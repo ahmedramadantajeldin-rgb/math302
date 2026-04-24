@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MATH302 — Numerical Methods</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --cream:    #f7f4ef;
+      --paper:    #fdfbf8;
+      --ink:      #1a1714;
+      --ink-soft: #4a453f;
+      --ink-dim:  #8a837a;
+      --rule:     #e0d9d0;
+      --accent:   #2d5a8e;
+      --accent-lt:#eef3fa;
+      --gold:     #b5893a;
+      --hover-bg: #f0eae0;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--cream);
+      color: var(--ink);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    /* ── Decorative top rule ── */
+    .top-rule {
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--gold) 50%, var(--accent) 100%);
+    }
+
+    /* ── Header ── */
+    header {
+      width: 100%;
+      max-width: 760px;
+      padding: 64px 32px 48px;
+      text-align: center;
+      position: relative;
+    }
+
+    .course-tag {
+      display: inline-block;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-lt);
+      padding: 5px 14px;
+      border-radius: 2px;
+      margin-bottom: 28px;
+    }
+
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(56px, 10vw, 88px);
+      font-weight: 400;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: var(--ink);
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--gold);
+    }
+
+    .subtitle {
+      margin-top: 16px;
+      font-size: 15px;
+      font-weight: 300;
+      color: var(--ink-dim);
+      letter-spacing: 0.04em;
+    }
+
+    .header-ornament {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      justify-content: center;
+      margin-top: 36px;
+    }
+
+    .header-ornament::before,
+    .header-ornament::after {
+      content: '';
+      height: 1px;
+      width: 60px;
+      background: var(--rule);
+    }
+
+    .header-ornament span {
+      width: 6px;
+      height: 6px;
+      background: var(--gold);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    /* ── Main content ── */
+    main {
+      width: 100%;
+      max-width: 760px;
+      padding: 0 32px 80px;
+    }
+
+    .section-label {
+      font-family: 'DM Mono', monospace;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--ink-dim);
+      margin-bottom: 20px;
+      padding-left: 2px;
+    }
+
+    /* ── Lecture list ── */
+    .lecture-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .lecture-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      padding: 22px 28px;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+      animation: slideUp 0.5s ease both;
+    }
+
+    .lecture-card:nth-child(1) { animation-delay: 0.05s; }
+    .lecture-card:nth-child(2) { animation-delay: 0.12s; }
+    .lecture-card:nth-child(3) { animation-delay: 0.19s; }
+    .lecture-card:nth-child(4) { animation-delay: 0.26s; }
+    .lecture-card:nth-child(5) { animation-delay: 0.33s; }
+
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .lecture-card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 3px;
+      background: var(--accent);
+      transform: scaleY(0);
+      transform-origin: bottom;
+      transition: transform 0.2s ease;
+    }
+
+    .lecture-card:hover {
+      background: var(--hover-bg);
+      border-color: #c8bfb0;
+      transform: translateX(4px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+    }
+
+    .lecture-card:hover::before {
+      transform: scaleY(1);
+    }
+
+    .card-left {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .lecture-num {
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      color: var(--ink-dim);
+      min-width: 24px;
+    }
+
+    .lecture-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: var(--accent-lt);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.2s ease;
+    }
+
+    .lecture-card:hover .lecture-icon {
+      background: var(--accent);
+    }
+
+    .lecture-icon svg {
+      width: 16px;
+      height: 16px;
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: stroke 0.2s ease;
+    }
+
+    .lecture-card:hover .lecture-icon svg {
+      stroke: #fff;
+    }
+
+    .lecture-info { display: flex; flex-direction: column; gap: 3px; }
+
+    .lecture-title {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--ink);
+      letter-spacing: -0.01em;
+    }
+
+    .lecture-desc {
+      font-size: 12px;
+      color: var(--ink-dim);
+      font-weight: 300;
+    }
+
+    .arrow {
+      color: var(--ink-dim);
+      transition: color 0.2s ease, transform 0.2s ease;
+      font-size: 18px;
+    }
+
+    .lecture-card:hover .arrow {
+      color: var(--accent);
+      transform: translateX(4px);
+    }
+
+    /* ── Footer ── */
+    footer {
+      width: 100%;
+      border-top: 1px solid var(--rule);
+      padding: 24px 32px;
+      text-align: center;
+    }
+
+    footer p {
+      font-size: 12px;
+      color: var(--ink-dim);
+      letter-spacing: 0.03em;
+    }
+
+    footer span {
+      font-family: 'DM Mono', monospace;
+      color: var(--accent);
+    }
+  </style>
+  <link rel="stylesheet" href="mobile.css"/>
+</head>
+<body>
+
+  <div class="top-rule"></div>
+
+  <header>
+    <div class="course-tag">Numerical Methods</div>
+    <h1>MATH<em>302</em></h1>
+    <p class="subtitle">Lecture Notes &amp; Reference Materials</p>
+    <div class="header-ornament"><span></span></div>
+  </header>
+
+  <main>
+    <p class="section-label">Lectures</p>
+
+    <nav class="lecture-list">
+
+      <!-- 01 Bisection -->
+      <a href="Bisection_Method_Math302.html" class="lecture-card">
+        <div class="card-left">
+          <span class="lecture-num">01</span>
+          <div class="lecture-icon">
+            <svg viewBox="0 0 24 24"><line x1="4" y1="12" x2="20" y2="12"/><polyline points="8 8 4 12 8 16"/><polyline points="16 8 20 12 16 16"/></svg>
+          </div>
+          <div class="lecture-info">
+            <span class="lecture-title">Bisection Method</span>
+            <span class="lecture-desc">Root-finding via interval halving</span>
+          </div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+      <!-- 02 Fixed Point -->
+      <a href="fixed_point_method.html" class="lecture-card">
+        <div class="card-left">
+          <span class="lecture-num">02</span>
+          <div class="lecture-icon">
+            <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>
+          </div>
+          <div class="lecture-info">
+            <span class="lecture-title">Fixed Point Method</span>
+            <span class="lecture-desc">Iterative fixed-point iteration</span>
+          </div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+      <!-- 03 Newton -->
+      <a href="Newton_Raphson_Professional.html" class="lecture-card">
+        <div class="card-left">
+          <span class="lecture-num">03</span>
+          <div class="lecture-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 18 Q9 4 12 12 Q15 20 21 6"/></svg>
+          </div>
+          <div class="lecture-info">
+            <span class="lecture-title">Newton Method</span>
+            <span class="lecture-desc">Newton-Raphson tangent approximation</span>
+          </div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+      <!-- 04 Jacobi -->
+      <a href="math302_jacobi_.html" class="lecture-card">
+        <div class="card-left">
+          <span class="lecture-num">04</span>
+          <div class="lecture-icon">
+            <svg viewBox="0 0 24 24"><rect x="3" y="3" width="8" height="8" rx="1"/><rect x="13" y="3" width="8" height="8" rx="1"/><rect x="3" y="13" width="8" height="8" rx="1"/><rect x="13" y="13" width="8" height="8" rx="1"/></svg>
+          </div>
+          <div class="lecture-info">
+            <span class="lecture-title">Jacobi Method</span>
+            <span class="lecture-desc">Iterative linear system solver</span>
+          </div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+      <!-- 05 Nonlinear -->
+      <a href="math302_sec5_nonlinear_equations.html" class="lecture-card">
+        <div class="card-left">
+          <span class="lecture-num">05</span>
+          <div class="lecture-icon">
+            <svg viewBox="0 0 24 24"><path d="M3 12 C6 4, 10 20, 14 8 S20 16 21 12"/></svg>
+          </div>
+          <div class="lecture-info">
+            <span class="lecture-title">Nonlinear Method</span>
+            <span class="lecture-desc">Systems of nonlinear equations</span>
+          </div>
+        </div>
+        <span class="arrow">→</span>
+      </a>
+
+    </nav>
+  </main>
+
+  <footer>
+    <p><span>MATH302</span> · Numerical Methods · All rights reserved</p>
+  </footer>
+
+</body>
+</html>

@@ -1,0 +1,1613 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Math 302 · Section 5 — System of Non-Linear Equations</title>
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=Source+Sans+3:wght@300;400;600;700&family=Fira+Code:wght@400;500&family=Noto+Naskh+Arabic:wght@400;500;700&display=swap" rel="stylesheet"/>
+
+<!-- MathJax -->
+<script>
+window.MathJax = {
+  tex: { inlineMath: [['$','$'],['\\(','\\)']], displayMath: [['$$','$$'],['\\[','\\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+
+<style>
+/* ─────────────────────────────────────────────
+   DESIGN TOKENS
+───────────────────────────────────────────── */
+:root {
+  --bg:           #f6f8fb;
+  --surface:      #ffffff;
+  --surface-alt:  #f0f5fd;
+  --border:       #dce6f5;
+  --accent-blue:  #2563c0;
+  --accent-blue-light: #dbeafe;
+  --accent-green: #16a34a;
+  --accent-green-light: #dcfce7;
+  --accent-amber: #d97706;
+  --accent-amber-light: #fef3c7;
+  --accent-red:   #dc2626;
+  --accent-red-light: #fee2e2;
+  --text-main:    #1e293b;
+  --text-sub:     #475569;
+  --text-faint:   #94a3b8;
+  --font-head:    'Lora', Georgia, serif;
+  --font-body:    'Source Sans 3', sans-serif;
+  --font-code:    'Fira Code', monospace;
+  --font-ar:      'Noto Naskh Arabic', serif;
+  --radius:       12px;
+  --radius-sm:    8px;
+  --shadow-sm:    0 1px 4px rgba(0,0,0,.07);
+  --shadow-md:    0 4px 18px rgba(0,0,0,.10);
+}
+
+/* ─────────────────────────────────────────────
+   RESET & BASE
+───────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text-main);
+  font-size: 16px;
+  line-height: 1.7;
+}
+a { color: var(--accent-blue); }
+
+/* ─────────────────────────────────────────────
+   STICKY NAV
+───────────────────────────────────────────── */
+.top-nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--accent-blue);
+  display: flex; align-items: center; gap: 0;
+  overflow-x: auto; white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(37,99,192,.35);
+}
+.top-nav a {
+  display: inline-block;
+  color: #fff; text-decoration: none;
+  font-size: 0.82rem; font-weight: 600;
+  letter-spacing: .02em;
+  padding: 0.65rem 1.2rem;
+  transition: background .18s;
+  opacity: .85;
+}
+.top-nav a:hover { background: rgba(255,255,255,.18); opacity: 1; }
+.top-nav .nav-brand {
+  font-family: var(--font-head);
+  font-size: 0.9rem;
+  padding: 0.65rem 1.4rem 0.65rem 1.2rem;
+  border-right: 1px solid rgba(255,255,255,.2);
+  opacity: 1;
+  flex-shrink: 0;
+}
+
+/* ─────────────────────────────────────────────
+   HERO HEADER
+───────────────────────────────────────────── */
+.hero {
+  background: linear-gradient(135deg, #1a3d8f 0%, #2563c0 60%, #3b82f6 100%);
+  color: white;
+  padding: 4rem 2rem 3rem;
+  text-align: center;
+}
+.hero-tag {
+  display: inline-block;
+  background: rgba(255,255,255,.15);
+  border: 1px solid rgba(255,255,255,.3);
+  border-radius: 20px;
+  font-size: 0.78rem; font-weight: 600;
+  letter-spacing: .1em; text-transform: uppercase;
+  padding: .3rem 1rem; margin-bottom: 1.2rem;
+}
+.hero h1 {
+  font-family: var(--font-head);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 700;
+  line-height: 1.25;
+  margin-bottom: .5rem;
+}
+.hero-sub {
+  font-size: 1.05rem;
+  opacity: .8;
+  margin-bottom: 1.5rem;
+}
+.hero-meta {
+  display: flex; justify-content: center; gap: 1.5rem; flex-wrap: wrap;
+  font-size: 0.85rem; opacity: .75;
+}
+.hero-meta span { display: flex; align-items: center; gap: .35rem; }
+
+/* ─────────────────────────────────────────────
+   LAYOUT
+───────────────────────────────────────────── */
+.page-wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 5rem;
+}
+
+/* ─────────────────────────────────────────────
+   SECTION TITLES
+───────────────────────────────────────────── */
+.section-title {
+  font-family: var(--font-head);
+  font-size: 1.55rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+  padding-bottom: .45rem;
+  border-bottom: 2.5px solid var(--accent-blue-light);
+  margin-bottom: 1.5rem;
+  display: flex; align-items: center; gap: .6rem;
+}
+.section-title .num {
+  background: var(--accent-blue);
+  color: white;
+  font-size: 0.85rem;
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-family: var(--font-body);
+  flex-shrink: 0;
+}
+
+section { margin-bottom: 3.5rem; }
+
+/* ─────────────────────────────────────────────
+   CARDS
+───────────────────────────────────────────── */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.6rem 1.8rem;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 1.2rem;
+}
+.card-blue  { border-left: 4px solid var(--accent-blue); background: #fafcff; }
+.card-green { border-left: 4px solid var(--accent-green); background: #fafffe; }
+.card-amber { border-left: 4px solid var(--accent-amber); background: #fffdf7; }
+.card-red   { border-left: 4px solid var(--accent-red); background: #fffafa; }
+
+.card-title {
+  font-family: var(--font-head);
+  font-size: 1.05rem; font-weight: 700;
+  color: var(--text-main);
+  margin-bottom: .7rem;
+}
+
+/* ─────────────────────────────────────────────
+   INFO BOXES
+───────────────────────────────────────────── */
+.info-box {
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.3rem;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+.info-blue  { background: var(--accent-blue-light);  border-left: 3px solid var(--accent-blue); }
+.info-green { background: var(--accent-green-light); border-left: 3px solid var(--accent-green); }
+.info-amber { background: var(--accent-amber-light); border-left: 3px solid var(--accent-amber); }
+.info-red   { background: var(--accent-red-light);   border-left: 3px solid var(--accent-red); }
+
+/* ─────────────────────────────────────────────
+   STEPS
+───────────────────────────────────────────── */
+.steps { display: flex; flex-direction: column; gap: 1rem; }
+.step {
+  display: flex; gap: 1rem; align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1.1rem 1.3rem;
+  box-shadow: var(--shadow-sm);
+}
+.step-num {
+  flex-shrink: 0;
+  width: 34px; height: 34px;
+  background: var(--accent-blue);
+  color: white;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: .9rem;
+  margin-top: .05rem;
+}
+.step-body { flex: 1; }
+.step-label {
+  font-weight: 700; font-size: .98rem;
+  color: var(--text-main);
+  margin-bottom: .2rem;
+}
+.step-ar {
+  font-family: var(--font-ar);
+  font-size: 0.88rem;
+  color: var(--accent-blue);
+  direction: rtl;
+  display: inline-block;
+  background: var(--accent-blue-light);
+  border-radius: 4px;
+  padding: .05rem .4rem;
+  margin-left: .4rem;
+}
+.step-desc { font-size: .93rem; color: var(--text-sub); margin-top: .3rem; }
+
+/* ─────────────────────────────────────────────
+   MATH BLOCK
+───────────────────────────────────────────── */
+.math-block {
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 1rem 1.5rem;
+  margin: .8rem 0;
+  overflow-x: auto;
+  text-align: center;
+  font-size: 1.05rem;
+}
+.math-block.highlight {
+  background: #eff6ff;
+  border-color: var(--accent-blue);
+}
+
+/* ─────────────────────────────────────────────
+   ITERATION TABLE
+───────────────────────────────────────────── */
+.table-wrap { overflow-x: auto; margin: 1rem 0; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.91rem;
+  font-family: var(--font-code);
+}
+thead tr {
+  background: var(--accent-blue);
+  color: white;
+}
+thead th {
+  padding: .6rem 1rem;
+  text-align: center;
+  font-family: var(--font-body);
+  font-weight: 600;
+  white-space: nowrap;
+}
+tbody tr { border-bottom: 1px solid var(--border); }
+tbody tr:nth-child(even) { background: var(--surface-alt); }
+tbody tr:last-child { background: #fef3c7; font-weight: 700; border-top: 2px solid var(--accent-amber); }
+tbody td { padding: .55rem 1rem; text-align: center; white-space: nowrap; }
+tbody tr:hover { background: #eff6ff; }
+.row-zero { background: #f0fdf4 !important; }
+
+/* ─────────────────────────────────────────────
+   EXAMPLE HEADER
+───────────────────────────────────────────── */
+.example-hdr {
+  background: linear-gradient(90deg, var(--accent-blue) 0%, #3b82f6 100%);
+  color: white;
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 1rem 1.8rem;
+}
+.example-hdr h3 {
+  font-family: var(--font-head);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.example-hdr p { font-size: .88rem; opacity: .85; margin-top: .2rem; }
+.example-body {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  padding: 1.6rem 1.8rem;
+  margin-bottom: 2rem;
+  box-shadow: var(--shadow-md);
+}
+
+/* ─────────────────────────────────────────────
+   SOLUTION STEPS
+───────────────────────────────────────────── */
+.sol-step {
+  margin-bottom: 1.4rem;
+}
+.sol-step-title {
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--accent-blue);
+  margin-bottom: .5rem;
+  display: flex; align-items: center; gap: .5rem;
+}
+.sol-step-title::before {
+  content: '';
+  display: inline-block;
+  width: 20px; height: 2px;
+  background: var(--accent-blue);
+}
+.sol-step p { color: var(--text-sub); font-size: .94rem; }
+
+/* ─────────────────────────────────────────────
+   CONVERGENCE BADGE
+───────────────────────────────────────────── */
+.badge {
+  display: inline-flex; align-items: center; gap: .35rem;
+  border-radius: 20px;
+  padding: .3rem .9rem;
+  font-size: .83rem; font-weight: 700;
+  margin-top: .5rem;
+}
+.badge-green { background: var(--accent-green-light); color: var(--accent-green); border: 1px solid #86efac; }
+.badge-red   { background: var(--accent-red-light);   color: var(--accent-red);   border: 1px solid #fca5a5; }
+
+/* ─────────────────────────────────────────────
+   ACCURACY BOX
+───────────────────────────────────────────── */
+.accuracy-box {
+  background: linear-gradient(135deg, #fef9ec, #fef3c7);
+  border: 1.5px solid #fbbf24;
+  border-radius: var(--radius-sm);
+  padding: 1.2rem 1.5rem;
+  margin-top: 1.2rem;
+}
+.accuracy-box .acc-title {
+  font-weight: 700; font-size: .85rem;
+  letter-spacing: .06em; text-transform: uppercase;
+  color: var(--accent-amber); margin-bottom: .6rem;
+}
+.accuracy-result {
+  font-family: var(--font-code);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #92400e;
+  background: white;
+  border: 1px solid #fbbf24;
+  border-radius: 6px;
+  padding: .4rem .9rem;
+  display: inline-block;
+  margin-top: .4rem;
+}
+
+/* ─────────────────────────────────────────────
+   COMPARISON TABLE (Linear vs Non-linear)
+───────────────────────────────────────────── */
+.compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.4rem;
+}
+@media (max-width: 560px) { .compare-grid { grid-template-columns: 1fr; } }
+.compare-card {
+  border-radius: var(--radius-sm);
+  padding: 1.1rem 1.3rem;
+}
+.compare-card h4 {
+  font-family: var(--font-head);
+  font-size: .95rem;
+  font-weight: 700;
+  margin-bottom: .6rem;
+}
+.compare-card ul { padding-left: 1.2rem; font-size: .9rem; color: var(--text-sub); }
+.compare-card ul li { margin-bottom: .25rem; }
+
+/* ─────────────────────────────────────────────
+   FORMULA REFERENCE BOX
+───────────────────────────────────────────── */
+.formula-ref {
+  background: var(--surface);
+  border: 2px solid var(--accent-blue);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.8rem;
+  margin: 1.5rem 0;
+  box-shadow: var(--shadow-md);
+}
+.formula-ref h4 {
+  font-family: var(--font-head);
+  color: var(--accent-blue);
+  font-size: 1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+}
+
+/* ─────────────────────────────────────────────
+   G-MATRIX VISUAL
+───────────────────────────────────────────── */
+.g-matrix-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+.matrix-label {
+  font-family: var(--font-head);
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--accent-blue);
+}
+
+/* ─────────────────────────────────────────────
+   NOTE / REMARK
+───────────────────────────────────────────── */
+.remark {
+  background: #fffdf7;
+  border: 1px dashed #fbbf24;
+  border-radius: var(--radius-sm);
+  padding: .85rem 1.2rem;
+  font-size: .9rem;
+  color: #78350f;
+  margin-top: .8rem;
+}
+.remark strong { color: var(--accent-amber); }
+
+/* ─────────────────────────────────────────────
+   FOOTER
+───────────────────────────────────────────── */
+.footer {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  color: var(--text-faint);
+  font-size: .82rem;
+}
+
+/* ─────────────────────────────────────────────
+   RESPONSIVE
+───────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .hero { padding: 2.5rem 1rem 2rem; }
+  .page-wrap { padding: 1.5rem 1rem 4rem; }
+  .example-body { padding: 1.2rem 1rem; }
+  .card { padding: 1.1rem 1.2rem; }
+  table { font-size: .8rem; }
+  thead th, tbody td { padding: .45rem .6rem; }
+}
+
+/* ─────────────────────────────────────────────
+   SCROLL ANIMATION
+───────────────────────────────────────────── */
+.fade-in {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity .5s ease, transform .5s ease;
+}
+.fade-in.visible { opacity: 1; transform: translateY(0); }
+
+/* ═════════════════════════════════════════════
+   PRINT STYLES - PDF RENDERING FIX
+═════════════════════════════════════════════ */
+@media print {
+  /* ─── RESET ANIMATIONS & EFFECTS ─── */
+  *, *::before, *::after {
+    animation: none !important;
+    transition: none !important;
+    box-shadow: none !important;
+  }
+  
+  /* ─── PAGE SETUP ─── */
+  @page {
+    size: A4;
+    margin: 1.5cm 1.5cm 2cm 1.5cm;
+  }
+  
+  /* ─── BODY & BACKGROUND ─── */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 11pt;
+    line-height: 1.5;
+  }
+  
+  /* ─── HIDE NAVIGATION ─── */
+  .top-nav {
+    display: none !important;
+  }
+  
+  /* ─── HERO HEADER - FIT ON FIRST PAGE ─── */
+  .hero {
+    background: linear-gradient(135deg, #1a3d8f 0%, #2563c0 60%, #3b82f6 100%) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    color: white !important;
+    padding: 1.5rem 1rem 1.2rem !important;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+  
+  .hero-tag {
+    background: rgba(255,255,255,.15) !important;
+    border: 1px solid rgba(255,255,255,.3) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .hero h1 {
+    font-size: 1.6rem !important;
+    margin-bottom: .3rem !important;
+  }
+  
+  .hero-sub {
+    font-size: .95rem !important;
+    margin-bottom: 1rem !important;
+  }
+  
+  .hero-meta {
+    font-size: .8rem !important;
+  }
+  
+  /* ─── MAIN CONTENT FLOW ─── */
+  .page-wrap {
+    max-width: 100% !important;
+    padding: 1rem 0 1rem !important;
+    margin: 0 !important;
+  }
+  
+  /* ─── SECTIONS - PREVENT ORPHANING ─── */
+  section {
+    page-break-inside: avoid;
+    break-inside: avoid-page;
+    margin-bottom: 1.5rem !important;
+  }
+  
+  .section-title {
+    page-break-after: avoid;
+    break-after: avoid;
+    padding-top: .5rem;
+  }
+  
+  /* ─── CARDS - KEEP TOGETHER ─── */
+  .card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    background: white !important;
+    border: 1px solid #ddd !important;
+    padding: .8rem 1rem !important;
+    margin-bottom: .8rem !important;
+  }
+  
+  .card-blue {
+    border-left: 3px solid #2563c0 !important;
+    background: #f8faff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .card-green {
+    border-left: 3px solid #16a34a !important;
+    background: #f7fdf8 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .card-amber {
+    border-left: 3px solid #d97706 !important;
+    background: #fffcf5 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .card-red {
+    border-left: 3px solid #dc2626 !important;
+    background: #fff8f8 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* ─── INFO BOXES ─── */
+  .info-box {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    padding: .6rem .8rem !important;
+    margin-bottom: .6rem !important;
+  }
+  
+  .info-blue {
+    background: #dbeafe !important;
+    border-left: 2px solid #2563c0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .info-green {
+    background: #dcfce7 !important;
+    border-left: 2px solid #16a34a !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .info-amber {
+    background: #fef3c7 !important;
+    border-left: 2px solid #d97706 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .info-red {
+    background: #fee2e2 !important;
+    border-left: 2px solid #dc2626 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* ─── STEPS - KEEP TOGETHER ─── */
+  .steps {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  .step {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    padding: .7rem .9rem !important;
+  }
+  
+  .step-num {
+    background: #2563c0 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .step-ar {
+    background: #dbeafe !important;
+    color: #2563c0 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* ─── MATH BLOCKS ─── */
+  .math-block {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    background: #f0f5fd !important;
+    border: 1px solid #dce6f5 !important;
+    padding: .7rem 1rem !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* ─── TABLES ─── */
+  table {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    font-size: 9pt !important;
+  }
+  
+  thead {
+    display: table-header-group;
+    background: #2563c0 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  tbody tr:nth-child(even) {
+    background: #f8faff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* ─── EXAMPLES ─── */
+  .example {
+    page-break-inside: avoid;
+    break-inside: avoid-page;
+  }
+  
+  .example-header {
+    page-break-after: avoid;
+    break-after: avoid;
+    background: #2563c0 !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .example-body {
+    padding: .8rem 1rem !important;
+  }
+  
+  /* ─── SOLUTION STEPS ─── */
+  .sol-step {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    padding: .7rem .9rem !important;
+  }
+  
+  .sol-step-num {
+    background: #16a34a !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* ─── FORMULA REFERENCES ─── */
+  .formula-ref {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    border: 2px solid #2563c0 !important;
+    background: white !important;
+    padding: 1rem 1.2rem !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* ─── ACCURACY BOX ─── */
+  .accuracy-box {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    background: #fef9ec !important;
+    border: 1.5px solid #fbbf24 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  .accuracy-result {
+    background: white !important;
+    border: 1px solid #fbbf24 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* ─── COMPARISON GRID ─── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: .8rem;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  .compare-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  /* ─── REMARKS ─── */
+  .remark {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    background: #fffdf7 !important;
+    border: 1px dashed #fbbf24 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  /* ─── HIDE FOOTER ─── */
+  .footer {
+    display: none !important;
+  }
+  
+  /* ─── FADE-IN ELEMENTS - ALWAYS VISIBLE ─── */
+  .fade-in {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+  
+  /* ─── LINKS ─── */
+  a {
+    color: #2563c0 !important;
+    text-decoration: none !important;
+  }
+  
+  /* ─── PREVENT WIDOWS & ORPHANS ─── */
+  p, li {
+    orphans: 3;
+    widows: 3;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+    break-after: avoid;
+    orphans: 4;
+    widows: 4;
+  }
+}
+</style>
+<link rel="stylesheet" href="mobile.css"/>
+</head>
+
+<body>
+
+<!-- Mobile Home Button -->
+<a href="index.html" class="mobile-home-btn" aria-label="Return to Home">
+  <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+  Home
+</a>
+
+<!-- ══════════════ STICKY NAV ══════════════ -->
+<nav class="top-nav">
+  <a class="nav-brand" href="#">📐 Math 302 §5</a>
+  <a href="#intro">Introduction</a>
+  <a href="#method">Method Steps</a>
+  <a href="#formulas">Key Formulas</a>
+  <a href="#example1">Example 1</a>
+  <a href="#example2">Example 2</a>
+</nav>
+
+<!-- ══════════════ HERO ══════════════ -->
+<header class="hero">
+  <div class="hero-tag">Math 302 — Section 5</div>
+  <h1>System of Non-Linear Equations</h1>
+  <p class="hero-sub">Fixed-Point Iteration Method</p>
+  <div class="hero-meta">
+    <span>📖 Iterative Scheme</span>
+    <span>📊 Convergence Test</span>
+    <span>🔢 Accuracy Formula</span>
+    <span>📝 2 Solved Examples</span>
+  </div>
+</header>
+
+<!-- ══════════════ PAGE CONTENT ══════════════ -->
+<main class="page-wrap">
+
+<!-- ═══════════════════════════════════════════
+     SECTION 1 — INTRODUCTION
+═══════════════════════════════════════════ -->
+<section id="intro" class="fade-in">
+  <h2 class="section-title"><span class="num">1</span>Introduction</h2>
+
+  <!-- What is it -->
+  <div class="card card-blue" style="margin-bottom:1.2rem;">
+    <div class="card-title">📌 What is the Fixed-Point (Jacobi-style) Iteration for Non-linear Systems?</div>
+    <p style="color:var(--text-sub); font-size:.95rem;">
+      When we have a <strong>system of two non-linear equations</strong> in two unknowns $x$ and $y$,
+      we cannot simply use Gaussian elimination. Instead, we <em>rearrange</em> the equations to express
+      $x$ as a function of $y$, and $y$ as a function of $x$ — then iterate (repeat) until the values converge.
+    </p>
+    <p style="color:var(--text-sub); font-size:.95rem; margin-top:.6rem;">
+      This approach is analogous to the <strong>Jacobi iteration</strong> used for linear systems,
+      now extended to handle non-linearity.
+    </p>
+  </div>
+
+  <!-- Linear vs Non-linear -->
+  <div class="card-title" style="font-family:var(--font-head); font-size:1.05rem; margin-bottom:.8rem; color:var(--text-main);">
+    Linear vs. Non-linear Systems
+  </div>
+  <div class="compare-grid">
+    <div class="compare-card" style="background:#f0f9ff; border:1px solid #bae6fd;">
+      <h4 style="color:#0369a1;">🔵 Linear System</h4>
+      <ul>
+        <li>All unknowns appear to the power of 1</li>
+        <li>e.g., $2x + 3y = 7$</li>
+        <li>Can be solved with Gaussian elimination, Gauss-Seidel, etc.</li>
+        <li>Unique solution (if non-singular)</li>
+      </ul>
+    </div>
+    <div class="compare-card" style="background:#fdf4ff; border:1px solid #e9d5ff;">
+      <h4 style="color:#7e22ce;">🟣 Non-linear System</h4>
+      <ul>
+        <li>Unknowns appear as powers, products, or functions</li>
+        <li>e.g., $y = x^4$, $x^3 + y^3 = 8$</li>
+        <li>Requires iterative numerical methods</li>
+        <li>May have multiple solutions</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Why this method -->
+  <div class="info-box info-green">
+    <strong>✅ Why use this method?</strong> It is simple to implement, requires only basic algebra to
+    rearrange the equations, and converges reliably when the <em>spectral condition</em> $\|G_0\| < 1$ is satisfied.
+  </div>
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 2 — METHOD STEPS
+═══════════════════════════════════════════ -->
+<section id="method" class="fade-in">
+  <h2 class="section-title"><span class="num">2</span>Method Steps</h2>
+
+  <p style="color:var(--text-sub); margin-bottom:1.3rem;">
+    Given a system of two non-linear equations in $x$ and $y$, follow these four steps:
+  </p>
+
+  <div class="steps">
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-label">
+          Rearrange the equations
+          <span class="step-ar">إعادة ترتيب المعادلات</span>
+        </div>
+        <div class="step-desc">
+          From <strong>one</strong> equation, isolate $x$ in terms of $y$ → call this function $g_1(y)$.<br/>
+          From the <strong>other</strong> equation, isolate $y$ in terms of $x$ → call this $g_2(x)$.
+        </div>
+        <div class="math-block" style="margin-top:.6rem;">
+          $x = g_1(y) \qquad y = g_2(x)$
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-label">
+          Build the Jacobian matrix $G$
+          <span class="step-ar">مصفوفة المشتقات</span>
+        </div>
+        <div class="step-desc">
+          Compute the matrix of partial derivatives of $(g_1, g_2)$ with respect to $(x, y)$:
+        </div>
+        <div class="math-block" style="margin-top:.6rem;">
+          $$G = \begin{pmatrix} \dfrac{\partial g_1}{\partial x} & \dfrac{\partial g_2}{\partial x} \\[10pt] \dfrac{\partial g_1}{\partial y} & \dfrac{\partial g_2}{\partial y} \end{pmatrix}$$
+        </div>
+        <div class="step-desc">
+          Then evaluate at the starting point $(x_0, y_0)$ to get $G_0 = G\big|_{(x_0, y_0)}$.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-label">
+          Check convergence
+          <span class="step-ar">شرط التقارب</span>
+        </div>
+        <div class="step-desc">
+          Compute the norm of $G_0$ (maximum absolute entry):
+        </div>
+        <div class="math-block highlight" style="margin-top:.6rem;">
+          $$\|G_0\| = \max_{i,j}\,|g_{ij}|$$
+        </div>
+        <div class="info-box info-green" style="margin-top:.6rem;">
+          <strong>If $\|G_0\| &lt; 1$</strong> → The method is <strong>Convergent</strong> ✅<br/>
+          <strong>If $\|G_0\| \geq 1$</strong> → The method <strong>Diverges</strong> ❌
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <div class="step-label">
+          Iterate and build the table
+          <span class="step-ar">التكرار وبناء الجدول</span>
+        </div>
+        <div class="step-desc">
+          Starting from $(x_0, y_0)$, apply:
+        </div>
+        <div class="math-block" style="margin-top:.6rem;">
+          $x_{n} = g_1(y_{n-1}), \qquad y_{n} = g_2(x_{n-1})$
+        </div>
+        <div class="step-desc">
+          Fill in an iteration table: $n \;|\; x_n \;|\; y_n$ until convergence or the required number of iterations.
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body">
+        <div class="step-label">
+          Calculate accuracy (error bound)
+          <span class="step-ar">حساب الدقة</span>
+        </div>
+        <div class="step-desc">
+          After $n$ iterations, estimate the accuracy using:
+        </div>
+        <div class="math-block highlight" style="margin-top:.6rem;">
+          $$\text{accuracy} \;\leq\; \frac{\|G_0\|}{1 - \|G_0\|} \cdot \frac{\|\mathbf{x}^{(n)} - \mathbf{x}^{(n-1)}\|}{\|\mathbf{x}^{(n)}\|}$$
+        </div>
+        <div class="step-desc">
+          where $\|\mathbf{x}^{(n)}\| = \max\bigl(|x_n|,\,|y_n|\bigr)$ and
+          $\|\mathbf{x}^{(n)} - \mathbf{x}^{(n-1)}\| = \max\bigl(|x_n - x_{n-1}|,\,|y_n - y_{n-1}|\bigr)$.
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .steps -->
+
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 3 — KEY FORMULAS REFERENCE
+═══════════════════════════════════════════ -->
+<section id="formulas" class="fade-in">
+  <h2 class="section-title"><span class="num">3</span>Key Formulas Reference</h2>
+
+  <div class="formula-ref">
+    <h4>📋 Quick Reference — All You Need</h4>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1rem;">
+      <div class="info-box info-blue" style="margin-bottom:0;">
+        <strong>Iterative Scheme</strong><br/>
+        $x_n = g_1(y_{n-1})$<br/>
+        $y_n = g_2(x_{n-1})$
+      </div>
+      <div class="info-box info-green" style="margin-bottom:0;">
+        <strong>Convergence Condition</strong><br/>
+        $\|G_0\| < 1 \;\Rightarrow\;$ Convergent
+      </div>
+    </div>
+
+    <div class="math-block highlight">
+      $$G = \begin{pmatrix} \dfrac{\partial g_1}{\partial x} & \dfrac{\partial g_2}{\partial x} \\[12pt] \dfrac{\partial g_1}{\partial y} & \dfrac{\partial g_2}{\partial y} \end{pmatrix} \Bigg|_{(x_0,\,y_0)}$$
+    </div>
+
+    <div class="math-block highlight" style="margin-top:.6rem;">
+      $$\text{Accuracy} \;\leq\; \frac{\|G_0\|}{1 - \|G_0\|} \cdot \frac{\left\|\mathbf{x}^{(n)} - \mathbf{x}^{(n-1)}\right\|}{\left\|\mathbf{x}^{(n)}\right\|}$$
+    </div>
+
+    <div class="remark">
+      <strong>📌 Norm used:</strong> The norm $\|\cdot\|$ is the <strong>max-norm (∞-norm)</strong>:
+      for a vector $\mathbf{v} = (a,b)$: $\|\mathbf{v}\| = \max(|a|,|b|)$.
+      For a matrix: $\|G\| = \max$ of all absolute entry values.
+    </div>
+  </div>
+
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 4 — EXAMPLE 1
+═══════════════════════════════════════════ -->
+<section id="example1" class="fade-in">
+  <h2 class="section-title"><span class="num">4</span>Example 1 — Solved</h2>
+
+  <div class="example-hdr">
+    <h3>Example 1</h3>
+    <p>Solve using an iterative scheme — convergence check + 6 iterations + accuracy</p>
+  </div>
+  <div class="example-body">
+
+    <!-- Problem Statement -->
+    <div class="sol-step">
+      <div class="sol-step-title">Problem Statement</div>
+      <div class="info-box info-blue">
+        Solve the system of equations using an iterative scheme:
+        $$y = x^4, \qquad x^3 + y^3 = 8$$
+        Starting point: $x_0 = 1,\; y_0 = 1$.<br/>
+        State why the method is convergent. Find the accuracy after <strong>6 iterations</strong>.
+      </div>
+    </div>
+
+    <!-- Step 1: Rearrange -->
+    <div class="sol-step">
+      <div class="sol-step-title">Step 1 — Rearrange Equations <span class="step-ar">إعادة الترتيب</span></div>
+      <p>
+        We need to express $x$ from one equation and $y$ from the other.
+      </p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:.7rem;">
+        <div class="card card-blue" style="margin-bottom:0;">
+          <div class="card-title" style="font-size:.88rem;">From equation 1: $y = x^4$</div>
+          <p style="font-size:.9rem; color:var(--text-sub);">Isolate $x$ in terms of $y$:</p>
+          <div class="math-block" style="margin:.5rem 0 0;">
+            $$x^4 = y \;\Rightarrow\; x = y^{1/4}$$
+          </div>
+          <div class="math-block highlight">$g_1: \quad x = y^{1/4}$</div>
+          <p style="font-size:.82rem; color:var(--text-sub);">We take the positive root since $x_0 = 1 > 0$.</p>
+        </div>
+        <div class="card card-green" style="margin-bottom:0;">
+          <div class="card-title" style="font-size:.88rem;">From equation 2: $x^3 + y^3 = 8$</div>
+          <p style="font-size:.9rem; color:var(--text-sub);">Isolate $y$ in terms of $x$:</p>
+          <div class="math-block" style="margin:.5rem 0 0;">
+            $$y^3 = 8 - x^3 \;\Rightarrow\; y = \sqrt[3]{8 - x^3}$$
+          </div>
+          <div class="math-block highlight">$g_2: \quad y = (8 - x^3)^{1/3}$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: G matrix -->
+    <div class="sol-step">
+      <div class="sol-step-title">Step 2 — Build the Jacobian Matrix $G$ <span class="step-ar">مصفوفة G</span></div>
+
+      <p style="font-size:.92rem; color:var(--text-sub); margin-bottom:.6rem;">
+        We have $g_1 = y^{1/4}$ (function of $y$ only) and $g_2 = (8-x^3)^{1/3}$ (function of $x$ only).
+        Compute all partial derivatives:
+      </p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:.8rem; margin-bottom:.8rem;">
+        <div class="info-box info-blue" style="margin-bottom:0;">
+          <strong>$\dfrac{\partial g_1}{\partial x} = 0$</strong><br/>
+          <span style="font-size:.85rem;">($g_1$ has no $x$)</span>
+        </div>
+        <div class="info-box info-green" style="margin-bottom:0;">
+          <strong>$\dfrac{\partial g_2}{\partial x} = \dfrac{1}{3}(8-x^3)^{-2/3}\cdot(-3x^2)$</strong><br/>
+          <span style="font-size:.85rem;">$= -x^2(8-x^3)^{-2/3}$</span>
+        </div>
+        <div class="info-box info-blue" style="margin-bottom:0;">
+          <strong>$\dfrac{\partial g_1}{\partial y} = \dfrac{1}{4}y^{-3/4}$</strong>
+        </div>
+        <div class="info-box info-green" style="margin-bottom:0;">
+          <strong>$\dfrac{\partial g_2}{\partial y} = 0$</strong><br/>
+          <span style="font-size:.85rem;">($g_2$ has no $y$)</span>
+        </div>
+      </div>
+
+      <div class="math-block highlight">
+        $$G = \begin{pmatrix} 0 & -x^2(8-x^3)^{-2/3} \\[8pt] \dfrac{1}{4}y^{-3/4} & 0 \end{pmatrix}$$
+      </div>
+    </div>
+
+    <!-- Step 3: Evaluate G0 -->
+    <div class="sol-step">
+      <div class="sol-step-title">Step 3 — Evaluate $G_0$ at $(x_0, y_0) = (1,1)$ <span class="step-ar">تعويض النقطة الابتدائية</span></div>
+
+      <p style="font-size:.92rem; color:var(--text-sub); margin-bottom:.6rem;">
+        Substitute $x=1$, $y=1$ into every entry of $G$:
+      </p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:.8rem; margin-bottom:.8rem;">
+        <div class="info-box info-amber" style="margin-bottom:0; font-size:.9rem;">
+          $G_{11} = 0$
+        </div>
+        <div class="info-box info-amber" style="margin-bottom:0; font-size:.9rem;">
+          $G_{12} = -(1)^2 \cdot (8-1)^{-2/3} = -(7)^{-2/3} = -0.2732758833$
+        </div>
+        <div class="info-box info-amber" style="margin-bottom:0; font-size:.9rem;">
+          $G_{21} = \dfrac{1}{4}(1)^{-3/4} = \dfrac{1}{4} = 0.25$
+        </div>
+        <div class="info-box info-amber" style="margin-bottom:0; font-size:.9rem;">
+          $G_{22} = 0$
+        </div>
+      </div>
+
+      <div class="math-block highlight">
+        $$G_0 = \begin{pmatrix} 0 & -0.2732758833 \\[6pt] \dfrac{1}{4} & 0 \end{pmatrix}$$
+      </div>
+
+      <div class="math-block">
+        $$\|G_0\| = \max\bigl(0,\; 0.2732758833,\; 0.25,\; 0\bigr) = 0.2732758833$$
+      </div>
+
+      <div class="info-box info-green" style="margin-top:.6rem;">
+        Since $\|G_0\| = 0.2732758833 &lt; 1$ →
+        <span class="badge badge-green">✅ The method is Convergent</span>
+      </div>
+    </div>
+
+    <!-- Step 4: First iteration manually -->
+    <div class="sol-step">
+      <div class="sol-step-title">Step 4 — Manual First Iteration (n=1) <span class="step-ar">التكرار الأول يدوياً</span></div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:.8rem;">
+        <div class="info-box info-blue" style="margin-bottom:0;">
+          $$x_1 = g_1(y_0) = (1)^{1/4} = 1$$
+        </div>
+        <div class="info-box info-green" style="margin-bottom:0;">
+          $$y_1 = g_2(x_0) = (8 - 1^3)^{1/3} = 7^{1/3} \approx 1.912931183$$
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5: Full Iteration Table -->
+    <div class="sol-step">
+      <div class="sol-step-title">Step 5 — Full Iteration Table (6 Iterations) <span class="step-ar">جدول التكرار</span></div>
+      <p style="font-size:.9rem; color:var(--text-sub); margin-bottom:.7rem;">
+        Applying $x_n = y_{n-1}^{1/4}$ and $y_n = (8 - x_{n-1}^3)^{1/3}$ repeatedly:
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>$n$</th>
+              <th>$x_n$</th>
+              <th>$y_n$</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row-zero">
+              <td><strong>0</strong></td>
+              <td>$x_0 = 1$</td>
+              <td>$y_0 = 1$</td>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>1</td>
+              <td>1.912931183</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>1.176047429</td>
+              <td>1.854062020</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>1.166893308</td>
+              <td>1.857709472</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>1.167466557</td>
+              <td>1.857483066</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>1.167430985</td>
+              <td>1.857497118</td>
+            </tr>
+            <tr>
+              <td><strong>6</strong></td>
+              <td><strong>1.167433193</strong></td>
+              <td><strong>1.857496246</strong></td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--font-body); font-size:.82rem; color:var(--text-sub);">$\mathbf{x}^{(6)}-\mathbf{x}^{(5)}$</td>
+              <td>$2.208 \times 10^{-6}$</td>
+              <td>$-8.72 \times 10^{-7}$</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="remark">
+        <strong>🔍 Norm calculations from table:</strong><br/>
+        $\|\mathbf{x}^{(6)} - \mathbf{x}^{(5)}\| = \max(2.208\times10^{-6},\; 8.72\times10^{-7}) = 2.208\times10^{-6}$<br/>
+        $\|\mathbf{x}^{(6)}\| = \max(|1.167433193|,\; |1.857496246|) = 1.857496246$
+      </div>
+    </div>
+
+    <!-- Step 6: Accuracy -->
+    <div class="sol-step">
+      <div class="sol-step-title">Step 6 — Calculate Accuracy <span class="step-ar">حساب الدقة</span></div>
+
+      <div class="accuracy-box">
+        <div class="acc-title">Accuracy Formula Applied</div>
+        <div class="math-block" style="background:white; border:1px solid #fbbf24;">
+          $$\text{accuracy} \leq \frac{\|G_0\|}{1-\|G_0\|} \cdot \frac{\|\mathbf{x}^{(6)} - \mathbf{x}^{(5)}\|}{\|\mathbf{x}^{(6)}\|}$$
+        </div>
+        <div class="math-block" style="background:white; border:1px solid #fbbf24; margin-top:.5rem;">
+          $$= \frac{0.2732758833}{1 - 0.2732758833} \cdot \frac{2.208\times10^{-6}}{1.857496246}$$
+        </div>
+        <div class="math-block" style="background:white; border:1px solid #fbbf24; margin-top:.5rem;">
+          $$= \frac{0.2732758833}{0.7267241167} \cdot \frac{2.208\times10^{-6}}{1.857496246}$$
+        </div>
+        <div style="text-align:center; margin-top:.7rem;">
+          <span class="accuracy-result">≤ 4.469951388 × 10⁻⁷</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .example-body -->
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 5 — EXAMPLE 2
+═══════════════════════════════════════════ -->
+<section id="example2" class="fade-in">
+  <h2 class="section-title"><span class="num">5</span>Example 2 — Solved</h2>
+
+  <div class="example-hdr">
+    <h3>Example 2</h3>
+    <p>Solve two non-linear equations — convergence check + 7 iterations + accuracy</p>
+  </div>
+  <div class="example-body">
+
+    <!-- Problem Statement -->
+    <div class="sol-step">
+      <div class="sol-step-title">Problem Statement</div>
+      <div class="info-box info-blue">
+        Solve the system of non-linear equations:
+        $$x - 2 + y^2 = 0, \qquad y = x^3$$
+        Starting point: $x_0 = -1,\; y_0 = -1$.<br/>
+        State why the method is convergent and calculate the accuracy after <strong>7 iterations</strong>.
+      </div>
+    </div>
+
+    <!-- Step 1: Rearrange -->
+    <div class="sol-step">
+      <div class="sol-step-title">Step 1 — Rearrange Equations <span class="step-ar">إعادة الترتيب</span></div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-top:.7rem;">
+        <div class="card card-blue" style="margin-bottom:0;">
+          <div class="card-title" style="font-size:.88rem;">From equation 2: $y = x^3$</div>
+          <p style="font-size:.9rem; color:var(--text-sub);">Isolate $x$ in terms of $y$:</p>
+          <div class="math-block" style="margin:.5rem 0 0;">
+            $$x = y^{1/3} = \sqrt[3]{y}$$
+          </div>
+          <div class="math-block highlight">$g_1: \quad x = y^{1/3}$</div>
+        </div>
+        <div class="card card-green" style="margin-bottom:0;">
+          <div class="card-title" style="font-size:.88rem;">From equation 1: $x - 2 + y^2 = 0$</div>
+          <p style="font-size:.9rem; color:var(--text-sub);">Isolate $y$ in terms of $x$:</p>
+          <div class="math-block" style="margin:.5rem 0 0;">
+            $$y^2 = 2 - x \;\Rightarrow\; y = \pm\sqrt{2-x}$$
+          </div>
+          <div class="math-block highlight">$g_2: \quad y = -\sqrt{2-x}$</div>
+          <p style="font-size:.82rem; color:var(--text-sub); margin-top:.4rem;">
+            We choose the <strong>negative</strong> root because $y_0 = -1 &lt; 0$.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: G matrix -->
+    <div class="sol-step">
+      <div class="sol-step-title">Step 2 — Build the Jacobian Matrix $G$ <span class="step-ar">مصفوفة G</span></div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:.8rem; margin-bottom:.8rem;">
+        <div class="info-box info-blue" style="margin-bottom:0;">
+          <strong>$\dfrac{\partial g_1}{\partial x} = 0$</strong><br/>
+          <span style="font-size:.85rem;">($g_1 = y^{1/3}$ has no $x$)</span>
+        </div>
+        <div class="info-box info-green" style="margin-bottom:0;">
+          <strong>$\dfrac{\partial g_2}{\partial x} = -\dfrac{1}{2}(2-x)^{-1/2}\cdot(-1) = \dfrac{1}{2}(2-x)^{-1/2}$</strong>
+        </div>
+        <div class="info-box info-blue" style="margin-bottom:0;">
+          <strong>$\dfrac{\partial g_1}{\partial y} = \dfrac{1}{3}y^{-2/3}$</strong>
+        </div>
+        <div class="info-box info-green" style="margin-bottom:0;">
+          <strong>$\dfrac{\partial g_2}{\partial y} = 0$</strong><br/>
+          <span style="font-size:.85rem;">($g_2 = -\sqrt{2-x}$ has no $y$)</span>
+        </div>
+      </div>
+
+      <div class="math-block highlight">
+        $$G = \begin{pmatrix} 0 & \dfrac{1}{2}(2-x)^{-1/2} \\[10pt] \dfrac{1}{3}y^{-2/3} & 0 \end{pmatrix}$$
+      </div>
+    </div>
+
+    <!-- Step 3: Evaluate G0 -->
+    <div class="sol-step">
+      <div class="sol-step-title">Step 3 — Evaluate $G_0$ at $(x_0, y_0) = (-1, -1)$ <span class="step-ar">تعويض النقطة الابتدائية</span></div>
+
+      <p style="font-size:.92rem; color:var(--text-sub); margin-bottom:.6rem;">
+        Substitute $x = -1$, $y = -1$:
+      </p>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:.8rem; margin-bottom:.8rem;">
+        <div class="info-box info-amber" style="margin-bottom:0; font-size:.9rem;">
+          $G_{11} = 0$
+        </div>
+        <div class="info-box info-amber" style="margin-bottom:0; font-size:.9rem;">
+          $G_{12} = \dfrac{1}{2}(2-(-1))^{-1/2} = \dfrac{1}{2}(3)^{-1/2} = \dfrac{1}{2\sqrt{3}} \approx 0.2886751346$
+        </div>
+        <div class="info-box info-amber" style="margin-bottom:0; font-size:.9rem;">
+          $G_{21} = \dfrac{1}{3}(-1)^{-2/3} = \dfrac{1}{3}(1) = \dfrac{1}{3} \approx 0.3333...$
+        </div>
+        <div class="info-box info-amber" style="margin-bottom:0; font-size:.9rem;">
+          $G_{22} = 0$
+        </div>
+      </div>
+
+      <div class="math-block highlight">
+        $$G_0 = \begin{pmatrix} 0 & 0.2886751346 \\[6pt] \dfrac{1}{3} & 0 \end{pmatrix}$$
+      </div>
+
+      <div class="math-block">
+        $$\|G_0\| = \max\!\left(0,\; 0.2886751346,\; \tfrac{1}{3},\; 0\right) = \max\!\left(0.2886751346,\; 0.3333...\right) = \frac{1}{3}$$
+      </div>
+
+      <div class="info-box info-green" style="margin-top:.6rem;">
+        Since $\|G_0\| = \dfrac{1}{3} &lt; 1$ →
+        <span class="badge badge-green">✅ The method is Convergent</span>
+      </div>
+    </div>
+
+    <!-- Step 4: Full Iteration Table -->
+    <div class="sol-step">
+      <div class="sol-step-title">Step 4 — Full Iteration Table (7 Iterations) <span class="step-ar">جدول التكرار</span></div>
+      <p style="font-size:.9rem; color:var(--text-sub); margin-bottom:.7rem;">
+        Applying $x_n = y_{n-1}^{1/3}$ and $y_n = -\sqrt{2 - x_{n-1}}$ repeatedly:
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>$n$</th>
+              <th>$x_n$</th>
+              <th>$y_n$</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row-zero">
+              <td><strong>0</strong></td>
+              <td>$x_0 = -1$</td>
+              <td>$y_0 = -1$</td>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>−1</td>
+              <td>−1.732050808</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>−1.200936955</td>
+              <td>−1.789116?5</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>−1.213983694</td>
+              <td>−1.792758683</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>−1.214806979</td>
+              <td>−1.792988282</td>
+            </tr>
+            <tr>
+              <td>5</td>
+              <td>−1.214858837</td>
+              <td>−1.793002743</td>
+            </tr>
+            <tr>
+              <td>6</td>
+              <td>−1.214862103</td>
+              <td>−1.793003654</td>
+            </tr>
+            <tr>
+              <td><strong>7</strong></td>
+              <td><strong>−1.214862309</strong></td>
+              <td><strong>−1.793003711</strong></td>
+            </tr>
+            <tr>
+              <td style="font-family:var(--font-body); font-size:.82rem; color:var(--text-sub);">$\mathbf{x}^{(7)}-\mathbf{x}^{(6)}$</td>
+              <td>$-2.06 \times 10^{-7}$</td>
+              <td>$-5.7 \times 10^{-8}$</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="remark">
+        <strong>🔍 Norm calculations from table:</strong><br/>
+        $\|\mathbf{x}^{(7)} - \mathbf{x}^{(6)}\| = \max(2.06\times10^{-7},\; 5.7\times10^{-8}) = 2.06\times10^{-7}$<br/>
+        $\|\mathbf{x}^{(7)}\| = \max(|-1.214862309|,\; |-1.793003711|) = 1.793003711$
+      </div>
+    </div>
+
+    <!-- Step 5: Accuracy -->
+    <div class="sol-step">
+      <div class="sol-step-title">Step 5 — Calculate Accuracy <span class="step-ar">حساب الدقة</span></div>
+
+      <div class="accuracy-box">
+        <div class="acc-title">Accuracy Formula Applied</div>
+        <div class="math-block" style="background:white; border:1px solid #fbbf24;">
+          $$\text{accuracy} \leq \frac{\|G_0\|}{1-\|G_0\|} \cdot \frac{\|\mathbf{x}^{(7)} - \mathbf{x}^{(6)}\|}{\|\mathbf{x}^{(7)}\|}$$
+        </div>
+        <div class="math-block" style="background:white; border:1px solid #fbbf24; margin-top:.5rem;">
+          $$= \frac{1/3}{1 - 1/3} \cdot \frac{2.06\times10^{-7}}{1.793003711}$$
+        </div>
+        <div class="math-block" style="background:white; border:1px solid #fbbf24; margin-top:.5rem;">
+          $$= \frac{1/3}{2/3} \cdot \frac{2.06\times10^{-7}}{1.793003711} = \frac{1}{2} \cdot \frac{2.06\times10^{-7}}{1.793003711}$$
+        </div>
+        <div style="text-align:center; margin-top:.7rem;">
+          <span class="accuracy-result">≤ 5.744550297 × 10⁻⁸</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .example-body -->
+</section>
+
+<!-- ═══════════════════════════════════════════
+     SECTION 6 — IMPORTANT NOTES & SUMMARY
+═══════════════════════════════════════════ -->
+<section id="notes" class="fade-in">
+  <h2 class="section-title"><span class="num">6</span>Important Notes &amp; Observations</h2>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem;">
+
+    <div class="card card-green">
+      <div class="card-title">📌 Choice of Sign</div>
+      <p style="font-size:.9rem; color:var(--text-sub);">
+        When isolating a variable involving $\pm$, always choose the sign that <strong>matches
+        your starting point</strong>. In Example 2, since $y_0 = -1 &lt; 0$, we chose $y = -\sqrt{2-x}$.
+        Choosing the wrong sign would cause divergence.
+      </p>
+    </div>
+
+    <div class="card card-blue">
+      <div class="card-title">🔢 Norm Definition</div>
+      <p style="font-size:.9rem; color:var(--text-sub);">
+        The norm used throughout is the <strong>max-norm (∞-norm)</strong>.
+        For a 2D vector $(a, b)$: $\|(a,b)\| = \max(|a|,|b|)$.
+        For a 2×2 matrix: $\|G\| = $ maximum absolute entry.
+      </p>
+    </div>
+
+    <div class="card card-amber">
+      <div class="card-title">⚠️ Convergence is Not Guaranteed</div>
+      <p style="font-size:.9rem; color:var(--text-sub);">
+        The convergence condition $\|G_0\| &lt; 1$ is <strong>sufficient but not always necessary</strong>.
+        The Jacobian matrix $G$ is evaluated at the starting point $(x_0, y_0)$ only. If $\|G_0\| \geq 1$,
+        try a different rearrangement or a different starting point.
+      </p>
+    </div>
+
+    <div class="card card-blue">
+      <div class="card-title">🎯 Accuracy vs. Absolute Error</div>
+      <p style="font-size:.9rem; color:var(--text-sub);">
+        The accuracy formula gives an <strong>upper bound</strong> on the relative error.
+        A smaller result means higher confidence in the answer. The smaller $\|G_0\|$ is compared to 1,
+        the faster the convergence and the smaller the accuracy bound.
+      </p>
+    </div>
+
+  </div>
+
+  <!-- Summary comparison -->
+  <div class="card" style="border:2px solid var(--accent-blue); background:#f8fbff;">
+    <div class="card-title" style="font-size:1.1rem;">📊 Side-by-Side Summary: Example 1 vs Example 2</div>
+    <div class="table-wrap" style="margin-top:.5rem;">
+      <table>
+        <thead>
+          <tr>
+            <th>Property</th>
+            <th>Example 1</th>
+            <th>Example 2</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Equations</td>
+            <td>$y = x^4$, $x^3+y^3=8$</td>
+            <td>$x-2+y^2=0$, $y=x^3$</td>
+          </tr>
+          <tr>
+            <td>Starting point</td>
+            <td>$(1,\,1)$</td>
+            <td>$(-1,\,-1)$</td>
+          </tr>
+          <tr>
+            <td>$g_1$</td>
+            <td>$x = y^{1/4}$</td>
+            <td>$x = y^{1/3}$</td>
+          </tr>
+          <tr>
+            <td>$g_2$</td>
+            <td>$y = (8-x^3)^{1/3}$</td>
+            <td>$y = -\sqrt{2-x}$</td>
+          </tr>
+          <tr>
+            <td>$\|G_0\|$</td>
+            <td>$0.2732758833$</td>
+            <td>$\frac{1}{3} \approx 0.3333$</td>
+          </tr>
+          <tr>
+            <td>Convergent?</td>
+            <td>✅ Yes</td>
+            <td>✅ Yes</td>
+          </tr>
+          <tr>
+            <td>Iterations</td>
+            <td>6</td>
+            <td>7</td>
+          </tr>
+          <tr>
+            <td>Accuracy</td>
+            <td>$\leq 4.470 \times 10^{-7}$</td>
+            <td>$\leq 5.745 \times 10^{-8}$</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</section>
+
+</main>
+
+<script>
+// Intersection Observer for fade-in animation
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+      observer.unobserve(entry.target);
+    }
+  });
+}, { threshold: 0.08 });
+
+document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>

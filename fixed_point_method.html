@@ -1,0 +1,1383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Fixed Point Iteration Method — Math 302</title>
+
+<!-- KaTeX (original math renderer — preserves $...$ delimiters) -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+  onload="renderMathInElement(document.body, {
+    delimiters: [
+      {left:'$$',right:'$$',display:true},
+      {left:'$',right:'$',display:false}
+    ],
+    throwOnError: false
+  });"></script>
+
+<!-- Google Fonts — Newton's exact font stack -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
+<style>
+/* ═══════════════════════════════════════════════
+   DESIGN SYSTEM — Soft Academic Ivory & Midnight
+   (Newton-Raphson reference design)
+═══════════════════════════════════════════════ */
+:root {
+  --ivory:       #f7f4ef;
+  --white:       #ffffff;
+  --paper:       #fdfbf7;
+  --fog:         #eee9e0;
+  --border:      #ddd6c8;
+  --ink:         #1c1a18;
+  --ink-soft:    #4a4540;
+  --muted:       #8a8078;
+  --midnight:    #0e1b2e;
+  --navy:        #163256;
+  --cobalt:      #1e4d8c;
+  --sky:         #3b82c4;
+  --teal:        #1a7a6e;
+  --amber:       #b57a10;
+  --amber-lt:    #f5c842;
+  --rust:        #b53a2a;
+  --green:       #1e6b45;
+  --purple:      #5b3f9a;
+
+  --ff-body:   'EB Garamond', Georgia, 'Times New Roman', serif;
+  --ff-ui:     'DM Sans', system-ui, sans-serif;
+  --ff-mono:   'DM Mono', 'Courier New', monospace;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --shadow-sm: 0 1px 6px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 20px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  background: var(--ivory);
+  color: var(--ink);
+  font-family: var(--ff-body);
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  min-height: 100vh;
+}
+
+/* ──────────── HEADER ──────────── */
+.site-header {
+  background: var(--midnight);
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+.site-header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 50%, rgba(30,77,140,.45) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 20%, rgba(26,122,110,.25) 0%, transparent 55%);
+}
+.site-header::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.header-inner {
+  position: relative; z-index: 1;
+  max-width: 980px; margin: 0 auto;
+  padding: 64px 32px 56px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.header-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 30px;
+  padding: 5px 16px;
+  font-family: var(--ff-mono);
+  font-size: .72rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.75);
+  margin-bottom: 22px;
+}
+.header-pill::before { content: '◆'; color: var(--amber-lt); }
+.site-header h1 {
+  font-family: var(--ff-body);
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  margin-bottom: 14px;
+}
+.site-header h1 em { color: var(--amber-lt); font-style: italic; }
+.header-sub {
+  font-family: var(--ff-ui);
+  font-size: .92rem;
+  font-weight: 300;
+  color: rgba(255,255,255,.55);
+  letter-spacing: .3px;
+  max-width: 500px;
+}
+.header-tags {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  margin-top: 28px;
+}
+.htag {
+  font-family: var(--ff-ui);
+  font-size: .75rem;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.13);
+  color: rgba(255,255,255,.65);
+}
+
+/* ──────────── PAGE LAYOUT ──────────── */
+.page-layout {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 8px 24px 80px;
+  display: block;
+}
+
+/* ──────────── TOC ──────────── */
+.toc-section {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.toc-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--cobalt);
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  padding: 28px 36px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 40px;
+}
+.toc-card-head {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 20px;
+}
+.toc-card-head .toc-badge {
+  font-family: var(--ff-mono);
+  font-size: .68rem; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase;
+  background: var(--cobalt); color: #fff;
+  padding: 4px 12px; border-radius: 4px;
+}
+.toc-card-head h4 {
+  font-family: var(--ff-body);
+  font-size: 1.1rem; font-weight: 600;
+  color: var(--midnight); letter-spacing: -.1px;
+}
+.toc-card-head .toc-rule { flex: 1; height: 1px; background: var(--border); }
+.toc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px 24px;
+}
+.toc-grid a {
+  font-family: var(--ff-ui);
+  font-size: .82rem; font-weight: 400;
+  color: var(--cobalt);
+  text-decoration: none;
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  transition: background .15s, color .15s;
+  line-height: 1.4;
+}
+.toc-grid a:hover { background: #e8f0fb; color: var(--midnight); }
+.toc-num {
+  font-family: var(--ff-mono);
+  font-size: .65rem; color: var(--muted);
+  background: var(--fog);
+  padding: 2px 6px; border-radius: 3px; flex-shrink: 0;
+}
+
+/* ──────────── CONTENT ──────────── */
+.content { min-width: 0; width: 100%; }
+
+/* ──────────── SECTION HEADS ──────────── */
+.sec-head {
+  display: flex; align-items: center; gap: 14px;
+  margin: 52px 0 24px;
+}
+.sec-head:first-child { margin-top: 0; }
+.sec-badge {
+  font-family: var(--ff-mono);
+  font-size: .68rem; font-weight: 500;
+  letter-spacing: 2px; color: var(--white);
+  background: var(--navy);
+  padding: 4px 11px; border-radius: 4px; white-space: nowrap;
+}
+.sec-badge.cobalt { background: var(--cobalt); }
+.sec-badge.purple { background: var(--purple); }
+.sec-badge.teal   { background: var(--teal);   }
+.sec-head h2 {
+  font-family: var(--ff-body);
+  font-size: 1.6rem; font-weight: 600;
+  color: var(--midnight); white-space: nowrap; letter-spacing: -.2px;
+}
+.sec-head h2.sub {
+  font-size: 1.25rem;
+}
+.sec-rule { flex: 1; height: 1px; background: var(--border); }
+
+/* ──────────── CARDS ──────────── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 26px 30px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+}
+.card-title {
+  font-family: var(--ff-ui);
+  font-size: .78rem; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--cobalt);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-title::before {
+  content: '';
+  display: inline-block;
+  width: 3px; height: 14px;
+  background: var(--cobalt);
+  border-radius: 2px;
+}
+
+/* ──────────── MATH DISPLAY BLOCKS ──────────── */
+.math-display {
+  background: #f0f4fa;
+  border: 1px solid #c4d4ec;
+  border-left: 4px solid var(--cobalt);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 16px 22px;
+  margin: 16px 0;
+  overflow-x: auto;
+  font-size: 1.05rem;
+}
+.math-display.amber {
+  background: #fdf8ec;
+  border-color: #e8d090;
+  border-left-color: var(--amber);
+}
+.math-display.green {
+  background: #edf7f2;
+  border-color: #9fd4b8;
+  border-left-color: var(--teal);
+}
+.math-display.rust {
+  background: #fdf0ee;
+  border-color: #e8b4ae;
+  border-left-color: var(--rust);
+}
+.math-display.purple {
+  background: #f6f4ff;
+  border-color: #c8baf2;
+  border-left-color: var(--purple);
+}
+
+/* ──────────── DEFINITION BOX ──────────── */
+.def-box {
+  background: #f0f4fa;
+  border: 1px solid #c4d4ec;
+  border-left: 4px solid var(--navy);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 18px 22px;
+  margin: 16px 0;
+  font-size: 1rem;
+  line-height: 1.75;
+}
+.def-box .def-label {
+  font-family: var(--ff-mono);
+  font-size: .68rem; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--navy); margin-bottom: 10px;
+}
+
+/* ──────────── THEOREM BOX ──────────── */
+.theorem-box {
+  background: #f0f4fa;
+  border: 1px solid #c4d4ec;
+  border-left: 4px solid var(--cobalt);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 18px 22px;
+  margin: 16px 0;
+  font-size: .97rem;
+  line-height: 1.75;
+}
+
+/* ──────────── PROOF BLOCK ──────────── */
+.proof-block {
+  background: #f6f4ff;
+  border: 1px solid #c8baf2;
+  border-left: 4px solid var(--purple);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 16px 22px;
+  margin: 14px 0;
+  font-size: .97rem;
+  line-height: 1.75;
+  color: #3a2a70;
+}
+
+/* ──────────── NOTE BOX (amber) ──────────── */
+.note-box {
+  background: #fdf8ec;
+  border: 1px solid #e8d090;
+  border-left: 4px solid var(--amber);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 14px 20px;
+  margin: 14px 0;
+  font-size: .95rem;
+  line-height: 1.7;
+}
+.note-box .note-label {
+  font-family: var(--ff-mono);
+  font-size: .68rem; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--amber); margin-bottom: 8px;
+}
+
+/* ──────────── FORMULA REFERENCE ──────────── */
+.formula-ref {
+  background: #fdf8ec;
+  border: 1px solid #e8d090;
+  border-left: 4px solid var(--amber);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 16px 22px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+.formula-ref .formula-label {
+  font-family: var(--ff-mono);
+  font-size: .68rem; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--amber); margin-bottom: 10px;
+}
+
+/* ──────────── DERIVATION / SOLUTION STEPS ──────────── */
+.derive-step {
+  display: flex; gap: 16px; align-items: flex-start;
+  margin: 10px 0;
+  padding: 14px 16px;
+  border-radius: 6px;
+  background: var(--paper);
+  border: 1px solid var(--fog);
+}
+.derive-step .ds-num {
+  font-family: var(--ff-mono);
+  font-size: .72rem; font-weight: 500;
+  background: var(--navy); color: #fff;
+  min-width: 24px; height: 24px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 2px;
+}
+.derive-step .ds-num.letter {
+  font-size: .68rem; min-width: 24px;
+}
+.derive-step .ds-body { font-size: .97rem; line-height: 1.75; flex: 1; }
+.derive-step .ds-body strong {
+  display: block;
+  font-family: var(--ff-ui);
+  font-size: .78rem; font-weight: 600;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: var(--cobalt); margin-bottom: 8px;
+}
+.derive-step .ds-body p { margin-bottom: 8px; }
+
+/* ──────────── CONDITIONS GRID ──────────── */
+.cond-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 12px; margin: 14px 0;
+}
+@media(max-width:540px){ .cond-grid { grid-template-columns: 1fr; } }
+.cond-tile {
+  border: 1px solid var(--border);
+  border-radius: 7px; padding: 14px 16px;
+  background: var(--paper);
+}
+.cond-tile .ct-label {
+  font-family: var(--ff-mono);
+  font-size: .65rem; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 6px;
+}
+.cond-tile .ct-val { font-size: .95rem; color: var(--midnight); line-height: 1.5; }
+
+/* ──────────── ARABIC INLINE HINT ──────────── */
+.arabic-hint {
+  font-family: var(--ff-ui);
+  direction: rtl;
+  font-size: .8rem;
+  color: var(--amber);
+  background: #fefbf0;
+  border: 1px solid #f0dfa0;
+  border-radius: 4px;
+  padding: 1px 8px;
+  display: inline-block;
+}
+
+/* ──────────── BADGES ──────────── */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--ff-mono);
+  font-size: .76rem; padding: 4px 12px;
+  border-radius: 20px; font-weight: 500;
+}
+.badge-green { background: #e6f5ed; color: #1b6b3a; border: 1px solid #9fd4b0; }
+.badge-red   { background: #fdecea; color: #93261c; border: 1px solid #e8aca8; }
+.badge-amber { background: #fdf8ec; color: #7a4a00; border: 1px solid #e8d090; }
+
+/* ──────────── VISUALIZATION ──────────── */
+#viz-section {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 20px;
+}
+.viz-controls {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  margin-bottom: 18px;
+}
+.viz-controls-label {
+  font-family: var(--ff-mono);
+  font-size: .72rem; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--muted);
+}
+.viz-btn {
+  font-family: var(--ff-ui);
+  font-size: .8rem; font-weight: 500;
+  padding: 8px 20px;
+  border: none; border-radius: 6px;
+  cursor: pointer;
+  transition: opacity .18s, transform .12s;
+}
+.viz-btn:hover { opacity: .88; transform: translateY(-1px); }
+.viz-btn.primary { background: var(--navy); color: #fff; }
+.viz-btn.secondary { background: var(--fog); color: var(--ink); }
+.viz-btn.reset { background: var(--amber); color: var(--midnight); }
+.viz-btn.active { background: var(--cobalt); color: #fff; }
+
+#viz-canvas {
+  width: 100%; display: block;
+  border-radius: 8px;
+  border: 1px solid var(--fog);
+  background: #fafcff;
+}
+.viz-legend {
+  display: flex; flex-wrap: wrap; gap: 16px;
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--fog);
+}
+.viz-legend-item {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--ff-ui);
+  font-size: .75rem; color: var(--ink-soft);
+}
+.viz-legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+.viz-legend-line { width: 24px; height: 2px; }
+
+#viz-log {
+  margin-top: 14px;
+  background: var(--midnight);
+  color: #c8dfff;
+  font-family: var(--ff-mono);
+  font-size: .78rem;
+  border-radius: 7px;
+  padding: 12px 16px;
+  min-height: 42px;
+  line-height: 1.6;
+}
+
+/* ──────────── PROBLEM PANELS ──────────── */
+.prob-panel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 32px;
+}
+.prob-header {
+  background: var(--navy);
+  color: #fff;
+  padding: 20px 28px;
+  display: flex; align-items: flex-start; gap: 16px;
+}
+.prob-index {
+  font-family: var(--ff-body);
+  font-size: 2.2rem; font-weight: 600;
+  line-height: 1; color: var(--amber-lt);
+  min-width: 48px;
+}
+.prob-meta { flex: 1; }
+.prob-meta .prob-label {
+  font-family: var(--ff-mono);
+  font-size: .65rem; letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.5); margin-bottom: 4px;
+}
+.prob-meta h3 {
+  font-family: var(--ff-body);
+  font-size: 1.2rem; font-weight: 500;
+  color: #fff; line-height: 1.35;
+}
+.prob-body { padding: 26px 28px; }
+
+/* ──────────── ITERATION TABLE ──────────── */
+.iter-tbl {
+  width: 100%; border-collapse: collapse;
+  font-size: .88rem; margin: 14px 0;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.iter-tbl thead th {
+  background: var(--midnight);
+  color: rgba(255,255,255,.85);
+  font-family: var(--ff-mono);
+  font-size: .7rem; font-weight: 500;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 10px 14px; text-align: left;
+}
+.iter-tbl tbody td {
+  padding: 9px 14px;
+  font-family: var(--ff-mono);
+  font-size: .82rem;
+  border-bottom: 1px solid var(--fog);
+  color: var(--ink-soft);
+}
+.iter-tbl tbody tr:nth-child(even) td { background: var(--paper); }
+.iter-tbl tbody tr.row-init td { color: var(--ink); font-weight: 500; }
+.iter-tbl tbody tr.row-converged td {
+  background: #eaf6f0; color: var(--teal); font-weight: 600;
+}
+.iter-tbl tbody tr.row-converged td:first-child::before { content: '✓ '; color: var(--green); }
+
+/* ──────────── RESULT BANNER ──────────── */
+.result-banner {
+  margin-top: 20px;
+  background: linear-gradient(130deg, var(--midnight) 0%, #1e3d6e 100%);
+  border-radius: var(--r-md);
+  padding: 20px 24px;
+  display: flex; align-items: center; gap: 18px;
+  box-shadow: 0 4px 20px rgba(14,27,46,.2);
+}
+.rb-icon { font-size: 2rem; flex-shrink: 0; }
+.rb-label { font-family: var(--ff-ui); font-size: .78rem; color: rgba(255,255,255,.55); margin-bottom: 4px; }
+.rb-value { font-family: var(--ff-mono); font-size: 1.3rem; font-weight: 500; color: var(--amber-lt); letter-spacing: .5px; }
+.rb-sub { font-family: var(--ff-ui); font-size: .75rem; color: rgba(255,255,255,.45); margin-top: 4px; }
+
+/* ──────────── FOOTER ──────────── */
+footer {
+  text-align: center;
+  padding: 28px 24px;
+  color: var(--muted);
+  font-family: var(--ff-mono);
+  font-size: .72rem;
+  letter-spacing: 1px;
+  border-top: 1px solid var(--border);
+}
+
+/* ──────────── RESPONSIVE ──────────── */
+@media(max-width: 600px) {
+  .toc-grid { grid-template-columns: 1fr 1fr; }
+  .toc-card { padding: 20px 18px; }
+  .prob-header { padding: 16px 18px; }
+  .prob-body { padding: 18px 18px; }
+  .card { padding: 18px 18px; }
+  #viz-section { padding: 18px; }
+}
+@media(max-width: 420px) {
+  .toc-grid { grid-template-columns: 1fr; }
+}
+
+p { margin-bottom: 10px; }
+.mt-sm { margin-top: 8px; }
+.mt-md { margin-top: 16px; }
+.text-muted { color: var(--muted); font-size: .88rem; }
+strong { font-weight: 600; }
+
+/* animate on load */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card, .prob-panel, #viz-section, .def-box, .theorem-box, .proof-block {
+  animation: fadeUp .4s ease both;
+}
+</style>
+  <link rel="stylesheet" href="mobile.css"/>
+</head>
+<body>
+<!-- Mobile Home Button -->
+<a href="index.html" class="mobile-home-btn" aria-label="Return to Home">
+  <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+  Home
+</a>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-pill">Math 302 &nbsp;·&nbsp; Numerical Analysis</div>
+    <h1><em>Fixed Point</em> Iteration Method</h1>
+    <p class="header-sub">Complete Theory, Visualization &amp; Solved Problems</p>
+    <div class="header-tags">
+      <span class="htag">Fixed Point Theory</span>
+      <span class="htag">Cobweb Diagram</span>
+      <span class="htag">Contraction Mapping</span>
+      <span class="htag">Iterative Methods</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════ TOC ═══════════════ -->
+<div class="toc-section">
+  <div class="toc-card">
+    <div class="toc-card-head">
+      <span class="toc-badge">Contents</span>
+      <h4>Table of Contents</h4>
+      <div class="toc-rule"></div>
+    </div>
+    <div class="toc-grid">
+      <a href="#sec-theory"><span class="toc-num">01</span>Theory &amp; Method</a>
+      <a href="#sec-algo"><span class="toc-num">↳</span>Algorithm &amp; Steps</a>
+      <a href="#sec-convergence"><span class="toc-num">↳</span>Convergence Conditions</a>
+      <a href="#sec-proof"><span class="toc-num">↳</span>Why The Method Works</a>
+      <a href="#sec-viz"><span class="toc-num">02</span>Interactive Visualization</a>
+      <a href="#sec-problems"><span class="toc-num">03</span>Solved Problems</a>
+      <a href="#prob1"><span class="toc-num">↳</span>Problem 1 — Polynomial</a>
+      <a href="#prob2"><span class="toc-num">↳</span>Problem 2 — Transcendental</a>
+      <a href="#sec-summary"><span class="toc-num">04</span>Summary Formula Sheet</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE LAYOUT ═══════════════ -->
+<div class="page-layout">
+  <div class="content">
+
+    <!-- ══════════════════════════════
+         § 01  THEORY
+    ══════════════════════════════ -->
+    <div class="sec-head" id="sec-theory">
+      <span class="sec-badge">§ 01</span>
+      <h2>Theory &amp; Method Explanation</h2>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div class="def-box">
+      <div class="def-label">Definition — Fixed Point</div>
+      <p>
+        A number $a$ is called a <strong>fixed point</strong> of a function $g(x)$ if:
+        $$g(a) = a$$
+        Geometrically, this means the graph of $y = g(x)$ intersects the line $y = x$ at $x = a$.
+        <span class="arabic-hint">النقطة الثابتة: حيث يساوي المخرج المدخل</span>
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Quick Examples</div>
+      <ul style="padding-left:18px; line-height:2.1;">
+        <li>$f(x) = x^2$ → fixed points at $x=0$ and $x=1$, since $f(0)=0$ and $f(1)=1$</li>
+        <li>$g(x) = x^2 - 2$ → fixed point at $x=2$, since $g(2) = 4-2 = 2$ ✓</li>
+      </ul>
+    </div>
+
+    <div class="cond-grid">
+      <div class="cond-tile">
+        <div class="ct-label">🌿 Root Finding</div>
+        <div class="ct-val">
+          Find $x$ such that: $$f(x) = 0$$
+          <span style="font-size:.85rem; color:var(--muted);">i.e., where the curve crosses the x-axis</span>
+        </div>
+      </div>
+      <div class="cond-tile">
+        <div class="ct-label">📌 Fixed Point</div>
+        <div class="ct-val">
+          Find $x$ such that: $$g(x) = x$$
+          <span style="font-size:.85rem; color:var(--muted);">i.e., where the curve meets the diagonal $y=x$</span>
+        </div>
+      </div>
+    </div>
+
+    <p>
+      The key insight: any root-finding problem $f(x)=0$ can be <em>rewritten</em> as a fixed point problem $x = g(x)$ by rearranging the equation algebraically. This is the bridge between the two formulations.
+      <span class="arabic-hint">إعادة صياغة المسألة</span>
+    </p>
+
+    <!-- Algorithm -->
+    <div class="sec-head" id="sec-algo" style="margin-top:36px;">
+      <span class="sec-badge cobalt">Steps</span>
+      <h2 class="sub">Algorithm — Step-by-Step</h2>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div class="derive-step">
+      <div class="ds-num">1</div>
+      <div class="ds-body">
+        <strong>Rewrite as Fixed-Point Form</strong>
+        Given $f(x)=0$, rearrange to get $x = g(x)$. There may be multiple valid rearrangements — choose the one for which convergence holds.
+      </div>
+    </div>
+
+    <div class="derive-step">
+      <div class="ds-num">2</div>
+      <div class="ds-body">
+        <strong>Verify Existence on $[a, b]$</strong>
+        Check that $g$ maps the interval into itself:
+        <div class="math-display" style="margin:10px 0;">$$g(a) \in [a, b] \quad \text{and} \quad g(b) \in [a, b]$$</div>
+        This guarantees a fixed point exists in the interval.
+        <span class="arabic-hint">إثبات وجود النقطة الثابتة</span>
+      </div>
+    </div>
+
+    <div class="derive-step">
+      <div class="ds-num">3</div>
+      <div class="ds-body">
+        <strong>Check Convergence Criterion</strong>
+        Compute $|g'(a)|$ and $|g'(b)|$ and take:
+        <div class="math-display" style="margin:10px 0;">$$k = \max|g'(x)| \quad \text{over } [a,b]$$</div>
+        If $k < 1$, the method <strong>converges</strong>. If $k \geq 1$ at any endpoint, adjust the interval.
+      </div>
+    </div>
+
+    <div class="derive-step">
+      <div class="ds-num">4</div>
+      <div class="ds-body">
+        <strong>Choose Initial Guess $x_0 \in [a, b]$</strong>
+        Any value in the interval works. Common choices are $x_0 = a$, $x_0 = b$, or the midpoint.
+      </div>
+    </div>
+
+    <div class="derive-step">
+      <div class="ds-num">5</div>
+      <div class="ds-body">
+        <strong>Iterate</strong>
+        Apply the recurrence relation repeatedly:
+        <div class="math-display" style="margin:10px 0;">$$x_n = g(x_{n-1}), \quad n = 1, 2, 3, \ldots$$</div>
+        Continue until the desired number of iterations or until $|x_n - x_{n-1}|$ is small enough.
+      </div>
+    </div>
+
+    <div class="derive-step">
+      <div class="ds-num">6</div>
+      <div class="ds-body">
+        <strong>Compute Accuracy After $n$ Iterations</strong>
+        <div class="math-display" style="margin:10px 0;">$$\text{Accuracy} \;\leq\; \frac{k}{1-k} \cdot \frac{|x_n - x_{n-1}|}{|x_n|}$$</div>
+      </div>
+    </div>
+
+    <!-- Convergence -->
+    <div class="sec-head" id="sec-convergence" style="margin-top:36px;">
+      <span class="sec-badge cobalt">Theorem</span>
+      <h2 class="sub">Convergence — Explanation</h2>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div class="theorem-box">
+      <p><strong>Theorem (Fixed Point Theorem):</strong> Let $g:[a,b]\to[a,b]$ be a continuous function. If $|g'(x)| \leq k < 1$ for all $x \in [a,b]$, then:</p>
+      <ol style="padding-left:20px; margin-top:12px; line-height:2.1;">
+        <li>There exists a <strong>unique</strong> fixed point $x^* \in [a,b]$.</li>
+        <li>For any starting point $x_0 \in [a,b]$, the sequence $x_{n+1} = g(x_n)$ <strong>converges</strong> to $x^*$.</li>
+        <li>The error satisfies: $|x_n - x^*| \leq \dfrac{k^n}{1-k}|x_1 - x_0|$.</li>
+      </ol>
+    </div>
+
+    <p>
+      <strong>Intuition</strong> <span class="arabic-hint">الحدس الهندسي</span>: when $|g'(x)| < 1$, the function $g$ is a <em>contraction</em> — it squeezes distances together. Each iteration brings $x_n$ closer to the fixed point. The smaller $k$ is, the faster the convergence.
+    </p>
+
+    <div class="card">
+      <div class="card-title">Convergence Speed — Rule of Thumb</div>
+      <ul style="padding-left:18px; line-height:2.1; font-size:.95rem;">
+        <li>$k \approx 0.1$ → Very fast convergence (errors shrink 10× per step)</li>
+        <li>$k \approx 0.5$ → Moderate convergence (errors halve each step)</li>
+        <li>$k \approx 0.9$ → Slow convergence (errors shrink only 10% per step)</li>
+        <li>$k \geq 1$ → <span style="color:var(--rust);font-weight:600;">Divergence — method fails</span></li>
+      </ul>
+    </div>
+
+    <!-- Proof -->
+    <div class="sec-head" id="sec-proof" style="margin-top:36px;">
+      <span class="sec-badge purple">Proof</span>
+      <h2 class="sub">Why The Method Works — Justification</h2>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div class="proof-block">
+      <p><strong>Proof sketch (using the Mean Value Theorem):</strong></p>
+      <p style="margin-top:10px;">Let $x^*$ be a fixed point, so $x^* = g(x^*)$. For any iterate $x_n$:</p>
+      <div class="math-display purple" style="margin:12px 0;">
+        $$|x_{n+1} - x^*| = |g(x_n) - g(x^*)| = |g'(\xi)| \cdot |x_n - x^*|$$
+      </div>
+      <p>where $\xi$ is some point between $x_n$ and $x^*$ (by MVT). Since $|g'(\xi)| \leq k < 1$:</p>
+      <div class="math-display purple" style="margin:12px 0;">
+        $$|x_{n+1} - x^*| \leq k \cdot |x_n - x^*|$$
+      </div>
+      <p>Applying this recursively:</p>
+      <div class="math-display purple" style="margin:12px 0;">
+        $$|x_n - x^*| \leq k^n \cdot |x_0 - x^*| \xrightarrow{n\to\infty} 0$$
+      </div>
+      <p>Since $k < 1$, we have $k^n \to 0$, so $x_n \to x^*$. The iteration converges. ✓</p>
+      <p style="text-align:right; font-size:1.3rem; margin-top:8px;">□</p>
+    </div>
+
+    <!-- ══════════════════════════════
+         § 02  VISUALIZATION
+    ══════════════════════════════ -->
+    <div class="sec-head" id="sec-viz">
+      <span class="sec-badge">§ 02</span>
+      <h2>Interactive Visualization</h2>
+      <div class="sec-rule"></div>
+    </div>
+
+    <p>The cobweb (staircase) diagram below illustrates how the iteration converges. Watch the path spiral inward toward the fixed point — the intersection of $y = g(x)$ and $y = x$.
+      <span class="arabic-hint">مخطط الكوبويب — يُظهر التقارب</span>
+    </p>
+
+    <div id="viz-section" style="margin-top:20px;">
+      <div class="viz-controls">
+        <span class="viz-controls-label">Problem:</span>
+        <button class="viz-btn primary active" id="btn-p1" onclick="switchProblem(1)">Problem 1: g(x) = 1/x² + 2</button>
+        <button class="viz-btn secondary" id="btn-p2" onclick="switchProblem(2)">Problem 2: g(x) = e⁻ˣ</button>
+        <button class="viz-btn secondary" id="btn-anim" onclick="animateIteration()">▶ Animate</button>
+        <button class="viz-btn reset" onclick="resetViz()">↺ Reset</button>
+      </div>
+      <canvas id="viz-canvas" width="856" height="440"></canvas>
+      <div class="viz-legend">
+        <div class="viz-legend-item">
+          <div class="viz-legend-line" style="background:var(--navy); height:3px;"></div>
+          <span>$y = g(x)$ (iteration function)</span>
+        </div>
+        <div class="viz-legend-item">
+          <div class="viz-legend-line" style="border-top:2px dashed var(--amber); height:0; background:transparent;"></div>
+          <span style="margin-left:-6px;">$y = x$ (fixed-point diagonal)</span>
+        </div>
+        <div class="viz-legend-item">
+          <div class="viz-legend-line" style="background:var(--rust);"></div>
+          <span>Iteration path</span>
+        </div>
+        <div class="viz-legend-item">
+          <div class="viz-legend-dot" style="background:var(--teal);"></div>
+          <span>Fixed point $x^*$</span>
+        </div>
+      </div>
+      <div id="viz-log">Select a problem above and click <strong>Animate</strong> to see the iteration converge step by step.</div>
+    </div>
+
+    <!-- ══════════════════════════════
+         § 03  SOLVED PROBLEMS
+    ══════════════════════════════ -->
+    <div class="sec-head" id="sec-problems">
+      <span class="sec-badge">§ 03</span>
+      <h2>Solved Problems</h2>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div class="note-box">
+      <div class="note-label">📌 Note on Problem Structure</div>
+      The file contains 4 problem statements (Problems 1, 2, 3, and 12), but Problems 1 &amp; 3 are the <em>same problem</em> (g(x) = 1/x²+2), and Problems 2 &amp; 12 are the <em>same problem</em> (e⁻ˣ − x = 0). In accordance with the strict rule of no repetition, each unique problem is solved <strong>once</strong> in full detail below.
+    </div>
+
+    <!-- ─── PROBLEM 1 ─── -->
+    <div class="prob-panel" id="prob1">
+      <div class="prob-header">
+        <div class="prob-index">01</div>
+        <div class="prob-meta">
+          <div class="prob-label">Solved Problem</div>
+          <h3>Polynomial Root — $x^3 - 2x^2 - 1 = 0$ on $[2, 3]$</h3>
+        </div>
+      </div>
+      <div class="prob-body">
+
+        <div class="math-display" style="margin-bottom:22px;">
+          <strong>Given:</strong> $g(x) = \dfrac{1}{x^2} + 2$. &nbsp;
+          (a) Show that $g$ has fixed points in $[2,3]$. &nbsp;
+          (b) Use fixed-point iteration to solve $x^3 - 2x^2 - 1 = 0$, performing 6 iterations. &nbsp;
+          (c) Find the accuracy after 6 iterations and check the convergence criterion.
+        </div>
+
+        <!-- Step A: Existence -->
+        <div class="derive-step">
+          <div class="ds-num letter">A</div>
+          <div class="ds-body">
+            <strong>Step A — Prove Existence of Fixed Point</strong>
+            <p>We need to show that $g(a) \in [a,b]$ and $g(b) \in [a,b]$ for $[a,b] = [2,3]$:</p>
+            <div class="math-display">$$g(2) = \frac{1}{(2)^2} + 2 = \frac{1}{4} + 2 = 2.25 \;\in\; [2, 3] \quad \checkmark$$</div>
+            <div class="math-display">$$g(3) = \frac{1}{(3)^2} + 2 = \frac{1}{9} + 2 \approx 2.111 \;\in\; [2, 3] \quad \checkmark$$</div>
+            <p>∴ $g(x)$ maps $[2,3]$ into itself — a fixed point exists in $[2,3]$. <span class="arabic-hint">ثبت وجود نقطة ثابتة</span></p>
+          </div>
+        </div>
+
+        <!-- Step B: Convergence -->
+        <div class="derive-step">
+          <div class="ds-num letter">B</div>
+          <div class="ds-body">
+            <strong>Step B — Convergence Criterion</strong>
+            <p>Compute $g'(x)$:</p>
+            <div class="math-display">$$g(x) = x^{-2} + 2 \;\Longrightarrow\; g'(x) = -\frac{2}{x^3}$$</div>
+            <p>Evaluate at endpoints:</p>
+            <div class="math-display">$$|g'(2)| = \frac{2}{8} = 0.25 < 1 \quad \checkmark \qquad |g'(3)| = \frac{2}{27} \approx 0.074 < 1 \quad \checkmark$$</div>
+            <div class="math-display">$$k = \max|g'(x)| \text{ on } [2,3] = 0.25 < 1$$</div>
+            <p><span class="badge badge-green">✓ Convergent</span> &nbsp; The method will converge since $k = 0.25 < 1$. Convergence is guaranteed. <span class="arabic-hint">الطريقة متقاربة</span></p>
+          </div>
+        </div>
+
+        <!-- Step C: Derivation -->
+        <div class="derive-step">
+          <div class="ds-num letter">C</div>
+          <div class="ds-body">
+            <strong>Step C — Derive the Iteration Formula</strong>
+            <p>Starting from $x^3 - 2x^2 - 1 = 0$:</p>
+            <div class="math-display">$$x^3 = 2x^2 + 1 \;\Longrightarrow\; x \cdot x^2 = 2x^2 + 1 \;\Longrightarrow\; x = 2 + \frac{1}{x^2} = g(x)$$</div>
+            <div class="math-display amber">$$\boxed{x_n = g(x_{n-1}) = 2 + \frac{1}{x_{n-1}^2}}$$</div>
+            <p>Starting value: $x_0 = 2$ (left endpoint of $[2,3]$). <span class="arabic-hint">اختيار نقطة البداية</span></p>
+          </div>
+        </div>
+
+        <!-- Step D: Iteration Table -->
+        <div class="derive-step">
+          <div class="ds-num letter">D</div>
+          <div class="ds-body">
+            <strong>Step D — Iteration Table (6 Iterations)</strong>
+            <table class="iter-tbl">
+              <thead>
+                <tr><th>$n$</th><th>$x_n = 2 + 1/x_{n-1}^2$</th></tr>
+              </thead>
+              <tbody>
+                <tr class="row-init"><td>0</td><td>$x_0 = 2$ (initial guess)</td></tr>
+                <tr><td>1</td><td>$2.250000000$</td></tr>
+                <tr><td>2</td><td>$2.197530864$</td></tr>
+                <tr><td>3</td><td>$2.207076127$</td></tr>
+                <tr><td>4</td><td>$2.205288856$</td></tr>
+                <tr><td>5</td><td>$2.205621742$</td></tr>
+                <tr class="row-converged"><td>6</td><td>$x_6 = 2.205559679$</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Step E: Accuracy -->
+        <div class="derive-step">
+          <div class="ds-num letter">E</div>
+          <div class="ds-body">
+            <strong>Step E — Accuracy After 6 Iterations</strong>
+            <div class="formula-ref">
+              <div class="formula-label">Accuracy Formula</div>
+              $$\text{Accuracy} \;\leq\; \frac{k}{1-k} \cdot \frac{|x_6 - x_5|}{|x_6|}$$
+            </div>
+            <div class="math-display">$$|x_6 - x_5| = |2.205559679 - 2.205621742| = 6.206 \times 10^{-5}$$</div>
+            <div class="math-display">$$\text{Accuracy} \leq \frac{0.25}{1 - 0.25} \cdot \frac{6.206 \times 10^{-5}}{2.205559679} = \frac{0.25}{0.75} \cdot 2.816 \times 10^{-5}$$</div>
+            <div class="result-banner">
+              <div class="rb-icon">✓</div>
+              <div>
+                <div class="rb-label">Final Accuracy Bound</div>
+                <div class="rb-value">Accuracy ≤ 9.38 × 10⁻⁶</div>
+                <div class="rb-sub">We have at least <strong>5 correct decimal digits</strong> — excellent precision! <span style="opacity:.6;">(دقة عالية)</span></div>
+              </div>
+            </div>
+            <p style="margin-top:14px;"><strong>Root approximation:</strong> $x^* \approx 2.20556$ (6-iteration estimate)</p>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /.prob-panel prob1 -->
+
+    <!-- ─── PROBLEM 2 ─── -->
+    <div class="prob-panel" id="prob2">
+      <div class="prob-header">
+        <div class="prob-index">02</div>
+        <div class="prob-meta">
+          <div class="prob-label">Solved Problem</div>
+          <h3>Transcendental Equation — $e^{-x} - x = 0$ on $[0,1]$ → adjusted to $[0.1, 1]$</h3>
+        </div>
+      </div>
+      <div class="prob-body">
+
+        <div class="math-display" style="margin-bottom:22px;">
+          <strong>Given:</strong> $g(x) = e^{-x}$. &nbsp;
+          (a) Show that $g$ has fixed points in $[0,1]$. &nbsp;
+          (b) Verify convergence criterion (with interval adjustment if needed). &nbsp;
+          (c) Perform 6 iterations and compute accuracy.
+        </div>
+
+        <!-- Step A -->
+        <div class="derive-step">
+          <div class="ds-num letter">A</div>
+          <div class="ds-body">
+            <strong>Step A — Existence on $[0,1]$</strong>
+            <div class="math-display">$$g(0) = e^0 = 1 \;\in\; [0, 1] \quad \checkmark \qquad g(1) = e^{-1} \approx 0.3679 \;\in\; [0, 1] \quad \checkmark$$</div>
+            <p>∴ $g(x)$ maps $[0,1]$ into itself — a fixed point exists in $[0,1]$.</p>
+          </div>
+        </div>
+
+        <!-- Step B -->
+        <div class="derive-step">
+          <div class="ds-num letter">B</div>
+          <div class="ds-body">
+            <strong>Step B — Convergence Criterion on $[0,1]$</strong>
+            <div class="math-display">$$g'(x) = -e^{-x} \;\Longrightarrow\; |g'(x)| = e^{-x}$$</div>
+            <div class="math-display">$$|g'(0)| = e^0 = 1 \quad \not{<}\; 1 \quad \text{⚠️ Fails!} \qquad |g'(1)| = e^{-1} \approx 0.368 < 1 \quad \checkmark$$</div>
+            <div class="note-box" style="margin:14px 0;">
+              <div class="note-label">⚠️ Problem at $x = 0$</div>
+              <p>Since $|g'(0)| = 1 \not< 1$, the convergence condition is <strong>not satisfied</strong> at $x = 0$. We must <strong>adjust the interval</strong> to exclude $x = 0$. <span class="arabic-hint">يجب تغيير المجال</span></p>
+              <p style="margin-top:8px;">New interval: $[0.1, 1]$</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Step B2 -->
+        <div class="derive-step">
+          <div class="ds-num letter" style="font-size:.58rem;">B₂</div>
+          <div class="ds-body">
+            <strong>Step B₂ — Verify on Adjusted Interval $[0.1, 1]$</strong>
+            <p><em>Existence check:</em></p>
+            <div class="math-display">$$g(0.1) = e^{-0.1} = 0.9048 \;\in\; [0.1, 1] \quad \checkmark \qquad g(1) = e^{-1} = 0.3679 \;\in\; [0.1, 1] \quad \checkmark$$</div>
+            <p><em>Convergence check:</em></p>
+            <div class="math-display">$$|g'(0.1)| = e^{-0.1} = 0.9048 < 1 \quad \checkmark \qquad |g'(1)| = e^{-1} = 0.3679 < 1 \quad \checkmark$$</div>
+            <div class="math-display">$$k = \max|g'(x)| \text{ on } [0.1,1] = 0.9048$$</div>
+            <p><span class="badge badge-green">✓ Convergent</span> &nbsp; $k = 0.9048 < 1$ on the adjusted interval. Note: convergence will be slower than Problem 1 ($k$ is close to 1). <span class="arabic-hint">تقارب بطيء</span></p>
+          </div>
+        </div>
+
+        <!-- Step C -->
+        <div class="derive-step">
+          <div class="ds-num letter">C</div>
+          <div class="ds-body">
+            <strong>Step C — Iteration Formula</strong>
+            <div class="math-display">$$e^{-x} - x = 0 \;\Longrightarrow\; x = e^{-x} = g(x)$$</div>
+            <div class="math-display amber">$$\boxed{x_n = e^{-x_{n-1}}, \quad x_0 = 1}$$</div>
+          </div>
+        </div>
+
+        <!-- Step D -->
+        <div class="derive-step">
+          <div class="ds-num letter">D</div>
+          <div class="ds-body">
+            <strong>Step D — Iteration Table (6 Iterations)</strong>
+            <table class="iter-tbl">
+              <thead>
+                <tr><th>$n$</th><th>$x_n = e^{-x_{n-1}}$</th></tr>
+              </thead>
+              <tbody>
+                <tr class="row-init"><td>0</td><td>$x_0 = 1$ (initial guess)</td></tr>
+                <tr><td>1</td><td>$0.367879441$</td></tr>
+                <tr><td>2</td><td>$0.692200628$</td></tr>
+                <tr><td>3</td><td>$0.500473500$</td></tr>
+                <tr><td>4</td><td>$0.606243535$</td></tr>
+                <tr><td>5</td><td>$0.545395786$</td></tr>
+                <tr class="row-converged"><td>6</td><td>$x_6 = 0.579612335$</td></tr>
+              </tbody>
+            </table>
+            <p class="text-muted mt-sm">Observe the slower oscillating convergence (zigzag pattern). The sequence alternates above and below the fixed point $x^* \approx 0.5671$ (the Omega constant). <span class="arabic-hint">تذبذب حول النقطة الثابتة</span></p>
+          </div>
+        </div>
+
+        <!-- Step E -->
+        <div class="derive-step">
+          <div class="ds-num letter">E</div>
+          <div class="ds-body">
+            <strong>Step E — Accuracy After 6 Iterations</strong>
+            <div class="math-display">$$|x_6 - x_5| = |0.579612335 - 0.545395786| = 0.034216549$$</div>
+            <div class="math-display">$$\text{Accuracy} \leq \frac{0.9048}{1 - 0.9048} \cdot \frac{0.034216549}{0.579612335} = \frac{0.9048}{0.0952} \cdot 0.059032$$</div>
+            <div class="result-banner">
+              <div class="rb-icon">⚠</div>
+              <div>
+                <div class="rb-label">Final Accuracy Bound</div>
+                <div class="rb-value">Accuracy ≤ 0.5613</div>
+                <div class="rb-sub">Only ~1 correct digit after 6 iterations — because $k \approx 0.9$ (slow convergence). More iterations are needed for good precision. <span style="opacity:.6;">(دقة منخفضة — يحتاج تكرارات أكثر)</span></div>
+              </div>
+            </div>
+            <div class="note-box" style="margin-top:18px;">
+              <div class="note-label">💡 Comparison of the Two Problems</div>
+              <p>Problem 1 ($k=0.25$) achieves accuracy $\approx 10^{-6}$ in 6 steps. Problem 2 ($k=0.9$) achieves only $\approx 0.56$ accuracy in 6 steps. This illustrates why a smaller $k$ means dramatically faster convergence. <span class="arabic-hint">مقارنة معدل التقارب</span></p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /.prob-panel prob2 -->
+
+    <!-- ══════════════════════════════
+         § 04  SUMMARY
+    ══════════════════════════════ -->
+    <div class="sec-head" id="sec-summary">
+      <span class="sec-badge">§ 04</span>
+      <h2>Summary Formula Sheet</h2>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+      <div class="formula-ref">
+        <div class="formula-label">📌 Fixed Point Definition</div>
+        $$g(a) = a$$
+      </div>
+      <div class="formula-ref">
+        <div class="formula-label">🔁 Iteration Recurrence</div>
+        $$x_n = g(x_{n-1})$$
+      </div>
+      <div class="formula-ref">
+        <div class="formula-label">✅ Existence Condition</div>
+        $$g(a) \in [a,b] \;\;\text{and}\;\; g(b) \in [a,b]$$
+      </div>
+      <div class="formula-ref">
+        <div class="formula-label">⚡ Convergence Condition</div>
+        $$k = \max_{[a,b]}|g'(x)| < 1$$
+      </div>
+      <div class="formula-ref" style="grid-column:1/-1;">
+        <div class="formula-label">📐 Accuracy Formula (memorize!)</div>
+        $$\text{Accuracy} \;\leq\; \frac{k}{1-k} \cdot \frac{|x_n - x_{n-1}|}{|x_n|}$$
+      </div>
+    </div>
+
+    <table class="iter-tbl" style="margin-top:28px;">
+      <thead>
+        <tr>
+          <th>Problem</th>
+          <th>$g(x)$</th>
+          <th>Interval</th>
+          <th>$k$</th>
+          <th>$x_6$</th>
+          <th>Accuracy</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1: $x^3-2x^2-1=0$</td>
+          <td>$\tfrac{1}{x^2}+2$</td>
+          <td>$[2,3]$</td>
+          <td>$0.25$</td>
+          <td>$2.205560$</td>
+          <td>$9.38\times10^{-6}$</td>
+        </tr>
+        <tr>
+          <td>2: $e^{-x}-x=0$</td>
+          <td>$e^{-x}$</td>
+          <td>$[0.1,1]$</td>
+          <td>$0.9048$</td>
+          <td>$0.579612$</td>
+          <td>$0.5613$</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div><!-- /.content -->
+</div><!-- /.page-layout -->
+
+<footer>
+  Math 302 — Numerical Analysis &nbsp;|&nbsp; Fixed Point Iteration Method &nbsp;|&nbsp; Complete Educational Document
+  <br><span style="color:var(--border); display:inline-block; margin-top:4px;">الطريقة التكرارية للنقطة الثابتة — حل كامل للمسائل</span>
+</footer>
+
+<!-- ═══════════════════ VISUALIZATION SCRIPT ═══════════════════ -->
+<script>
+const canvas = document.getElementById('viz-canvas');
+const ctx = canvas.getContext('2d');
+const info = document.getElementById('viz-log');
+
+function resizeCanvas() {
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.parentElement.getBoundingClientRect();
+  const w = Math.floor(rect.width);
+  const h = Math.round(w * 0.52);
+  canvas.style.width  = w + 'px';
+  canvas.style.height = h + 'px';
+  canvas.width  = w * dpr;
+  canvas.height = h * dpr;
+  ctx.scale(dpr, dpr);
+  drawAll();
+}
+window.addEventListener('resize', resizeCanvas);
+
+const problems = {
+  1: {
+    g: x => 1/(x*x) + 2,
+    label: 'g(x) = 1/x² + 2',
+    xMin: 1.8, xMax: 3.2,
+    yMin: 1.8, yMax: 3.2,
+    x0: 2.0,
+    fixedPoint: 2.2056,
+    iterations: [2, 2.25, 2.1975, 2.2071, 2.2053, 2.2056, 2.2056]
+  },
+  2: {
+    g: x => Math.exp(-x),
+    label: 'g(x) = e⁻ˣ',
+    xMin: 0.1, xMax: 1.05,
+    yMin: 0.1, yMax: 1.05,
+    x0: 1.0,
+    fixedPoint: 0.5671,
+    iterations: [1, 0.3679, 0.6922, 0.5005, 0.6062, 0.5454, 0.5796]
+  }
+};
+
+let currentProblem = 1;
+let animTimer = null;
+let drawnIterations = 0;
+
+function switchProblem(n) {
+  clearInterval(animTimer); animTimer = null;
+  currentProblem = n;
+  drawnIterations = 0;
+  document.getElementById('btn-p1').className = 'viz-btn' + (n===1 ? ' primary active' : ' secondary');
+  document.getElementById('btn-p2').className = 'viz-btn' + (n===2 ? ' primary active' : ' secondary');
+  document.getElementById('btn-anim').textContent = '▶ Animate';
+  info.textContent = 'Click Animate to see iteration steps.';
+  drawAll();
+}
+
+function resetViz() {
+  clearInterval(animTimer); animTimer = null;
+  drawnIterations = 0;
+  document.getElementById('btn-anim').textContent = '▶ Animate';
+  info.textContent = 'Click Animate to see iteration steps.';
+  drawAll();
+}
+
+function animateIteration() {
+  const btn = document.getElementById('btn-anim');
+  if (animTimer) { clearInterval(animTimer); animTimer = null; btn.textContent = '▶ Animate'; return; }
+  if (drawnIterations >= problems[currentProblem].iterations.length - 1) { drawnIterations = 0; }
+  btn.textContent = '⏸ Pause';
+  animTimer = setInterval(() => {
+    if (drawnIterations < problems[currentProblem].iterations.length - 1) {
+      drawnIterations++;
+      drawAll();
+      const iters = problems[currentProblem].iterations;
+      info.innerHTML =
+        '<span style="color:#f5c842;">Iter ' + drawnIterations + '</span>' +
+        '&nbsp;&nbsp;x<sub>' + drawnIterations + '</sub> = <strong>' + iters[drawnIterations].toFixed(8) + '</strong>' +
+        '&nbsp;&nbsp;|Δx| = ' + Math.abs(iters[drawnIterations] - iters[drawnIterations-1]).toFixed(8);
+    } else {
+      clearInterval(animTimer); animTimer = null; btn.textContent = '▶ Animate';
+      const p = problems[currentProblem];
+      info.innerHTML = '<span style="color:#7ddba8;">✓ Converged to x* ≈ ' + p.fixedPoint + ' after ' + drawnIterations + ' iterations.</span>';
+    }
+  }, 750);
+}
+
+function drawAll() {
+  const w = canvas.width  / (window.devicePixelRatio||1);
+  const h = canvas.height / (window.devicePixelRatio||1);
+  const p = problems[currentProblem];
+
+  ctx.clearRect(0, 0, w, h);
+  ctx.fillStyle = '#fafcff';
+  ctx.fillRect(0, 0, w, h);
+
+  const ml = 52, mr = 18, mt = 18, mb = 42;
+  const pw = w - ml - mr;
+  const ph = h - mt - mb;
+  const {xMin, xMax, yMin, yMax} = p;
+  const toCanvasX = x => ml + (x - xMin)/(xMax - xMin) * pw;
+  const toCanvasY = y => mt + ph - (y - yMin)/(yMax - yMin) * ph;
+
+  // Grid
+  ctx.strokeStyle = '#eee9e0'; ctx.lineWidth = 1;
+  for (let i=0; i<=6; i++) {
+    const cx = toCanvasX(xMin + i*(xMax-xMin)/6);
+    ctx.beginPath(); ctx.moveTo(cx, mt); ctx.lineTo(cx, mt+ph); ctx.stroke();
+  }
+  for (let j=0; j<=6; j++) {
+    const cy = toCanvasY(yMin + j*(yMax-yMin)/6);
+    ctx.beginPath(); ctx.moveTo(ml, cy); ctx.lineTo(ml+pw, cy); ctx.stroke();
+  }
+
+  // Axes
+  ctx.strokeStyle = '#ddd6c8'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(ml, mt+ph); ctx.lineTo(ml+pw, mt+ph); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ml, mt); ctx.lineTo(ml, mt+ph); ctx.stroke();
+
+  // Axis labels
+  ctx.fillStyle = '#8a8078'; ctx.font = '11px DM Mono, monospace'; ctx.textAlign = 'center';
+  for (let i=0; i<=6; i++) {
+    const x = xMin + i*(xMax-xMin)/6;
+    ctx.fillText(x.toFixed(1), toCanvasX(x), mt+ph+16);
+  }
+  ctx.textAlign = 'right';
+  for (let j=0; j<=6; j++) {
+    const y = yMin + j*(yMax-yMin)/6;
+    ctx.fillText(y.toFixed(1), ml-6, toCanvasY(y)+4);
+  }
+
+  // y = x diagonal (amber dashed)
+  ctx.strokeStyle = '#b57a10'; ctx.lineWidth = 1.5; ctx.setLineDash([6,4]);
+  const xS = Math.max(xMin, yMin), xE = Math.min(xMax, yMax);
+  ctx.beginPath();
+  ctx.moveTo(toCanvasX(xS), toCanvasY(xS));
+  ctx.lineTo(toCanvasX(xE), toCanvasY(xE));
+  ctx.stroke(); ctx.setLineDash([]);
+
+  // g(x) curve (navy)
+  ctx.strokeStyle = '#163256'; ctx.lineWidth = 2.5;
+  ctx.beginPath();
+  let started = false;
+  for (let px=0; px<=pw; px++) {
+    const x = xMin + px/pw*(xMax-xMin);
+    const y = p.g(x);
+    if (y >= yMin && y <= yMax) {
+      const cx = ml+px, cy = toCanvasY(y);
+      if (!started) { ctx.moveTo(cx, cy); started=true; } else { ctx.lineTo(cx, cy); }
+    } else { started = false; }
+  }
+  ctx.stroke();
+
+  // Cobweb path (rust)
+  if (drawnIterations > 0) {
+    const iters = p.iterations;
+    ctx.strokeStyle = '#b53a2a'; ctx.lineWidth = 1.8; ctx.setLineDash([]);
+    ctx.beginPath();
+    ctx.moveTo(toCanvasX(iters[0]), toCanvasY(iters[0]));
+    for (let i=1; i<=drawnIterations; i++) {
+      const gVal = iters[i];
+      ctx.lineTo(toCanvasX(iters[i-1]), toCanvasY(gVal));
+      ctx.lineTo(toCanvasX(gVal), toCanvasY(gVal));
+    }
+    ctx.stroke();
+    for (let i=0; i<=drawnIterations; i++) {
+      const xi = iters[i];
+      ctx.fillStyle = i === drawnIterations ? '#b53a2a' : 'rgba(181,58,42,0.3)';
+      ctx.beginPath();
+      ctx.arc(toCanvasX(xi), toCanvasY(xi), i===drawnIterations ? 5 : 3, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  // Fixed point (teal)
+  ctx.fillStyle = '#1a7a6e';
+  ctx.beginPath();
+  ctx.arc(toCanvasX(p.fixedPoint), toCanvasY(p.fixedPoint), 6, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#fff'; ctx.lineWidth = 2; ctx.stroke();
+
+  // Labels
+  ctx.fillStyle = '#163256'; ctx.font = 'bold 12px DM Mono, monospace'; ctx.textAlign = 'left';
+  ctx.fillText(p.label, ml+8, mt+20);
+  ctx.fillStyle = '#b57a10';
+  ctx.fillText('y = x', toCanvasX(xE)-30, toCanvasY(xE)+14);
+  ctx.fillStyle = '#1a7a6e';
+  ctx.fillText('x* ≈ ' + p.fixedPoint, toCanvasX(p.fixedPoint)+10, toCanvasY(p.fixedPoint)-8);
+}
+
+window.addEventListener('load', () => { setTimeout(resizeCanvas, 50); });
+</script>
+
+</body>
+</html>

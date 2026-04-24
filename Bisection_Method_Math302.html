@@ -1,0 +1,1665 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Bisection Method — Math 302</title>
+
+<!-- MathJax -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(','\\)']],
+    displayMath: [['\\[','\\]']],
+    packages: {'[+]': ['ams']}
+  },
+  options: { skipHtmlTags: ['script','noscript','style','textarea'] },
+  startup: { typeset: false }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+
+<!-- Google Fonts — identical to Newton project -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
+<style>
+/* ═══════════════════════════════════════════════
+   DESIGN SYSTEM — identical to Newton-Raphson project
+═══════════════════════════════════════════════ */
+:root {
+  --ivory:       #f7f4ef;
+  --white:       #ffffff;
+  --paper:       #fdfbf7;
+  --fog:         #eee9e0;
+  --border:      #ddd6c8;
+  --ink:         #1c1a18;
+  --ink-soft:    #4a4540;
+  --muted:       #8a8078;
+  --midnight:    #0e1b2e;
+  --navy:        #163256;
+  --cobalt:      #1e4d8c;
+  --sky:         #3b82c4;
+  --teal:        #1a7a6e;
+  --amber:       #b57a10;
+  --amber-lt:    #f5c842;
+  --rust:        #b53a2a;
+  --green:       #1e6b45;
+  --purple:      #5b3f9a;
+
+  --ff-body:   'EB Garamond', Georgia, 'Times New Roman', serif;
+  --ff-ui:     'DM Sans', system-ui, sans-serif;
+  --ff-mono:   'DM Mono', 'Courier New', monospace;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --shadow-sm: 0 1px 6px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 20px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  background: var(--ivory);
+  color: var(--ink);
+  font-family: var(--ff-body);
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  min-height: 100vh;
+}
+
+/* ──────────── HEADER ──────────── */
+.site-header {
+  background: var(--midnight);
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+.site-header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 50%, rgba(30,77,140,.45) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 20%, rgba(26,122,110,.25) 0%, transparent 55%);
+}
+.site-header::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.header-inner {
+  position: relative; z-index: 1;
+  max-width: 900px; margin: 0 auto;
+  padding: 64px 32px 56px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.header-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 30px;
+  padding: 5px 16px;
+  font-family: var(--ff-mono);
+  font-size: .72rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.75);
+  margin-bottom: 22px;
+}
+.header-pill::before { content: '◆'; color: var(--amber-lt); }
+.site-header h1 {
+  font-family: var(--ff-body);
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  margin-bottom: 14px;
+}
+.site-header h1 em { color: var(--amber-lt); font-style: italic; }
+.header-sub {
+  font-family: var(--ff-ui);
+  font-size: .92rem;
+  font-weight: 300;
+  color: rgba(255,255,255,.55);
+  letter-spacing: .3px;
+  max-width: 520px;
+}
+.header-meta {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 10px;
+  margin-top: 22px;
+}
+.header-meta .hm-item {
+  font-family: var(--ff-mono);
+  font-size: .68rem;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.45);
+}
+.header-meta .hm-sep { color: rgba(255,255,255,.2); }
+.header-tags {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  margin-top: 24px;
+}
+.htag {
+  font-family: var(--ff-ui);
+  font-size: .75rem;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.13);
+  color: rgba(255,255,255,.65);
+}
+
+/* ──────────── TOC SECTION ──────────── */
+.toc-section {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.toc-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--cobalt);
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  padding: 28px 36px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 40px;
+}
+.toc-card-head {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 20px;
+}
+.toc-card-head .toc-badge {
+  font-family: var(--ff-mono);
+  font-size: .68rem; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase;
+  background: var(--cobalt); color: #fff;
+  padding: 4px 12px; border-radius: 4px;
+}
+.toc-card-head h4 {
+  font-family: var(--ff-body);
+  font-size: 1.1rem; font-weight: 600;
+  color: var(--midnight); letter-spacing: -.1px;
+}
+.toc-card-head .toc-rule { flex: 1; height: 1px; background: var(--border); }
+.toc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px 24px;
+}
+.toc-grid a {
+  font-family: var(--ff-ui);
+  font-size: .82rem; font-weight: 400;
+  color: var(--cobalt); text-decoration: none;
+  display: flex; align-items: center; gap: 7px;
+  padding: 6px 8px; border-radius: 5px;
+  transition: background .15s, color .15s; line-height: 1.4;
+}
+.toc-grid a:hover { background: #e8f0fb; color: var(--midnight); }
+.toc-num {
+  font-family: var(--ff-mono); font-size: .65rem;
+  color: var(--muted); background: var(--fog);
+  padding: 2px 6px; border-radius: 3px; flex-shrink: 0;
+}
+
+/* ──────────── PAGE LAYOUT ──────────── */
+.page-layout {
+  max-width: 900px; margin: 0 auto;
+  padding: 8px 24px 80px; display: block;
+}
+.content { min-width: 0; width: 100%; }
+
+/* ──────────── SECTION DIVIDERS ──────────── */
+.sec-head {
+  display: flex; align-items: center; gap: 14px;
+  margin: 52px 0 24px;
+}
+.sec-head:first-child { margin-top: 0; }
+.sec-badge {
+  font-family: var(--ff-mono); font-size: .68rem; font-weight: 500;
+  letter-spacing: 2px; color: var(--white); background: var(--navy);
+  padding: 4px 11px; border-radius: 4px; white-space: nowrap;
+}
+.sec-head h2 {
+  font-family: var(--ff-body);
+  font-size: 1.6rem; font-weight: 600;
+  color: var(--midnight); white-space: nowrap; letter-spacing: -.2px;
+}
+.sec-rule { flex: 1; height: 1px; background: var(--border); }
+
+/* ──────────── CARDS ──────────── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 26px 30px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+}
+.card-title {
+  font-family: var(--ff-ui); font-size: .78rem; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--cobalt);
+  margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+}
+.card-title::before {
+  content: ''; display: inline-block;
+  width: 3px; height: 14px; background: var(--cobalt); border-radius: 2px;
+}
+
+/* ──────────── MATH DISPLAY BLOCKS ──────────── */
+.math-display {
+  background: #f0f4fa;
+  border: 1px solid #c4d4ec;
+  border-left: 4px solid var(--cobalt);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 16px 22px; margin: 16px 0;
+  overflow-x: auto; font-size: 1.05rem;
+}
+.math-display.amber {
+  background: #fdf8ec; border-color: #e8d090;
+  border-left-color: var(--amber);
+}
+.math-display.green {
+  background: #edf7f2; border-color: #9fd4b8;
+  border-left-color: var(--teal);
+}
+.math-display.rust {
+  background: #fdf0ee; border-color: #e8b4ae;
+  border-left-color: var(--rust);
+}
+
+/* ──────────── DERIVATION STEPS ──────────── */
+.derive-step {
+  display: flex; gap: 16px; align-items: flex-start;
+  margin: 10px 0; padding: 10px 14px;
+  border-radius: 6px; background: var(--paper); border: 1px solid var(--fog);
+}
+.derive-step .ds-num {
+  font-family: var(--ff-mono); font-size: .7rem; font-weight: 500;
+  background: var(--navy); color: #fff;
+  min-width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-top: 2px;
+}
+.derive-step .ds-body { font-size: .97rem; line-height: 1.7; }
+.derive-step .ds-body .ds-note {
+  font-family: var(--ff-ui); font-size: .8rem;
+  color: var(--muted); font-style: italic; display: block; margin-top: 3px;
+}
+
+/* ──────────── ARABIC NOTE ──────────── */
+.ar {
+  font-family: var(--ff-ui); direction: rtl; font-size: .85rem;
+  color: var(--amber); background: #fefbf0;
+  border: 1px solid #f0dfa0; border-right: 3px solid var(--amber);
+  border-radius: 0 5px 5px 0; padding: 6px 14px 6px 10px;
+  margin: 8px 0; display: block; text-align: right;
+}
+.ar-inline {
+  font-family: var(--ff-ui); font-style: italic;
+  color: var(--amber); font-size: .9em;
+}
+
+/* ──────────── CONDITION PILLS ──────────── */
+.pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--ff-mono); font-size: .76rem;
+  padding: 5px 12px; border-radius: 20px; font-weight: 500;
+}
+.pill.pos { background: #e6f5ed; color: #1b6b3a; border: 1px solid #9fd4b0; }
+.pill.neg { background: #fdecea; color: #93261c; border: 1px solid #e8aca8; }
+.pill.ok  { background: #e8f0fb; color: #1a4a8a; border: 1px solid #aac4e8; }
+
+/* ──────────── PROOF BLOCK ──────────── */
+.proof-block {
+  background: #f6f4ff; border: 1px solid #c8baf2;
+  border-left: 4px solid var(--purple);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 14px 20px; margin: 12px 0;
+  font-family: var(--ff-mono); font-size: .82rem;
+  color: #3a2a70; line-height: 1.7;
+}
+
+/* ──────────── CONDITIONS GRID ──────────── */
+.cond-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0;
+}
+@media(max-width:540px){ .cond-grid { grid-template-columns: 1fr; } }
+.cond-tile {
+  border: 1px solid var(--border); border-radius: 7px;
+  padding: 14px 16px; background: var(--paper);
+}
+.cond-tile .ct-label {
+  font-family: var(--ff-mono); font-size: .65rem;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 6px;
+}
+.cond-tile .ct-val { font-size: .95rem; color: var(--midnight); line-height: 1.5; }
+
+/* ──────────── THEOREM CARD ──────────── */
+.theorem-card {
+  background: #fdf8ec; border: 1px solid #e8d090;
+  border-left: 4px solid var(--amber);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 20px 24px; margin: 16px 0;
+}
+.theorem-card .th-label {
+  font-family: var(--ff-mono); font-size: .68rem; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--amber); margin-bottom: 10px;
+}
+
+/* ──────────── VISUALIZATION ──────────── */
+#viz-section {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-lg); padding: 28px;
+  box-shadow: var(--shadow-md); margin-bottom: 20px;
+}
+.viz-controls {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  margin-bottom: 18px;
+}
+.viz-controls select {
+  font-family: var(--ff-mono); font-size: .78rem;
+  padding: 8px 12px; border: 1px solid var(--border);
+  border-radius: 6px; background: var(--ivory); color: var(--midnight);
+  cursor: pointer; outline: none; flex: 1; min-width: 180px;
+}
+.viz-btn {
+  font-family: var(--ff-ui); font-size: .8rem; font-weight: 500;
+  padding: 8px 20px; border: none; border-radius: 6px;
+  cursor: pointer; transition: opacity .18s, transform .12s;
+}
+.viz-btn:hover { opacity: .88; transform: translateY(-1px); }
+.viz-btn.primary { background: var(--navy); color: #fff; }
+.viz-btn.secondary { background: var(--fog); color: var(--ink); }
+.viz-btn.accent { background: var(--amber); color: var(--midnight); }
+#viz-canvas {
+  width: 100%; height: 380px; display: block;
+  border-radius: 8px; border: 1px solid var(--fog); background: #fafcff;
+}
+.viz-legend {
+  display: flex; flex-wrap: wrap; gap: 16px;
+  margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--fog);
+}
+.viz-legend-item {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--ff-ui); font-size: .75rem; color: var(--ink-soft);
+}
+.viz-legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+.viz-legend-line { width: 24px; height: 2.5px; }
+#viz-log {
+  margin-top: 14px; background: var(--midnight); color: #c8dfff;
+  font-family: var(--ff-mono); font-size: .78rem; border-radius: 7px;
+  padding: 12px 16px; min-height: 42px; line-height: 1.6;
+}
+#viz-log .vl-ok  { color: #7ddba8; }
+#viz-log .vl-iter{ color: #f5c842; }
+.viz-stats-bar {
+  display: flex; flex-wrap: wrap; gap: 24px;
+  background: var(--midnight); padding: 10px 16px;
+  border-radius: 0 0 7px 7px; margin-top: 2px;
+}
+.viz-stats-bar span {
+  font-family: var(--ff-mono); font-size: .76rem;
+  color: rgba(200,223,255,.55);
+}
+.viz-stats-bar strong { color: var(--amber-lt); font-weight: 500; }
+
+/* ──────────── PROBLEM PANELS ──────────── */
+.prob-panel {
+  background: var(--white); border: 1px solid var(--border);
+  border-radius: var(--r-lg); overflow: hidden;
+  box-shadow: var(--shadow-md); margin-bottom: 32px;
+}
+.prob-header {
+  background: var(--navy); color: #fff;
+  padding: 20px 28px; display: flex; align-items: flex-start; gap: 16px;
+}
+.prob-index {
+  font-family: var(--ff-body); font-size: 2.2rem; font-weight: 600;
+  line-height: 1; color: var(--amber-lt); min-width: 48px;
+}
+.prob-meta { flex: 1; }
+.prob-meta .prob-label {
+  font-family: var(--ff-mono); font-size: .65rem; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,.5); margin-bottom: 4px;
+}
+.prob-meta h3 {
+  font-family: var(--ff-body); font-size: 1.2rem; font-weight: 500;
+  color: #fff; line-height: 1.35;
+}
+.prob-body { padding: 26px 28px; }
+.prob-question {
+  background: var(--paper); border-left: 3px solid var(--amber);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 16px 20px; margin-bottom: 22px;
+  font-size: .97rem; line-height: 1.7; color: var(--ink);
+}
+
+/* sub-headings inside problem */
+.ph {
+  font-family: var(--ff-ui); font-size: .75rem; font-weight: 600;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--cobalt);
+  margin: 22px 0 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.ph::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ──────────── ITERATION TABLE ──────────── */
+.iter-tbl {
+  width: 100%; border-collapse: collapse; font-size: .88rem;
+  margin: 14px 0; border-radius: var(--r-sm);
+  overflow: hidden; border: 1px solid var(--border);
+}
+.iter-tbl thead th {
+  background: var(--midnight); color: rgba(255,255,255,.85);
+  font-family: var(--ff-mono); font-size: .7rem; font-weight: 500;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 10px 14px; text-align: center;
+}
+.iter-tbl tbody td {
+  padding: 9px 14px; font-family: var(--ff-mono); font-size: .82rem;
+  border-bottom: 1px solid var(--fog); color: var(--ink-soft);
+  text-align: center;
+}
+.iter-tbl tbody tr:nth-child(even) td { background: var(--paper); }
+.iter-tbl tbody tr.row-init td { color: var(--ink); font-weight: 500; }
+.iter-tbl tbody tr.row-hl td {
+  background: #fdf8ec; color: var(--amber); font-weight: 600;
+}
+.iter-tbl tbody tr.row-converged td {
+  background: #eaf6f0; color: var(--teal); font-weight: 600;
+}
+.td-pos { color: var(--green) !important; font-weight: 600 !important; }
+.td-neg { color: var(--rust)  !important; font-weight: 600 !important; }
+.iter-tbl .delta { color: var(--muted); font-size: .76rem; }
+
+/* ──────────── RESULT BOX ──────────── */
+.result-banner {
+  margin-top: 20px;
+  background: linear-gradient(130deg, var(--midnight) 0%, #1e3d6e 100%);
+  border-radius: var(--r-md); padding: 20px 24px;
+  display: flex; align-items: center; gap: 18px;
+  box-shadow: 0 4px 20px rgba(14,27,46,.2);
+}
+.rb-icon { font-size: 2rem; flex-shrink: 0; }
+.rb-label { font-family: var(--ff-ui); font-size: .78rem; color: rgba(255,255,255,.55); margin-bottom: 4px; }
+.rb-value { font-family: var(--ff-mono); font-size: 1.3rem; font-weight: 500; color: var(--amber-lt); letter-spacing: .5px; }
+.rb-sub { font-family: var(--ff-ui); font-size: .75rem; color: rgba(255,255,255,.4); margin-top: 4px; }
+
+/* ──────────── SUMMARY GRID ──────────── */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+  gap: 14px; margin: 20px 0;
+}
+.sum-card {
+  background: var(--white); border: 1px solid var(--border);
+  border-top: 3px solid var(--cobalt);
+  border-radius: var(--r-md); padding: 16px 18px;
+}
+.sum-card.amber { border-top-color: var(--amber); }
+.sum-card.teal  { border-top-color: var(--teal);  }
+.sum-card.rust  { border-top-color: var(--rust);  }
+.sum-card.purple{ border-top-color: var(--purple);}
+.sum-card .sc-label {
+  font-family: var(--ff-mono); font-size: .63rem;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 6px;
+}
+.sum-card .sc-val {
+  font-family: var(--ff-mono); font-size: 1.1rem;
+  color: var(--ink); font-weight: 500;
+}
+
+/* ──────────── FOOTER ──────────── */
+footer {
+  text-align: center; padding: 32px 24px;
+  color: var(--muted); font-family: var(--ff-mono);
+  font-size: .72rem; letter-spacing: 1px;
+  border-top: 1px solid var(--border);
+}
+
+/* ──────────── UTILITY ──────────── */
+p { margin-bottom: 10px; }
+.mt-sm { margin-top: 8px; }
+.mt-md { margin-top: 16px; }
+.text-muted { color: var(--muted); font-size: .88rem; }
+strong { font-weight: 600; }
+
+/* ──────────── RESPONSIVE ──────────── */
+@media(max-width: 600px) {
+  .toc-grid { grid-template-columns: 1fr 1fr; }
+  .toc-card { padding: 20px 18px; }
+  .prob-body { padding: 18px 18px; }
+  .card { padding: 18px 18px; }
+  #viz-section { padding: 18px; }
+  .result-banner { flex-direction: column; gap: 8px; }
+}
+@media(max-width: 420px) {
+  .toc-grid { grid-template-columns: 1fr; }
+}
+
+/* ──────────── LOAD ANIMATIONS ──────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card, .prob-panel, #viz-section {
+  animation: fadeUp .4s ease both;
+}
+</style>
+  <link rel="stylesheet" href="mobile.css"/>
+</head>
+<body>
+<!-- Mobile Home Button -->
+<a href="index.html" class="mobile-home-btn" aria-label="Return to Home">
+  <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+  Home
+</a>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-pill">Math 302 &nbsp;·&nbsp; Numerical Analysis</div>
+    <h1>The <em>Bisection</em> Method</h1>
+    <p class="header-sub">A complete study guide — theory, convergence proof, visualization &amp; solved problems</p>
+    <div class="header-meta">
+      <span class="hm-item">Section Math 302</span>
+      <span class="hm-sep">·</span>
+      <span class="hm-item">Numerical Analysis</span>
+    </div>
+    <div class="header-tags">
+      <span class="htag">Root Finding</span>
+      <span class="htag">Linear Convergence</span>
+      <span class="htag">Interval Halving</span>
+      <span class="htag">IVT-Based Method</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════ TOC ═══════════════ -->
+<div class="toc-section">
+  <div class="toc-card">
+    <div class="toc-card-head">
+      <span class="toc-badge">Contents</span>
+      <h4>Table of Contents</h4>
+      <div class="toc-rule"></div>
+    </div>
+    <div class="toc-grid">
+      <a href="#sec-theory"><span class="toc-num">01</span>Concept &amp; Theory</a>
+      <a href="#sec-conditions"><span class="toc-num">02</span>Applicability Conditions</a>
+      <a href="#sec-algorithm"><span class="toc-num">03</span>Algorithm Steps</a>
+      <a href="#sec-convergence"><span class="toc-num">04</span>Convergence &amp; Accuracy</a>
+      <a href="#sec-viz"><span class="toc-num">05</span>Visualization</a>
+      <a href="#sec-problems"><span class="toc-num">06</span>Solved Problems</a>
+      <a href="#prob-1"><span class="toc-num">↳</span>Problem 1</a>
+      <a href="#prob-2"><span class="toc-num">↳</span>Problem 2</a>
+      <a href="#prob-3"><span class="toc-num">↳</span>Problem 3</a>
+      <a href="#prob-4"><span class="toc-num">↳</span>Problem 4</a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE LAYOUT ═══════════════ -->
+<div class="page-layout">
+<div class="content">
+
+  <!-- ══════════════════════════════════
+       § 01  CONCEPT & THEORY
+  ══════════════════════════════════ -->
+  <div class="sec-head" id="sec-theory">
+    <span class="sec-badge">§ 01</span>
+    <h2>Concept &amp; Theory</h2>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Definition</div>
+    <p>
+      The <strong>Bisection Method</strong> (Binary-Search Method) is a root-finding algorithm that
+      repeatedly bisects an interval and selects the sub-interval in which the root must lie.
+      It solves equations of the form \(f(x) = 0\), where \(f\) is a continuous function.
+    </p>
+    <span class="ar">طريقة نصف المدى — تعمل بتقسيم الفترة باستمرار حتى الاقتراب من الجذر بدقة عالية.</span>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Core Idea — Intermediate Value Theorem</div>
+    <p>
+      Suppose \(f\) is continuous on \([a, b]\) and \(f(a) \cdot f(b) < 0\). By the
+      <strong>Intermediate Value Theorem</strong>, there exists at least one
+      \(P \in (a, b)\) such that \(f(P) = 0\).
+    </p>
+    <p>
+      The method exploits this by computing the midpoint
+      \(x_n = \dfrac{a + b}{2}\) and deciding which half contains the root
+      based on the sign of \(f(x_n)\). <span class="ar-inline">(يعني نتحقق من الإشارة في النقطة الوسطى)</span>
+    </p>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;">
+      <div class="cond-tile">
+        <div class="ct-label">Key Principle</div>
+        <div class="ct-val">Sign changes guarantee a root (IVT). No sign change → wrong interval.</div>
+      </div>
+      <div class="cond-tile">
+        <div class="ct-label">Convergence Type</div>
+        <div class="ct-val">Linear — error halves each iteration. Reliable but slower than Newton.</div>
+      </div>
+    </div>
+    <span class="ar">بمعرفة أن الدالة تتغير إشارتها على الفترة، يوجد جذر بالضرورة — هذا هو أساس الطريقة.</span>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Convergence Theorem</div>
+    <p>Suppose \(f \in C[a,b]\) and \(f(a)f(b) < 0\). The Bisection Method generates a sequence \(\{P_n\}_{n=1}^{\infty}\) approximating a zero \(P\) of \(f\) with the bound:</p>
+    <div class="math-display amber">
+      \[ \boxed{|P_n - P| \;\leq\; \frac{b - a}{2^n}, \qquad n \geq 1} \]
+    </div>
+    <p>As \(n \to \infty\), the error vanishes — convergence is guaranteed. <span class="ar-inline">(الخطأ يتقلص بنسبة النصف مع كل تكرار)</span></p>
+  </div>
+
+  <!-- ══════════════════════════════════
+       § 02  CONDITIONS
+  ══════════════════════════════════ -->
+  <div class="sec-head" id="sec-conditions">
+    <span class="sec-badge">§ 02</span>
+    <h2>Applicability Conditions</h2>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Required Conditions</div>
+    <p>Before applying the method on \([a,b]\), verify all three:</p>
+
+    <div class="cond-grid">
+      <div class="cond-tile">
+        <div class="ct-label">Condition 1 — Continuity</div>
+        <div class="ct-val">\(f\) must be <strong>continuous</strong> on \([a,b]\)<br><small style="color:var(--muted)">i.e. \(f \in C[a,b]\)</small></div>
+      </div>
+      <div class="cond-tile">
+        <div class="ct-label">Condition 2 — Sign Change</div>
+        <div class="ct-val">\(f(a) \cdot f(b) < 0\) — opposite signs at endpoints</div>
+      </div>
+      <div class="cond-tile">
+        <div class="ct-label">Condition 3 — Root Existence</div>
+        <div class="ct-val">At least one root must exist in the interior \((a, b)\)</div>
+      </div>
+      <div class="cond-tile">
+        <div class="ct-label">Initial Midpoint</div>
+        <div class="ct-val">\(x_0 = \dfrac{a + b}{2}\) — always the first guess</div>
+      </div>
+    </div>
+    <span class="ar">الشرط الأساسي: f(a) و f(b) تختلفان في الإشارة (ضربهما سالب) — هذا يضمن وجود جذر.</span>
+  </div>
+
+  <!-- ══════════════════════════════════
+       § 03  ALGORITHM
+  ══════════════════════════════════ -->
+  <div class="sec-head" id="sec-algorithm">
+    <span class="sec-badge">§ 03</span>
+    <h2>Algorithm Steps</h2>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Step-by-Step Procedure</div>
+
+    <div class="derive-step">
+      <div class="ds-num">1</div>
+      <div class="ds-body">
+        <strong>Compute the midpoint</strong> at iteration \(n\):
+        <div class="math-display">
+          \[ x_n \;=\; \frac{a_n + b_n}{2} \]
+        </div>
+        <span class="ds-note">يعني نأخذ النقطة الوسطى بين a و b دائماً.</span>
+      </div>
+    </div>
+
+    <div class="derive-step">
+      <div class="ds-num">2</div>
+      <div class="ds-body">
+        <strong>Evaluate</strong> \(f(x_n)\) and <strong>check termination</strong>:
+        if \(f(x_n) = 0\) exactly, then \(P = x_n\). Stop.
+      </div>
+    </div>
+
+    <div class="derive-step">
+      <div class="ds-num">3</div>
+      <div class="ds-body">
+        <strong>Update the interval</strong> by the sign rule:
+        <div class="math-display amber">
+          \[
+            \text{If } f(a_n)\cdot f(x_n) < 0 \;\Rightarrow\; \text{root in }[a_n,\,x_n]
+            \quad\text{set}\quad b_{n+1} = x_n
+          \]
+          \[
+            \text{Else} \;\Rightarrow\; \text{root in }[x_n,\,b_n]
+            \quad\text{set}\quad a_{n+1} = x_n
+          \]
+        </div>
+        <span class="ds-note">احتفظ بالفترة التي تتعارض إشارتا طرفيها.</span>
+      </div>
+    </div>
+
+    <div class="derive-step">
+      <div class="ds-num">4</div>
+      <div class="ds-body">
+        <strong>Repeat</strong> steps 1–3 until
+        \(\dfrac{b_n - a_n}{2} < \varepsilon\) (desired accuracy is met).
+        <span class="ds-note">نكرر حتى يصبح طول الفترة أصغر من الدقة المطلوبة.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Decision Rule — Quick Reference</div>
+    <p>Let \(s = \text{sign}(f(a_n))\). Then:</p>
+    <div class="math-display green">
+      \[
+        \text{If } f(x_n) \times s < 0 \;\Rightarrow\; \text{root in left half}
+        \qquad \text{else} \;\Rightarrow\; \text{root in right half}
+      \]
+    </div>
+    <p class="text-muted">Keep whichever sub-interval has endpoints with <em>opposite signs</em>.</p>
+  </div>
+
+  <!-- ══════════════════════════════════
+       § 04  CONVERGENCE
+  ══════════════════════════════════ -->
+  <div class="sec-head" id="sec-convergence">
+    <span class="sec-badge">§ 04</span>
+    <h2>Convergence &amp; Accuracy</h2>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Error Bound</div>
+    <p>After \(n\) iterations, the absolute error satisfies:</p>
+    <div class="math-display amber">
+      \[ |P_n - P| \;\leq\; \frac{b - a}{2^n} \]
+    </div>
+    <p>The interval length halves with every step — guaranteed linear convergence.</p>
+    <span class="ar">الخطأ بعد n تكرار لا يتجاوز (b−a)/2ⁿ — يتقلص النصف في كل خطوة.</span>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Relative Accuracy</div>
+    <p>The <strong>relative accuracy</strong> at step \(n\) is bounded by:</p>
+    <div class="math-display">
+      \[ \text{accuracy} \;\leq\; \frac{|x - x_n|}{|x_n|} \;\leq\; \frac{(b-a)/2^n}{|x_n|} \]
+    </div>
+    <p class="text-muted">Where \(x_n\) is the midpoint at iteration \(n\). <span class="ar-inline">(الدقة النسبية = الخطأ المطلق ÷ القيمة)</span></p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Minimum Iterations for Desired Accuracy</div>
+    <p>To guarantee \(|P_n - P| < \varepsilon\), we need:</p>
+    <div class="math-display amber">
+      \[ \frac{b-a}{2^n} < \varepsilon
+         \;\implies\;
+         n \;>\; \frac{\ln(b-a) - \ln(\varepsilon)}{\ln 2}
+         \;=\; \frac{\ln\!\left(\dfrac{b-a}{\varepsilon}\right)}{\ln 2} \]
+    </div>
+    <p>For the common case \(\varepsilon = 10^{-k}\) with interval length \(b - a = 1\):</p>
+    <div class="math-display green">
+      \[ n \;>\; \frac{k \ln 10}{\ln 2} \;\approx\; 3.3219 \cdot k \]
+    </div>
+    <p class="text-muted">Always round <strong>up</strong> to the nearest integer. <span class="ar-inline">(نقرّب دائماً للأعلى)</span></p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Proof — Why Bisection Converges</div>
+    <p>At each step the interval halves. Starting with \([a_0,b_0]\) of length \(L_0 = b-a\):</p>
+
+    <div class="proof-block">
+      After 1 iteration: length = L₀ / 2<br>
+      After 2 iterations: length = L₀ / 4<br>
+      After n iterations: length = L₀ / 2ⁿ = (b−a) / 2ⁿ
+    </div>
+
+    <p>Since the true root \(P\) is always inside the current interval, the distance from any midpoint \(P_n\) to \(P\) cannot exceed half the current interval length:</p>
+    <div class="math-display green">
+      \[ |P_n - P| \;\leq\; \frac{b-a}{2^n} \]
+    </div>
+    <p>As \(n \to \infty\), \(\dfrac{b-a}{2^n} \to 0\), so \(P_n \to P\). &emsp;\(\blacksquare\)</p>
+  </div>
+
+  <!-- ══════════════════════════════════
+       § 05  VISUALIZATION
+  ══════════════════════════════════ -->
+  <div class="sec-head" id="sec-viz">
+    <span class="sec-badge">§ 05</span>
+    <h2>Interactive Visualization</h2>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div id="viz-section">
+    <div class="viz-controls">
+      <select id="fn-select">
+        <option value="0">f(x) = x³ − 2x − 1 &nbsp;on&nbsp; [1, 2]</option>
+        <option value="1">f(x) = x³ + x + 1 &nbsp;on&nbsp; [−1, 0]</option>
+        <option value="2">f(x) = √x − cos x &nbsp;on&nbsp; [0, 1]</option>
+        <option value="3">f(x) = x³ − 3x² + 2x + 7 &nbsp;on&nbsp; [−2, −1]</option>
+      </select>
+      <button class="viz-btn primary" id="btn-step">▶&ensp;Next Step</button>
+      <button class="viz-btn accent"  id="btn-auto">⚡&ensp;Auto Run</button>
+      <button class="viz-btn secondary" id="btn-reset">↺&ensp;Reset</button>
+    </div>
+
+    <canvas id="viz-canvas" width="860" height="380"></canvas>
+
+    <div id="viz-log">Select a function and press <strong>Next Step</strong> to begin.</div>
+
+    <div class="viz-stats-bar" id="viz-stats">
+      <span>Iteration: <strong id="st-n">—</strong></span>
+      <span>a = <strong id="st-a">—</strong></span>
+      <span>b = <strong id="st-b">—</strong></span>
+      <span>x<sub>n</sub> = <strong id="st-x">—</strong></span>
+      <span>f(x<sub>n</sub>) = <strong id="st-f">—</strong></span>
+      <span>Error ≤ <strong id="st-e">—</strong></span>
+    </div>
+
+    <div class="viz-legend">
+      <span class="viz-legend-item">
+        <span class="viz-legend-line" style="background:#0e1b2e"></span> f(x) curve
+      </span>
+      <span class="viz-legend-item">
+        <span class="viz-legend-dot" style="background:#b53a2a"></span> Current midpoint
+      </span>
+      <span class="viz-legend-item">
+        <span class="viz-legend-dot" style="background:#b57a10;opacity:.55"></span> Past midpoints
+      </span>
+      <span class="viz-legend-item">
+        <span class="viz-legend-line" style="background:#1a7a6e;border-top:2px dashed var(--teal)"></span> Interval boundaries
+      </span>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       § 06  SOLVED PROBLEMS
+  ══════════════════════════════════ -->
+  <div class="sec-head" id="sec-problems">
+    <span class="sec-badge">§ 06</span>
+    <h2>Solved Problems</h2>
+    <div class="sec-rule"></div>
+  </div>
+
+  <!-- ── PROBLEM 1 ── -->
+  <div class="prob-panel" id="prob-1">
+    <div class="prob-header">
+      <div class="prob-index">P1</div>
+      <div class="prob-meta">
+        <div class="prob-label">Problem 1 · Main Example · Full Detail</div>
+        <h3>Solve \(x^3 - 2x - 1 = 0\) on \([1, 2]\) — 5 Iterations</h3>
+      </div>
+    </div>
+    <div class="prob-body">
+
+      <div class="prob-question">
+        Use the Bisection Method to solve \(x^3 - 2x - 1 = 0\) on \([1,2]\). Execute <strong>5 iterations</strong>, then:
+        (a) calculate the accuracy after 5 iterations, and
+        (b) find \(n\) such that \(|x - x_n| < 10^{-5}\).
+      </div>
+
+      <div class="ph">Setup &amp; Applicability</div>
+      <p>Let \(f(x) = x^3 - 2x - 1\). Verify the sign-change condition:</p>
+      <div class="math-display">
+        \[
+          f(1) = 1 - 2 - 1 = -2 \quad (\text{negative})
+          \qquad
+          f(2) = 8 - 4 - 1 = 3 \quad (\text{positive})
+        \]
+      </div>
+      <div class="pill-row">
+        <span class="pill neg">f(1) = −2 &lt; 0</span>
+        <span class="pill pos">f(2) = +3 &gt; 0</span>
+        <span class="pill ok">✓ f(1)·f(2) &lt; 0 → Root exists on [1, 2]</span>
+      </div>
+
+      <div class="ph">Iteration Table — 5 Steps</div>
+      <div style="overflow-x:auto">
+        <table class="iter-tbl">
+          <thead>
+            <tr>
+              <th>\(n\)</th>
+              <th>\(a_n\) (−ve)</th>
+              <th>\(b_n\) (+ve)</th>
+              <th>\(x_n = \frac{a_n+b_n}{2}\)</th>
+              <th>\(f(x_n)\)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row-init"><td>0</td><td>1</td><td>2</td><td>1.5</td><td class="td-neg">−ve</td></tr>
+            <tr><td>1</td><td>1.5</td><td>2</td><td>1.75</td><td class="td-pos">+ve</td></tr>
+            <tr><td>2</td><td>1.5</td><td>1.75</td><td>1.625</td><td class="td-pos">+ve</td></tr>
+            <tr><td>3</td><td>1.5</td><td>1.625</td><td>1.5625</td><td class="td-neg">−ve</td></tr>
+            <tr><td>4</td><td>1.5625</td><td>1.625</td><td>1.59375</td><td class="td-neg">−ve</td></tr>
+            <tr class="row-hl"><td>5</td><td>1.59375</td><td>1.625</td><td><strong>1.609375</strong></td><td class="delta">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="result-banner">
+        <div class="rb-icon">✓</div>
+        <div>
+          <div class="rb-label">After 5 iterations</div>
+          <div class="rb-value">\(x_5 = 1.609375\)</div>
+        </div>
+      </div>
+
+      <div class="ph">(a) Relative Accuracy at n = 5</div>
+      <div class="math-display">
+        \[
+          \text{accuracy} \;\leq\; \frac{(b-a)/2^n}{|x_n|}
+          \;=\; \frac{(2-1)/2^5}{|1.609375|}
+          \;=\; \frac{1/32}{1.609375}
+          \;=\; 0.01942 \;\approx\; 1.942 \times 10^{-2}
+        \]
+      </div>
+      <p class="text-muted">We have approximately <strong>1 correct significant digit</strong>. <span class="ar-inline">(رقم صحيح واحد تقريباً)</span></p>
+
+      <div class="ph">(b) Minimum n for \(|x - x_n| < 10^{-5}\)</div>
+      <div class="math-display">
+        \[
+          \frac{b-a}{2^n} < 10^{-5}
+          \;\implies\; 2^{-n} < 10^{-5}
+          \;\implies\; -n\ln 2 < -5\ln 10
+        \]
+        \[
+          n \;>\; \frac{5\ln 10}{\ln 2}
+          \;=\; \frac{5 \times 2.3026}{0.6931}
+          \;=\; 16.61
+        \]
+      </div>
+      <div class="result-banner">
+        <div class="rb-icon">✓</div>
+        <div>
+          <div class="rb-label">Minimum iterations for accuracy \(&lt; 10^{-5}\)</div>
+          <div class="rb-value">n = 17 iterations</div>
+          <div class="rb-sub">Round 16.61 up → n = 17</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── PROBLEM 2 ── -->
+  <div class="prob-panel" id="prob-2">
+    <div class="prob-header">
+      <div class="prob-index">P2</div>
+      <div class="prob-meta">
+        <div class="prob-label">Problem 2 · Negative Interval [−1, 0]</div>
+        <h3>Solve \(x^3 + x + 1 = 0\) on \([-1, 0]\) — 5 Iterations</h3>
+      </div>
+    </div>
+    <div class="prob-body">
+
+      <div class="prob-question">
+        Use the Bisection Method to solve \(x^3 + x + 1 = 0\) on \([-1, 0]\). Execute <strong>5 iterations</strong>, then:
+        (a) calculate the accuracy, and
+        (b) find \(n\) such that \(|x_n - x| < 10^{-4}\).
+      </div>
+
+      <div class="ph">Setup &amp; Applicability</div>
+      <div class="math-display">
+        \[
+          f(-1) = -1 - 1 + 1 = -1 \quad (\text{neg})
+          \qquad
+          f(0) = 0 + 0 + 1 = 1 \quad (\text{pos})
+        \]
+      </div>
+      <div class="pill-row">
+        <span class="pill neg">f(−1) = −1 &lt; 0</span>
+        <span class="pill pos">f(0) = +1 &gt; 0</span>
+        <span class="pill ok">✓ f(−1)·f(0) &lt; 0 → Root exists on [−1, 0]</span>
+      </div>
+
+      <div class="ph">Iteration Table — 5 Steps</div>
+      <div style="overflow-x:auto">
+        <table class="iter-tbl">
+          <thead>
+            <tr><th>\(n\)</th><th>\(a_n\) (−ve)</th><th>\(b_n\) (+ve)</th><th>\(x_n\)</th><th>\(f(x_n)\)</th></tr>
+          </thead>
+          <tbody>
+            <tr class="row-init"><td>0</td><td>−1</td><td>0</td><td>−0.5</td><td class="td-pos">+ve</td></tr>
+            <tr><td>1</td><td>−1</td><td>−0.5</td><td>−0.75</td><td class="td-neg">−ve</td></tr>
+            <tr><td>2</td><td>−0.75</td><td>−0.5</td><td>−0.625</td><td class="td-pos">+ve</td></tr>
+            <tr><td>3</td><td>−0.75</td><td>−0.625</td><td>−0.6875</td><td class="td-neg">−ve</td></tr>
+            <tr><td>4</td><td>−0.6875</td><td>−0.625</td><td>−0.65625</td><td class="td-pos">+ve</td></tr>
+            <tr class="row-hl"><td>5</td><td>−0.6875</td><td>−0.65625</td><td><strong>−0.671875</strong></td><td class="delta">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="result-banner">
+        <div class="rb-icon">✓</div>
+        <div>
+          <div class="rb-label">After 5 iterations</div>
+          <div class="rb-value">\(x_5 = -0.671875\)</div>
+        </div>
+      </div>
+
+      <div class="ph">(a) Relative Accuracy at n = 5</div>
+      <div class="math-display">
+        \[
+          \text{accuracy} \;\leq\; \frac{(0-(-1))/2^5}{|-0.671875|}
+          \;=\; \frac{1/32}{0.671875}
+          \;=\; 0.04651 \;\approx\; 4.651 \times 10^{-2}
+        \]
+      </div>
+      <p class="text-muted">Approximately <strong>1 correct significant digit</strong>. <span class="ar-inline">(رقم صحيح واحد تقريباً)</span></p>
+
+      <div class="ph">(b) Minimum n for \(|x_n - x| < 10^{-4}\)</div>
+      <div class="math-display">
+        \[
+          \frac{1}{2^n} < 10^{-4}
+          \;\implies\; n > \frac{4\ln 10}{\ln 2}
+          \;=\; \frac{4 \times 2.3026}{0.6931}
+          \;=\; 13.28
+        \]
+      </div>
+      <div class="result-banner">
+        <div class="rb-icon">✓</div>
+        <div>
+          <div class="rb-label">Minimum iterations for accuracy \(&lt; 10^{-4}\)</div>
+          <div class="rb-value">n = 14 iterations</div>
+          <div class="rb-sub">Round 13.28 up → n = 14</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── PROBLEM 3 ── -->
+  <div class="prob-panel" id="prob-3">
+    <div class="prob-header">
+      <div class="prob-index">P3</div>
+      <div class="prob-meta">
+        <div class="prob-label">Problem 3 · Mixed Function on [0, 1]</div>
+        <h3>Find \(x_3\) for \(f(x) = \sqrt{x} - \cos x = 0\) on \([0, 1]\)</h3>
+      </div>
+    </div>
+    <div class="prob-body">
+
+      <div class="prob-question">
+        Use the Bisection Method to find \(x_3\) for \(f(x) = \sqrt{x} - \cos x\) on \([0, 1]\).
+        All angles in radians. <span class="ar-inline">(الزوايا بالتقدير الدائري)</span>
+      </div>
+
+      <div class="ph">Setup &amp; Applicability</div>
+      <div class="math-display">
+        \[
+          f(0) = \sqrt{0} - \cos 0 = 0 - 1 = -1 \quad (\text{neg})
+        \]
+        \[
+          f(1) = \sqrt{1} - \cos 1 = 1 - 0.5403 = 0.4597 \quad (\text{pos})
+        \]
+      </div>
+      <div class="pill-row">
+        <span class="pill neg">f(0) = −1 &lt; 0</span>
+        <span class="pill pos">f(1) ≈ +0.46 &gt; 0</span>
+        <span class="pill ok">✓ Root exists on [0, 1]</span>
+      </div>
+
+      <div class="ph">Iteration Table — Finding x₃</div>
+      <div style="overflow-x:auto">
+        <table class="iter-tbl">
+          <thead>
+            <tr><th>\(n\)</th><th>\(a_n\) (−ve)</th><th>\(b_n\) (+ve)</th><th>\(x_n\)</th><th>\(f(x_n)\)</th></tr>
+          </thead>
+          <tbody>
+            <tr class="row-init"><td>0</td><td>0</td><td>1</td><td>0.5</td><td class="td-neg">−ve</td></tr>
+            <tr><td>1</td><td>0.5</td><td>1</td><td>0.75</td><td class="td-neg">−ve</td></tr>
+            <tr><td>2</td><td>0.75</td><td>1</td><td>0.875</td><td class="td-neg">−ve</td></tr>
+            <tr class="row-hl"><td>3</td><td>0.875</td><td>1</td><td><strong>0.9375</strong></td><td class="td-neg">−ve</td></tr>
+            <tr><td>4</td><td>0.9375</td><td>1</td><td>0.96875</td><td class="delta">—</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-muted mt-sm">
+        <strong>Note:</strong> The table matches the recorded problem sheet values.
+        The true root of \(\sqrt{x} = \cos x\) (radians) is approximately \(x \approx 0.6417\).
+        The table values reflect the given problem sheet, which appears to use cosine in degrees, yielding a root near \(x \approx 1\).
+      </p>
+      <span class="ar">القيم الدقيقة تعتمد على الآلة الحاسبة والوحدات — الجدول يطابق قيم الملف الأصلي.</span>
+
+      <div class="result-banner">
+        <div class="rb-icon">✓</div>
+        <div>
+          <div class="rb-label">Third approximation (as given in problem sheet)</div>
+          <div class="rb-value">\(x_3 = 0.9375\)</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ── PROBLEM 4 ── -->
+  <div class="prob-panel" id="prob-4">
+    <div class="prob-header">
+      <div class="prob-index">P4</div>
+      <div class="prob-meta">
+        <div class="prob-label">Problem 4 · 10 Given Iterations · Accuracy &amp; Decimal Places</div>
+        <h3>Solve \(x^3 - 3x^2 + 2x + 7 = 0\) on \([-2, -1]\)</h3>
+      </div>
+    </div>
+    <div class="prob-body">
+
+      <div class="prob-question">
+        Solve \(x^3 - 3x^2 + 2x + 7 = 0\) on \([-2, -1]\) using the Bisection Method.
+        The first 10 iterations are recorded below. Then:
+        (a) Calculate the accuracy after 10 iterations.
+        (b) Find \(n\) to reach accuracy correct to <strong>7 decimal places</strong> (\(|x_n - x| < 10^{-7}\)).
+        (c) Find \(n\) for \(|x_n - x| < 10^{-4}\).
+      </div>
+
+      <div class="ph">Setup &amp; Applicability</div>
+      <div class="math-display">
+        \[
+          f(-2) = -8 - 12 - 4 + 7 = -17 \quad (\text{neg})
+          \qquad
+          f(-1) = -1 - 3 - 2 + 7 = 1 \quad (\text{pos})
+        \]
+      </div>
+      <div class="pill-row">
+        <span class="pill neg">f(−2) = −17 &lt; 0</span>
+        <span class="pill pos">f(−1) = +1 &gt; 0</span>
+        <span class="pill ok">✓ Root exists on [−2, −1] &nbsp;·&nbsp; interval length = 1</span>
+      </div>
+
+      <div class="ph">Given Iteration Table (Partial)</div>
+      <div style="overflow-x:auto">
+        <table class="iter-tbl">
+          <thead>
+            <tr><th>\(n\)</th><th>\(a_n\)</th><th>\(b_n\)</th><th>\(x_n\)</th><th>\(f(x_n)\)</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>1</td><td>−2</td><td>−1</td><td>−1.5</td><td class="td-neg">−ve</td></tr>
+            <tr><td>2</td><td>−1.5</td><td>−1</td><td>−1.25</td><td class="td-neg">−ve</td></tr>
+            <tr><td>⋮</td><td class="delta">—</td><td class="delta">—</td><td class="delta">—</td><td class="delta">—</td></tr>
+            <tr><td>9</td><td>−1.089843750</td><td>−1.085937</td><td>−1.087890625</td><td class="td-neg">−ve</td></tr>
+            <tr class="row-hl"><td>10</td><td>−1.087890625</td><td>−1.0859375</td><td><strong>−1.086914063</strong></td><td class="td-neg">−ve</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="result-banner">
+        <div class="rb-icon">✓</div>
+        <div>
+          <div class="rb-label">After 10 iterations</div>
+          <div class="rb-value">\(x_{10} = -1.086914063\)</div>
+        </div>
+      </div>
+
+      <div class="ph">(a) Relative Accuracy at n = 10</div>
+      <div class="math-display">
+        \[
+          \text{accuracy} \;\leq\; \frac{(b-a)/2^{10}}{|x_{10}|}
+          \;=\; \frac{1/1024}{|-1.086914063|}
+          \;=\; \frac{0.0009765625}{1.086914063}
+          \;=\; 8.985 \times 10^{-4}
+        \]
+      </div>
+      <p class="text-muted">Approximately <strong>3 correct significant digits</strong>. <span class="ar-inline">(ثلاثة أرقام صحيحة تقريباً)</span></p>
+
+      <div class="ph">(b) Minimum n for \(|x_n - x| < 10^{-7}\) — 7 Decimal Places</div>
+      <div class="math-display">
+        \[
+          \frac{1}{2^n} < 10^{-7}
+          \;\implies\; -n\ln 2 < -7\ln 10
+          \;\implies\; n > \frac{7\ln 10}{\ln 2}
+          \;=\; \frac{7 \times 2.3026}{0.6931}
+          \;=\; \frac{16.118}{0.6931}
+          \;=\; 23.25
+        \]
+      </div>
+      <div class="result-banner">
+        <div class="rb-icon">✓</div>
+        <div>
+          <div class="rb-label">Minimum iterations for 7 decimal place accuracy</div>
+          <div class="rb-value">n = 24 iterations</div>
+          <div class="rb-sub">Round 23.25 up → n = 24</div>
+        </div>
+      </div>
+
+      <div class="ph">(c) Minimum n for \(|x_n - x| < 10^{-4}\)</div>
+      <div class="math-display">
+        \[
+          n > \frac{4\ln 10}{\ln 2}
+          \;=\; \frac{4 \times 2.3026}{0.6931}
+          \;=\; 13.28
+        \]
+      </div>
+      <div class="result-banner">
+        <div class="rb-icon">✓</div>
+        <div>
+          <div class="rb-label">Minimum iterations for accuracy \(&lt; 10^{-4}\)</div>
+          <div class="rb-value">n = 14 iterations</div>
+          <div class="rb-sub">Round 13.28 up → n = 14</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════
+       SUMMARY
+  ══════════════════════════════════ -->
+  <div class="sec-head">
+    <span class="sec-badge">Summary</span>
+    <h2>Results at a Glance</h2>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div class="summary-grid">
+    <div class="sum-card">
+      <div class="sc-label">P1 — Root (n=5)</div>
+      <div class="sc-val">1.609375</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-label">P1 — Accuracy (n=5)</div>
+      <div class="sc-val">1.94 × 10⁻²</div>
+    </div>
+    <div class="sum-card">
+      <div class="sc-label">P1 — n for 10⁻⁵</div>
+      <div class="sc-val">n = 17</div>
+    </div>
+    <div class="sum-card teal">
+      <div class="sc-label">P2 — Root (n=5)</div>
+      <div class="sc-val">−0.671875</div>
+    </div>
+    <div class="sum-card teal">
+      <div class="sc-label">P2 — Accuracy (n=5)</div>
+      <div class="sc-val">4.65 × 10⁻²</div>
+    </div>
+    <div class="sum-card teal">
+      <div class="sc-label">P2 — n for 10⁻⁴</div>
+      <div class="sc-val">n = 14</div>
+    </div>
+    <div class="sum-card amber">
+      <div class="sc-label">P3 — x₃</div>
+      <div class="sc-val">0.9375</div>
+    </div>
+    <div class="sum-card rust">
+      <div class="sc-label">P4 — Accuracy (n=10)</div>
+      <div class="sc-val">8.985 × 10⁻⁴</div>
+    </div>
+    <div class="sum-card purple">
+      <div class="sc-label">P4 — n for 10⁻⁷</div>
+      <div class="sc-val">n = 24</div>
+    </div>
+  </div>
+
+  <div class="card mt-md">
+    <div class="card-title">Key Formula — Always Use This</div>
+    <div class="math-display amber">
+      \[ n \;>\; \frac{k \ln 10}{\ln 2} \;\approx\; 3.3219 \cdot k
+         \qquad \text{for tolerance } 10^{-k} \text{ and interval length } 1 \]
+    </div>
+    <p class="text-muted">For interval length \(L \neq 1\): use \(n > \dfrac{\ln(L/\varepsilon)}{\ln 2}\). <span class="ar-inline">(عند طول فترة غير 1، اضف ln(L) لطرف البسط)</span></p>
+  </div>
+
+</div><!-- /content -->
+</div><!-- /page-layout -->
+
+<footer>
+  Math 302 &nbsp;·&nbsp; Bisection Method Study Guide &nbsp;·&nbsp; Numerical Analysis
+</footer>
+
+<!-- ═══════════════════════════════════════════════
+     VISUALIZATION JAVASCRIPT
+     Uses the same DPR-correct coordinate system
+     as the Newton-Raphson visualization.
+═══════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  const canvas  = document.getElementById('viz-canvas');
+  const ctx     = canvas.getContext('2d');
+  const logEl   = document.getElementById('viz-log');
+  const fnSel   = document.getElementById('fn-select');
+  const btnStep = document.getElementById('btn-step');
+  const btnAuto = document.getElementById('btn-auto');
+  const btnReset= document.getElementById('btn-reset');
+
+  /* ── Stats bar elements ── */
+  const stN = document.getElementById('st-n');
+  const stA = document.getElementById('st-a');
+  const stB = document.getElementById('st-b');
+  const stX = document.getElementById('st-x');
+  const stF = document.getElementById('st-f');
+  const stE = document.getElementById('st-e');
+
+  /* ─────────────────────────────────────────────
+     FUNCTION LIBRARY
+  ───────────────────────────────────────────── */
+  const FNS = [
+    {
+      label: 'f(x) = x³ − 2x − 1',
+      f:  x => x*x*x - 2*x - 1,
+      a: 1, b: 2,
+      dom: [0.6, 2.4], rng: [-3, 5]
+    },
+    {
+      label: 'f(x) = x³ + x + 1',
+      f:  x => x*x*x + x + 1,
+      a: -1, b: 0,
+      dom: [-1.4, 0.4], rng: [-2, 2.5]
+    },
+    {
+      label: 'f(x) = √x − cos x',
+      f:  x => Math.sqrt(Math.max(0,x)) - Math.cos(x),
+      a: 0, b: 1,
+      dom: [-0.1, 1.2], rng: [-1.4, 1.4]
+    },
+    {
+      label: 'f(x) = x³ − 3x² + 2x + 7',
+      f:  x => x*x*x - 3*x*x + 2*x + 7,
+      a: -2, b: -1,
+      dom: [-2.4, -0.6], rng: [-20, 6]
+    }
+  ];
+
+  /* ─────────────────────────────────────────────
+     STATE & DIMENSIONS
+  ───────────────────────────────────────────── */
+  let cssW = 860, cssH = 380;
+  let state = {}, autoTimer = null;
+  const PAD = { l:62, r:28, t:36, b:48 };
+
+  /* ─────────────────────────────────────────────
+     COORDINATE MAPPERS
+  ───────────────────────────────────────────── */
+  function wX(x, fn) {
+    return PAD.l + (x - fn.dom[0]) / (fn.dom[1] - fn.dom[0]) * (cssW - PAD.l - PAD.r);
+  }
+  function wY(y, fn) {
+    return (cssH - PAD.b) - (y - fn.rng[0]) / (fn.rng[1] - fn.rng[0]) * (cssH - PAD.t - PAD.b);
+  }
+
+  /* ─────────────────────────────────────────────
+     RESIZE — correct DPR handling
+  ───────────────────────────────────────────── */
+  function resize() {
+    const dpr  = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    cssW = rect.width;
+    cssH = rect.height;
+    canvas.width  = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    draw();
+  }
+
+  /* ─────────────────────────────────────────────
+     RESET
+  ───────────────────────────────────────────── */
+  function resetState() {
+    clearAuto();
+    const fn = FNS[parseInt(fnSel.value)];
+    state = {
+      fn,
+      a: fn.a, b: fn.b,
+      iters: [],
+      done: false
+    };
+    updateStats(null);
+    draw();
+    setLog('Ready — press <strong>Next Step</strong> to begin.', '');
+  }
+
+  /* ─────────────────────────────────────────────
+     STEP
+  ───────────────────────────────────────────── */
+  function step() {
+    if (state.done) { setLog('<span class="vl-ok">✓ Converged. Reset to start again.</span>'); return; }
+    const { fn, a, b } = state;
+    const xn  = (a + b) / 2;
+    const fxn = fn.f(xn);
+    const err = (b - a) / 2;
+    const n   = state.iters.length + 1;
+    state.iters.push({ a, b, xn, fxn, n });
+
+    /* Update interval */
+    if (Math.abs(fxn) < 1e-12) {
+      state.done = true;
+    } else if (fn.f(a) * fxn < 0) {
+      state.b = xn;
+    } else {
+      state.a = xn;
+    }
+
+    if (err < 1e-9 || n >= 20) state.done = true;
+
+    updateStats({ a, b, xn, fxn, n });
+    draw();
+
+    const sign = fxn > 0 ? '+ve' : fxn < 0 ? '−ve' : '= 0';
+    setLog(
+      `<span class="vl-iter">Step ${n}</span>` +
+      `&nbsp;&nbsp; x<sub>${n}</sub> = <strong>${xn.toFixed(8)}</strong>` +
+      `&nbsp;&nbsp; f(x<sub>${n}</sub>) = ${fxn.toFixed(6)} (${sign})` +
+      `&nbsp;&nbsp; error ≤ ${err.toExponential(4)}` +
+      (state.done ? `&nbsp;&nbsp;<span class="vl-ok">✓ Converged</span>` : '')
+    );
+  }
+
+  /* ─────────────────────────────────────────────
+     UPDATE STATS BAR
+  ───────────────────────────────────────────── */
+  function updateStats(it) {
+    if (!it) {
+      [stN,stA,stB,stX,stF,stE].forEach(el => el.textContent = '—');
+      return;
+    }
+    stN.textContent = it.n;
+    stA.textContent = it.a.toFixed(7);
+    stB.textContent = it.b.toFixed(7);
+    stX.textContent = it.xn.toFixed(7);
+    stF.textContent = it.fxn.toFixed(6);
+    stE.textContent = ((it.b - it.a)/2).toExponential(4);
+  }
+
+  /* ─────────────────────────────────────────────
+     DRAW
+  ───────────────────────────────────────────── */
+  function draw() {
+    const fn = state.fn;
+    const W = cssW, H = cssH;
+    const { l, r, t, b } = PAD;
+    const plotL = l, plotR = W-r, plotT = t, plotB = H-b;
+
+    ctx.clearRect(0, 0, W, H);
+
+    /* ── Background ── */
+    ctx.fillStyle = '#f8faff';
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(plotL, plotT, plotR-plotL, plotB-plotT);
+
+    /* ── Grid ── */
+    ctx.strokeStyle = '#e2e8f4'; ctx.lineWidth = 1;
+    const gridX = 8, gridY = 6;
+    for (let i = 0; i <= gridX; i++) {
+      const cx = plotL + i * (plotR-plotL)/gridX;
+      ctx.beginPath(); ctx.moveTo(cx,plotT); ctx.lineTo(cx,plotB); ctx.stroke();
+    }
+    for (let i = 0; i <= gridY; i++) {
+      const cy = plotT + i * (plotB-plotT)/gridY;
+      ctx.beginPath(); ctx.moveTo(plotL,cy); ctx.lineTo(plotR,cy); ctx.stroke();
+    }
+
+    /* ── Axes ── */
+    const ay0 = wY(0, fn);
+    ctx.strokeStyle = '#8a9cc0'; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(plotL, ay0); ctx.lineTo(plotR, ay0); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(plotL, plotT); ctx.lineTo(plotL, plotB); ctx.stroke();
+
+    /* ── Axis labels ── */
+    ctx.fillStyle = '#8090b0'; ctx.font = '11px DM Mono, monospace'; ctx.textAlign = 'center';
+    const xStep = (fn.dom[1]-fn.dom[0]) / gridX;
+    for (let i = 0; i <= gridX; i++) {
+      const xv = fn.dom[0] + i * xStep;
+      const cx = wX(xv, fn);
+      ctx.fillText(xv.toFixed(1), cx, ay0 + 16);
+    }
+
+    /* ── Current interval shading ── */
+    const cxA = wX(state.a, fn), cxB = wX(state.b, fn);
+    ctx.fillStyle = 'rgba(26,122,110,0.08)';
+    ctx.fillRect(cxA, plotT, cxB-cxA, plotB-plotT);
+
+    /* ── Interval boundary lines ── */
+    ctx.strokeStyle = 'rgba(26,122,110,0.55)';
+    ctx.lineWidth = 2; ctx.setLineDash([6,4]);
+    ctx.beginPath(); ctx.moveTo(cxA, plotT); ctx.lineTo(cxA, plotB); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(cxB, plotT); ctx.lineTo(cxB, plotB); ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* ── a/b labels ── */
+    ctx.fillStyle = '#1a7a6e'; ctx.font = 'bold 11px DM Mono, monospace'; ctx.textAlign = 'center';
+    ctx.fillText('a='+state.a.toFixed(4), cxA, plotT+16);
+    ctx.fillText('b='+state.b.toFixed(4), cxB, plotT+16);
+
+    /* ── Past midpoints (faded gold) ── */
+    state.iters.slice(0,-1).forEach(it => {
+      const cx = wX(it.xn, fn);
+      ctx.fillStyle = 'rgba(181,122,16,0.45)';
+      ctx.beginPath(); ctx.arc(cx, ay0, 4, 0, Math.PI*2); ctx.fill();
+    });
+
+    /* ── Clip to plot area ── */
+    ctx.save();
+    ctx.rect(plotL, plotT, plotR-plotL, plotB-plotT);
+    ctx.clip();
+
+    /* ── Function curve ── */
+    ctx.strokeStyle = '#0e1b2e'; ctx.lineWidth = 2.8;
+    ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+    ctx.beginPath();
+    let first = true;
+    const STEPS = 500;
+    for (let i = 0; i <= STEPS; i++) {
+      const x = fn.dom[0] + i/STEPS * (fn.dom[1]-fn.dom[0]);
+      const y = fn.f(x);
+      if (!isFinite(y) || isNaN(y) || y < fn.rng[0]-2 || y > fn.rng[1]+2) { first=true; continue; }
+      const cx = wX(x,fn), cy = wY(y,fn);
+      if (first) { ctx.moveTo(cx,cy); first=false; } else ctx.lineTo(cx,cy);
+    }
+    ctx.stroke();
+
+    /* ── Current midpoint highlight ── */
+    if (state.iters.length > 0) {
+      const last = state.iters[state.iters.length-1];
+      const mx   = wX(last.xn, fn);
+      const mxF  = wY(last.fxn, fn);
+
+      /* Vertical dashed line at midpoint */
+      ctx.strokeStyle = 'rgba(181,58,42,0.5)'; ctx.lineWidth = 1.8;
+      ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(mx, plotT); ctx.lineTo(mx, plotB); ctx.stroke();
+      ctx.setLineDash([]);
+
+      /* Dot at f(xn) on curve */
+      if (Math.abs(last.fxn) < (fn.rng[1]-fn.rng[0])) {
+        ctx.fillStyle = '#b53a2a'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(mx, mxF, 6, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      }
+
+      /* Midpoint label */
+      ctx.fillStyle = '#0e1b2e';
+      ctx.font = 'bold 11px DM Mono, monospace'; ctx.textAlign = 'center';
+      const lbl = 'x'+last.n+' = '+last.xn.toFixed(4);
+      const tw  = ctx.measureText(lbl).width;
+      ctx.fillStyle = '#b53a2a';
+      ctx.beginPath();
+      ctx.roundRect(mx-tw/2-6, plotT+22, tw+12, 16, 3);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.fillText(lbl, mx, plotT+34);
+    }
+
+    ctx.restore();
+
+    /* Dot on x-axis for current midpoint */
+    if (state.iters.length > 0) {
+      const last = state.iters[state.iters.length-1];
+      const mx   = wX(last.xn, fn);
+      ctx.fillStyle = '#b53a2a'; ctx.strokeStyle = '#fff'; ctx.lineWidth = 2.5;
+      ctx.beginPath(); ctx.arc(mx, ay0, 7, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(mx, ay0, 3, 0, Math.PI*2); ctx.fill();
+    }
+
+    /* ── Function label ── */
+    ctx.fillStyle = '#1c2a40'; ctx.font = 'bold 12px DM Mono, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(fn.label, plotL+6, plotT-14);
+  }
+
+  /* ─────────────────────────────────────────────
+     HELPERS
+  ───────────────────────────────────────────── */
+  function setLog(html) { logEl.innerHTML = html; }
+
+  function clearAuto() {
+    if (autoTimer) {
+      clearInterval(autoTimer); autoTimer = null;
+      btnAuto.textContent = '⚡\u2007Auto Run';
+    }
+  }
+
+  /* ─────────────────────────────────────────────
+     EVENT LISTENERS
+  ───────────────────────────────────────────── */
+  btnStep.addEventListener('click', step);
+  btnReset.addEventListener('click', resetState);
+  fnSel.addEventListener('change', resetState);
+
+  btnAuto.addEventListener('click', () => {
+    if (autoTimer) {
+      clearAuto();
+    } else {
+      if (state.done) resetState();
+      btnAuto.textContent = '⏸\u2007Pause';
+      autoTimer = setInterval(() => {
+        step();
+        if (state.done) clearAuto();
+      }, 950);
+    }
+  });
+
+  /* ─────────────────────────────────────────────
+     INIT
+  ───────────────────────────────────────────── */
+  resetState();
+  window.addEventListener('load', resize);
+  window.addEventListener('resize', () => {
+    clearTimeout(window._bisRT);
+    window._bisRT = setTimeout(resize, 120);
+  });
+  resize();
+
+})();
+</script>
+
+<!-- MathJax typeset on load -->
+<script>
+window.addEventListener('load', function () {
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise().catch(console.error);
+  }
+});
+</script>
+
+</body>
+</html>

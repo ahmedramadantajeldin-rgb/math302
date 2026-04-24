@@ -1,0 +1,302 @@
+/* ═══════════════════════════════════════════════════════════
+   MATH 302 — MOBILE-ONLY RESPONSIVE STYLES
+   All rules inside @media queries — desktop is UNAFFECTED
+═══════════════════════════════════════════════════════════ */
+
+/* ── Home button hidden on desktop ── */
+.mobile-home-btn { display: none !important; }
+
+@media (max-width: 768px) {
+
+  /* ═══════════════════════════════════════
+     MOBILE HOME BUTTON (FAB)
+  ═══════════════════════════════════════ */
+  .mobile-home-btn {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 6px;
+    position: fixed;
+    bottom: 24px;
+    right: 16px;
+    z-index: 9999;
+    background: rgba(14,27,46,0.93);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #fff;
+    font-family: -apple-system, 'DM Sans', system-ui, sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    padding: 12px 20px;
+    border-radius: 50px;
+    text-decoration: none;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.1);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: transform 0.15s ease;
+  }
+  .mobile-home-btn:active { transform: scale(0.93); }
+  .mobile-home-btn svg {
+    width: 16px; height: 16px;
+    stroke: currentColor; stroke-width: 2; fill: none;
+    stroke-linecap: round; stroke-linejoin: round;
+    flex-shrink: 0;
+  }
+
+  /* ═══════════════════════════════════════
+     GLOBAL FIXES
+  ═══════════════════════════════════════ */
+  html { -webkit-text-size-adjust: 100%; }
+  body { overflow-x: hidden !important; }
+
+  /* Force inline 2-col grids to 1-col */
+  div[style*="grid-template-columns:1fr 1fr"],
+  div[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* MathJax & KaTeX overflow */
+  mjx-container,
+  .MathJax, .MathJax_Display,
+  .katex-display, .katex-display > .katex {
+    overflow-x: auto !important;
+    overflow-y: hidden !important;
+    -webkit-overflow-scrolling: touch;
+    max-width: 100% !important;
+  }
+  mjx-container[display="true"] {
+    overflow-x: auto !important;
+    padding: 4px 0;
+  }
+
+  /* ═══════════════════════════════════════
+     INDEX PAGE
+  ═══════════════════════════════════════ */
+  .top-rule + header { padding: 36px 20px 28px; }
+  .subtitle { font-size: 13px; }
+  .header-ornament { margin-top: 20px; }
+  .lecture-card { padding: 16px 16px; }
+  .card-left { gap: 12px; }
+  .lecture-icon { width: 32px; height: 32px; border-radius: 6px; }
+  .lecture-icon svg { width: 14px; height: 14px; }
+  .lecture-title { font-size: 14px; }
+  .lecture-desc { font-size: 11px; }
+
+  /* ═══════════════════════════════════════
+     ACADEMIC PAGES (Bisection / Newton / Fixed Point)
+  ═══════════════════════════════════════ */
+  .header-inner { padding: 36px 16px 32px !important; }
+  .site-header h1 { font-size: clamp(1.4rem, 6vw, 2rem) !important; }
+  .header-pill { font-size: 0.62rem !important; padding: 4px 12px !important; margin-bottom: 14px !important; }
+  .header-sub { font-size: 0.8rem !important; }
+  .header-meta { gap: 6px !important; }
+  .header-meta .hm-item { font-size: 0.6rem !important; }
+  .header-tags { gap: 6px !important; margin-top: 16px !important; }
+  .htag { font-size: 0.65rem !important; padding: 3px 10px !important; }
+
+  /* TOC */
+  .toc-section { padding: 0 12px !important; }
+  .toc-card { padding: 16px 14px !important; }
+  .toc-grid { grid-template-columns: 1fr !important; gap: 2px !important; }
+  .toc-grid a { font-size: 0.8rem !important; padding: 8px 10px !important; min-height: 44px; }
+
+  /* Page layout */
+  .page-layout { padding: 8px 12px 80px !important; }
+
+  /* Section heads */
+  .sec-head { margin: 28px 0 14px !important; flex-wrap: wrap; gap: 8px !important; }
+  .sec-head h2 { font-size: 1.15rem !important; white-space: normal !important; }
+  .sec-badge { font-size: 0.6rem !important; }
+
+  /* Cards */
+  .card { padding: 14px 12px !important; margin-bottom: 12px !important; }
+  .card-title { font-size: 0.7rem !important; }
+
+  /* Math displays */
+  .math-display { padding: 10px 12px !important; font-size: 0.88rem !important; margin: 10px 0 !important; }
+
+  /* Derivation steps */
+  .derive-step { padding: 10px 10px !important; gap: 10px !important; }
+  .derive-step .ds-body { font-size: 0.88rem !important; }
+  .derive-step .ds-body .ds-note { font-size: 0.72rem !important; }
+
+  /* Arabic notes */
+  .ar { font-size: 0.76rem !important; padding: 5px 10px !important; }
+
+  /* Conditions grid */
+  .cond-grid { grid-template-columns: 1fr !important; }
+  .cond-tile { padding: 10px 12px !important; }
+
+  /* Theorem card */
+  .theorem-card { padding: 14px 16px !important; }
+
+  /* Problem panels */
+  .prob-header { padding: 14px 14px !important; }
+  .prob-body { padding: 14px 12px !important; }
+  .prob-index { font-size: 1.6rem !important; min-width: 36px !important; }
+  .prob-meta h3 { font-size: 1rem !important; }
+  .ph { font-size: 0.7rem !important; margin: 14px 0 8px !important; }
+
+  /* Iteration tables */
+  .iter-tbl { display: block !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+  .iter-tbl thead { display: table; width: 100%; min-width: 400px; }
+  .iter-tbl tbody { display: table; width: 100%; min-width: 400px; }
+  .iter-tbl thead th { padding: 8px 10px !important; font-size: 0.62rem !important; }
+  .iter-tbl tbody td { padding: 7px 10px !important; font-size: 0.75rem !important; }
+
+  /* Result banner */
+  .result-banner { flex-direction: column !important; gap: 8px !important; padding: 14px 14px !important; }
+  .rb-value { font-size: 1.1rem !important; }
+
+  /* Summary grid */
+  .summary-grid { grid-template-columns: 1fr !important; }
+
+  /* Visualization */
+  #viz-section { padding: 14px !important; }
+  #viz-canvas { height: 240px !important; }
+  .viz-controls { flex-direction: column; align-items: stretch !important; }
+  .viz-controls select { width: 100% !important; min-width: 0 !important; }
+  .viz-btn { padding: 12px 18px !important; min-height: 44px; font-size: 0.82rem !important; }
+  .viz-legend { gap: 8px !important; }
+  #viz-log { font-size: 0.7rem !important; padding: 10px 12px !important; }
+  .viz-stats-bar { gap: 12px !important; padding: 8px 12px !important; }
+  .viz-stats-bar span { font-size: 0.68rem !important; }
+
+  /* Proof block */
+  .proof-block { padding: 10px 14px !important; font-size: 0.76rem !important; }
+
+  /* Footer */
+  footer { padding: 18px 14px !important; font-size: 0.65rem !important; }
+
+  /* Definition / theorem / note boxes (Fixed Point) */
+  .def-box { padding: 14px 14px !important; }
+  .theorem-box { padding: 14px 14px !important; }
+  .note-box { padding: 12px 14px !important; }
+  .formula-ref { padding: 12px 14px !important; }
+
+  /* Pill badges */
+  .pill-row { gap: 6px !important; }
+  .pill { font-size: 0.7rem !important; padding: 4px 10px !important; }
+
+  /* ═══════════════════════════════════════
+     JACOBI PAGE
+  ═══════════════════════════════════════ */
+  /* Nav pill bar */
+  nav.toc { padding: 0.5rem 0.8rem !important; gap: 0.3rem !important; }
+  nav.toc a { padding: 0.4rem 0.7rem !important; font-size: 0.76rem !important; min-height: 36px; display: inline-flex; align-items: center; }
+
+  /* Grid 2-col to 1-col */
+  .grid2 { grid-template-columns: 1fr !important; }
+
+  /* Steps touch target */
+  .steps li { gap: 0.7rem; margin-bottom: 0.8rem; }
+
+  /* Formula boxes */
+  .formula { padding: 0.7rem 0.9rem !important; font-size: 0.84rem !important; }
+
+  /* Math block */
+  .math-block { overflow-x: auto !important; -webkit-overflow-scrolling: touch; padding: 0.5rem 0.8rem !important; }
+
+  /* Table scroll */
+  .tbl-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+  .tbl-wrap table { min-width: 420px; }
+
+  /* Diff grid */
+  .diff-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* Equation set */
+  .eq-set { padding: 0.7rem 1rem !important; }
+  .eq-set p { font-size: 0.82rem !important; }
+  .rearr { padding: 0.7rem 1rem !important; }
+  .rearr p { font-size: 0.82rem !important; }
+
+  /* Accuracy block */
+  .acc-block { padding: 1rem 1.1rem !important; }
+
+  /* Callout */
+  .callout { padding: 0.7rem 0.9rem !important; font-size: 0.86rem !important; }
+
+  /* Convergence badge */
+  .conv-badge { font-size: 0.75rem !important; }
+
+  /* ═══════════════════════════════════════
+     NONLINEAR EQUATIONS PAGE
+  ═══════════════════════════════════════ */
+  /* Top nav */
+  .top-nav { gap: 0 !important; }
+  .top-nav a { padding: 0.55rem 0.8rem !important; font-size: 0.72rem !important; }
+  .top-nav .nav-brand { padding: 0.55rem 1rem !important; font-size: 0.78rem !important; }
+
+  /* Hero */
+  .hero { padding: 2.5rem 1rem 2rem !important; }
+  .hero h1 { font-size: clamp(1.4rem, 5vw, 2rem) !important; }
+  .hero-sub { font-size: 0.9rem !important; }
+  .hero-tag { font-size: 0.7rem !important; padding: 0.25rem 0.8rem !important; }
+  .hero-meta { gap: 0.8rem !important; font-size: 0.78rem !important; }
+
+  /* Page wrap */
+  .page-wrap { padding: 1.5rem 0.8rem 5rem !important; }
+
+  /* Section titles */
+  .section-title { font-size: 1.2rem !important; gap: 0.4rem !important; }
+  .section-title .num { width: 24px; height: 24px; font-size: 0.75rem; }
+
+  /* Cards */
+  .card-blue, .card-green, .card-amber, .card-red { padding: 1.1rem 1rem !important; }
+  .card-title { font-size: 0.95rem !important; }
+
+  /* Info boxes */
+  .info-box { padding: 0.8rem 1rem !important; font-size: 0.88rem !important; }
+
+  /* Steps */
+  .step { padding: 0.9rem 1rem !important; gap: 0.7rem !important; }
+  .step-num { width: 28px; height: 28px; font-size: 0.78rem; }
+  .step-label { font-size: 0.9rem !important; }
+  .step-desc { font-size: 0.85rem !important; }
+  .step-ar { font-size: 0.78rem !important; }
+
+  /* Comparison grid */
+  .compare-grid { grid-template-columns: 1fr !important; }
+
+  /* Example panels */
+  .example-hdr { padding: 0.8rem 1rem !important; }
+  .example-hdr h3 { font-size: 1rem !important; }
+  .example-body { padding: 1rem 1rem !important; }
+
+  /* Solution steps */
+  .sol-step-title { font-size: 0.75rem !important; }
+  .sol-step p { font-size: 0.86rem !important; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+  .table-wrap table { min-width: 400px; }
+
+  /* Accuracy box */
+  .accuracy-box { padding: 1rem 1.1rem !important; }
+
+  /* Formula reference */
+  .formula-ref { padding: 1rem 1.1rem !important; }
+
+  /* Remark */
+  .remark { padding: 0.7rem 1rem !important; font-size: 0.84rem !important; }
+
+  /* Footer */
+  .footer { padding: 1.5rem 1rem !important; font-size: 0.76rem !important; }
+
+  /* G-matrix display */
+  .g-matrix-display { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+}
+
+/* ═══════════════════════════════════════
+   EXTRA SMALL SCREENS (≤ 380px)
+═══════════════════════════════════════ */
+@media (max-width: 380px) {
+  .mobile-home-btn { padding: 10px 16px !important; font-size: 0.76rem !important; bottom: 16px !important; right: 12px !important; }
+  .site-header h1 { font-size: 1.3rem !important; }
+  .hero h1 { font-size: 1.3rem !important; }
+  .sec-head h2 { font-size: 1.05rem !important; }
+  .section-title { font-size: 1.05rem !important; }
+  .derive-step { flex-direction: column; gap: 6px !important; }
+  .step { flex-direction: column; gap: 6px !important; }
+  .prob-header { flex-direction: column; gap: 8px !important; }
+}

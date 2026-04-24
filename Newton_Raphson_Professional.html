@@ -1,0 +1,1815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Newton-Raphson Method — Math 302</title>
+
+<!-- MathJax for LaTeX rendering -->
+<script>
+window.MathJax = {
+  tex: {
+    inlineMath: [['\\(','\\)']],
+    displayMath: [['\\[','\\]']],
+    packages: {'[+]': ['ams']},
+    tags: 'none'
+  },
+  options: { skipHtmlTags: ['script','noscript','style','textarea'] },
+  startup: { typeset: false }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js" async></script>
+
+<!-- Google Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
+<style>
+/* ═══════════════════════════════════════════════
+   DESIGN SYSTEM — Soft Academic Ivory & Midnight
+═══════════════════════════════════════════════ */
+:root {
+  --ivory:       #f7f4ef;
+  --white:       #ffffff;
+  --paper:       #fdfbf7;
+  --fog:         #eee9e0;
+  --border:      #ddd6c8;
+  --ink:         #1c1a18;
+  --ink-soft:    #4a4540;
+  --muted:       #8a8078;
+  --midnight:    #0e1b2e;
+  --navy:        #163256;
+  --cobalt:      #1e4d8c;
+  --sky:         #3b82c4;
+  --teal:        #1a7a6e;
+  --amber:       #b57a10;
+  --amber-lt:    #f5c842;
+  --rust:        #b53a2a;
+  --green:       #1e6b45;
+  --purple:      #5b3f9a;
+
+  --ff-body:   'EB Garamond', Georgia, 'Times New Roman', serif;
+  --ff-ui:     'DM Sans', system-ui, sans-serif;
+  --ff-mono:   'DM Mono', 'Courier New', monospace;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --shadow-sm: 0 1px 6px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 20px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  background: var(--ivory);
+  color: var(--ink);
+  font-family: var(--ff-body);
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  min-height: 100vh;
+}
+
+/* ──────────── HEADER ──────────── */
+.site-header {
+  background: var(--midnight);
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+.site-header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 50%, rgba(30,77,140,.45) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 20%, rgba(26,122,110,.25) 0%, transparent 55%);
+}
+.site-header::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.header-inner {
+  position: relative; z-index: 1;
+  max-width: 980px; margin: 0 auto;
+  padding: 64px 32px 56px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.header-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 30px;
+  padding: 5px 16px;
+  font-family: var(--ff-mono);
+  font-size: .72rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.75);
+  margin-bottom: 22px;
+}
+.header-pill::before { content: '◆'; color: var(--amber-lt); }
+.site-header h1 {
+  font-family: var(--ff-body);
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  margin-bottom: 14px;
+}
+.site-header h1 em { color: var(--amber-lt); font-style: italic; }
+.header-sub {
+  font-family: var(--ff-ui);
+  font-size: .92rem;
+  font-weight: 300;
+  color: rgba(255,255,255,.55);
+  letter-spacing: .3px;
+  max-width: 500px;
+}
+.header-tags {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  margin-top: 28px;
+}
+.htag {
+  font-family: var(--ff-ui);
+  font-size: .75rem;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 20px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.13);
+  color: rgba(255,255,255,.65);
+}
+
+/* ──────────── PAGE LAYOUT — Single Column ──────────── */
+.page-layout {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 8px 24px 80px;
+  display: block;
+}
+
+/* ──────────── TOC — Centered Section Under Header ──────────── */
+.toc-section {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+.toc-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--cobalt);
+  border-radius: 0 0 var(--r-md) var(--r-md);
+  padding: 28px 36px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 40px;
+}
+.toc-card-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 20px;
+}
+.toc-card-head .toc-badge {
+  font-family: var(--ff-mono);
+  font-size: .68rem;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  background: var(--cobalt);
+  color: #fff;
+  padding: 4px 12px;
+  border-radius: 4px;
+}
+.toc-card-head h4 {
+  font-family: var(--ff-body);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--midnight);
+  letter-spacing: -.1px;
+}
+.toc-card-head .toc-rule {
+  flex: 1; height: 1px; background: var(--border);
+}
+.toc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px 24px;
+}
+.toc-grid a {
+  font-family: var(--ff-ui);
+  font-size: .82rem;
+  font-weight: 400;
+  color: var(--cobalt);
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 8px;
+  border-radius: 5px;
+  transition: background .15s, color .15s;
+  line-height: 1.4;
+}
+.toc-grid a:hover {
+  background: #e8f0fb;
+  color: var(--midnight);
+}
+.toc-num {
+  font-family: var(--ff-mono);
+  font-size: .65rem;
+  color: var(--muted);
+  background: var(--fog);
+  padding: 2px 6px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* hide the old sidebar (if any remnant) */
+.toc-sticky { display: none !important; }
+
+/* ──────────── CONTENT AREA ──────────── */
+.content { min-width: 0; width: 100%; }
+
+/* ──────────── SECTION DIVIDERS ──────────── */
+.sec-head {
+  display: flex; align-items: center; gap: 14px;
+  margin: 52px 0 24px;
+}
+.sec-head:first-child { margin-top: 0; }
+.sec-badge {
+  font-family: var(--ff-mono);
+  font-size: .68rem;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: var(--white);
+  background: var(--navy);
+  padding: 4px 11px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+.sec-head h2 {
+  font-family: var(--ff-body);
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--midnight);
+  white-space: nowrap;
+  letter-spacing: -.2px;
+}
+.sec-rule { flex: 1; height: 1px; background: var(--border); }
+
+/* ──────────── CARDS ──────────── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 26px 30px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+}
+.card-title {
+  font-family: var(--ff-ui);
+  font-size: .78rem;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--cobalt);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-title::before {
+  content: '';
+  display: inline-block;
+  width: 3px; height: 14px;
+  background: var(--cobalt);
+  border-radius: 2px;
+}
+
+/* ──────────── MATH DISPLAY BLOCKS ──────────── */
+.math-display {
+  background: #f0f4fa;
+  border: 1px solid #c4d4ec;
+  border-left: 4px solid var(--cobalt);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 16px 22px;
+  margin: 16px 0;
+  overflow-x: auto;
+  font-size: 1.05rem;
+}
+.math-display.amber {
+  background: #fdf8ec;
+  border-color: #e8d090;
+  border-left-color: var(--amber);
+}
+.math-display.green {
+  background: #edf7f2;
+  border-color: #9fd4b8;
+  border-left-color: var(--teal);
+}
+.math-display.rust {
+  background: #fdf0ee;
+  border-color: #e8b4ae;
+  border-left-color: var(--rust);
+}
+
+/* ──────────── DERIVATION STEPS ──────────── */
+.derive-step {
+  display: flex; gap: 16px; align-items: flex-start;
+  margin: 10px 0;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: var(--paper);
+  border: 1px solid var(--fog);
+}
+.derive-step .ds-num {
+  font-family: var(--ff-mono);
+  font-size: .7rem;
+  font-weight: 500;
+  background: var(--navy);
+  color: #fff;
+  min-width: 22px; height: 22px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.derive-step .ds-body { font-size: .97rem; line-height: 1.7; }
+.derive-step .ds-body .ds-note {
+  font-family: var(--ff-ui);
+  font-size: .8rem;
+  color: var(--muted);
+  font-style: italic;
+  display: block;
+  margin-top: 3px;
+}
+
+/* ──────────── ARABIC NOTE INLINE ──────────── */
+.ar {
+  font-family: var(--ff-ui);
+  direction: rtl;
+  font-size: .85rem;
+  color: var(--amber);
+  background: #fefbf0;
+  border: 1px solid #f0dfa0;
+  border-right: 3px solid var(--amber);
+  border-radius: 0 5px 5px 0;
+  padding: 6px 14px 6px 10px;
+  margin: 8px 0;
+  display: block;
+  text-align: right;
+}
+
+/* ──────────── CONDITIONS TABLE ──────────── */
+.cond-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 14px 0;
+}
+@media(max-width:540px){ .cond-grid { grid-template-columns: 1fr; } }
+.cond-tile {
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  padding: 14px 16px;
+  background: var(--paper);
+}
+.cond-tile .ct-label {
+  font-family: var(--ff-mono);
+  font-size: .65rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.cond-tile .ct-val { font-size: .95rem; color: var(--midnight); line-height: 1.5; }
+
+/* ──────────── VISUALIZATION ──────────── */
+#viz-section {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  padding: 28px;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 20px;
+}
+.viz-controls {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  margin-bottom: 18px;
+}
+.viz-controls select {
+  font-family: var(--ff-mono);
+  font-size: .78rem;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--ivory);
+  color: var(--midnight);
+  cursor: pointer;
+  outline: none;
+  flex: 1; min-width: 180px;
+}
+.viz-btn {
+  font-family: var(--ff-ui);
+  font-size: .8rem;
+  font-weight: 500;
+  padding: 8px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity .18s, transform .12s;
+}
+.viz-btn:hover { opacity: .88; transform: translateY(-1px); }
+.viz-btn.primary { background: var(--navy); color: #fff; }
+.viz-btn.secondary { background: var(--fog); color: var(--ink); }
+.viz-btn.reset { background: var(--amber); color: var(--midnight); }
+
+#viz-canvas {
+  width: 100%; height: 400px;
+  display: block;
+  border-radius: 8px;
+  border: 1px solid var(--fog);
+  background: #fafcff;
+}
+
+.viz-legend {
+  display: flex; flex-wrap: wrap; gap: 16px;
+  margin-top: 12px; padding-top: 12px;
+  border-top: 1px solid var(--fog);
+}
+.viz-legend-item {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--ff-ui);
+  font-size: .75rem;
+  color: var(--ink-soft);
+}
+.viz-legend-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+.viz-legend-line {
+  width: 24px; height: 2px;
+}
+
+#viz-log {
+  margin-top: 14px;
+  background: var(--midnight);
+  color: #c8dfff;
+  font-family: var(--ff-mono);
+  font-size: .78rem;
+  border-radius: 7px;
+  padding: 12px 16px;
+  min-height: 42px;
+  line-height: 1.6;
+}
+#viz-log .vl-ok { color: #7ddba8; }
+#viz-log .vl-iter { color: #f5c842; }
+
+/* ──────────── PROBLEM PANELS ──────────── */
+.prob-panel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 32px;
+}
+.prob-header {
+  background: var(--navy);
+  color: #fff;
+  padding: 20px 28px;
+  display: flex; align-items: flex-start; gap: 16px;
+}
+.prob-index {
+  font-family: var(--ff-body);
+  font-size: 2.2rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--amber-lt);
+  min-width: 48px;
+}
+.prob-meta { flex: 1; }
+.prob-meta .prob-label {
+  font-family: var(--ff-mono);
+  font-size: .65rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.5);
+  margin-bottom: 4px;
+}
+.prob-meta h3 {
+  font-family: var(--ff-body);
+  font-size: 1.2rem;
+  font-weight: 500;
+  color: #fff;
+  line-height: 1.35;
+}
+
+.prob-body { padding: 26px 28px; }
+
+/* sub-headings inside problem */
+.ph {
+  font-family: var(--ff-ui);
+  font-size: .75rem;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--cobalt);
+  margin: 22px 0 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.ph::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+/* ──────────── CONDITION PILLS ──────────── */
+.pill-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0; }
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--ff-mono);
+  font-size: .76rem;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-weight: 500;
+}
+.pill.pos { background: #e6f5ed; color: #1b6b3a; border: 1px solid #9fd4b0; }
+.pill.neg { background: #fdecea; color: #93261c; border: 1px solid #e8aca8; }
+.pill.ok  { background: #e8f0fb; color: #1a4a8a; border: 1px solid #aac4e8; }
+
+/* ──────────── ITERATION TABLE ──────────── */
+.iter-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: .88rem;
+  margin: 14px 0;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+.iter-tbl thead th {
+  background: var(--midnight);
+  color: rgba(255,255,255,.85);
+  font-family: var(--ff-mono);
+  font-size: .7rem;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  text-align: left;
+}
+.iter-tbl tbody td {
+  padding: 9px 14px;
+  font-family: var(--ff-mono);
+  font-size: .82rem;
+  border-bottom: 1px solid var(--fog);
+  color: var(--ink-soft);
+}
+.iter-tbl tbody tr:nth-child(even) td { background: var(--paper); }
+.iter-tbl tbody tr.row-init td { color: var(--ink); font-weight: 500; }
+.iter-tbl tbody tr.row-converged td {
+  background: #eaf6f0;
+  color: var(--teal);
+  font-weight: 600;
+}
+.iter-tbl tbody tr.row-converged td:first-child::before {
+  content: '✓ '; color: var(--green);
+}
+.iter-tbl .delta { color: var(--muted); font-size: .76rem; }
+
+/* ──────────── RESULT BOX ──────────── */
+.result-banner {
+  margin-top: 20px;
+  background: linear-gradient(130deg, var(--midnight) 0%, #1e3d6e 100%);
+  border-radius: var(--r-md);
+  padding: 20px 24px;
+  display: flex; align-items: center; gap: 18px;
+  box-shadow: 0 4px 20px rgba(14,27,46,.2);
+}
+.rb-icon { font-size: 2rem; flex-shrink: 0; }
+.rb-label {
+  font-family: var(--ff-ui);
+  font-size: .78rem;
+  color: rgba(255,255,255,.55);
+  margin-bottom: 4px;
+}
+.rb-value {
+  font-family: var(--ff-mono);
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: var(--amber-lt);
+  letter-spacing: .5px;
+}
+.rb-sub {
+  font-family: var(--ff-ui);
+  font-size: .75rem;
+  color: rgba(255,255,255,.4);
+  margin-top: 4px;
+}
+
+/* ──────────── CONVERGENCE PROOF ──────────── */
+.proof-block {
+  background: #f6f4ff;
+  border: 1px solid #c8baf2;
+  border-left: 4px solid var(--purple);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 14px 20px;
+  margin: 12px 0;
+  font-family: var(--ff-mono);
+  font-size: .82rem;
+  color: #3a2a70;
+  line-height: 1.7;
+}
+
+/* ──────────── FOOTER ──────────── */
+footer {
+  text-align: center;
+  padding: 28px 24px;
+  color: var(--muted);
+  font-family: var(--ff-mono);
+  font-size: .72rem;
+  letter-spacing: 1px;
+  border-top: 1px solid var(--border);
+}
+
+/* ──────────── RESPONSIVE ──────────── */
+@media(max-width: 600px) {
+  .toc-grid { grid-template-columns: 1fr 1fr; }
+  .toc-card { padding: 20px 18px; }
+  .prob-panel .prob-header { padding: 16px 18px; }
+  .prob-body { padding: 18px 18px; }
+  .card { padding: 18px 18px; }
+  #viz-section { padding: 18px; }
+}
+@media(max-width: 420px) {
+  .toc-grid { grid-template-columns: 1fr; }
+}
+p { margin-bottom: 10px; }
+.mt-sm { margin-top: 8px; }
+.mt-md { margin-top: 16px; }
+.text-muted { color: var(--muted); font-size: .88rem; }
+strong { font-weight: 600; }
+
+/* animate on load */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.card, .prob-panel, #viz-section {
+  animation: fadeUp .4s ease both;
+}
+</style>
+  <link rel="stylesheet" href="mobile.css"/>
+</head>
+<body>
+<!-- Mobile Home Button -->
+<a href="index.html" class="mobile-home-btn" aria-label="Return to Home">
+  <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+  Home
+</a>
+
+<!-- ═══════════════ HEADER ═══════════════ -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-pill">Math 302 &nbsp;·&nbsp; Section 3</div>
+    <h1>The <em>Newton-Raphson</em> Method</h1>
+    <p class="header-sub">Numerical Analysis — Theory, Convergence Proof, Visualization &amp; Solved Problems</p>
+    <div class="header-tags">
+      <span class="htag">Root Finding</span>
+      <span class="htag">Quadratic Convergence</span>
+      <span class="htag">Tangent Lines</span>
+      <span class="htag">Iterative Methods</span>
+    </div>
+  </div>
+</header>
+
+<!-- ═══════════════ CONTACT / TOC SECTION — centered under header ═══════════════ -->
+<div class="toc-section">
+  <div class="toc-card">
+    <div class="toc-card-head">
+      <span class="toc-badge">Contents</span>
+      <h4>Table of Contents</h4>
+      <div class="toc-rule"></div>
+    </div>
+    <div class="toc-grid">
+      <a href="#sec-theory">
+        <span class="toc-num">01</span>Definition &amp; Idea
+      </a>
+      <a href="#sec-derivation">
+        <span class="toc-num">02</span>Formula Derivation
+      </a>
+      <a href="#sec-conditions">
+        <span class="toc-num">03</span>Applicability Conditions
+      </a>
+      <a href="#sec-convergence">
+        <span class="toc-num">04</span>Convergence Proof
+      </a>
+      <a href="#sec-viz">
+        <span class="toc-num">05</span>Visualization
+      </a>
+      <a href="#sec-problems">
+        <span class="toc-num">06</span>Solved Problems
+      </a>
+      <a href="#prob-ex">
+        <span class="toc-num">↳</span>Example Problem
+      </a>
+      <a href="#prob-2i">
+        <span class="toc-num">↳</span>Problem 2(i)
+      </a>
+      <a href="#prob-2ii">
+        <span class="toc-num">↳</span>Problem 2(ii)
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════ PAGE LAYOUT ═══════════════ -->
+<div class="page-layout">
+
+  <!-- ── CONTENT ── -->
+  <div class="content">
+
+    <!-- ══════════════════════════════════
+         § 01  DEFINITION & IDEA
+    ══════════════════════════════════ -->
+    <div class="sec-head" id="sec-theory">
+      <span class="sec-badge">§ 01</span>
+      <h2>Definition &amp; Core Idea</h2>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">What Is It?</div>
+      <p>
+        The <strong>Newton-Raphson Method</strong> is an iterative root-finding algorithm. Given a differentiable function \(f(x)\), it finds an approximation to a solution of \(f(x)=0\) by repeatedly refining a guess using the function's tangent line.
+      </p>
+      <span class="ar">الفكرة الأساسية: بدل ما نحل المعادلة مباشرةً، نبدأ بتخمين أوّلي ونحسّنه خطوة بخطوة باستخدام المماس.</span>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Geometric Interpretation</div>
+      <p>At a point \(x_{n-1}\) on the curve, draw the <strong>tangent line</strong> to \(f\). Where that tangent crosses the \(x\)-axis is the next approximation \(x_n\). Each tangent "overshoots" closer to the true root.</p>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;">
+        <div class="cond-tile">
+          <div class="ct-label">Intuition</div>
+          <div class="ct-val">Tangent line ≈ local linear model of \(f\). Its zero is a better root estimate.</div>
+        </div>
+        <div class="cond-tile">
+          <div class="ct-label">Speed</div>
+          <div class="ct-val">Converges quadratically — correct digits <em>double</em> each iteration near the root.</div>
+        </div>
+      </div>
+      <span class="ar">يعني إننا بنرسم خط المماس عند النقطة الحالية، ونشوف وين بيقطع المحور السيني — هاد بيكون تقريبنا الجديد.</span>
+    </div>
+
+    <!-- ══════════════════════════════════
+         § 02  FORMULA DERIVATION
+    ══════════════════════════════════ -->
+    <div class="sec-head" id="sec-derivation">
+      <span class="sec-badge">§ 02</span>
+      <h2>Formula Derivation</h2>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Step-by-Step Derivation</div>
+
+      <div class="derive-step">
+        <div class="ds-num">1</div>
+        <div class="ds-body">
+          The tangent line to \(f\) at the point \(\bigl(x_{n-1},\, f(x_{n-1})\bigr)\) is:
+          <div class="math-display">
+            \[ y - f(x_{n-1}) \;=\; f'(x_{n-1})\cdot\bigl(x - x_{n-1}\bigr) \]
+          </div>
+          <span class="ds-note">هاد هو معادلة خط المماس عند النقطة \(x_{n-1}\).</span>
+        </div>
+      </div>
+
+      <div class="derive-step">
+        <div class="ds-num">2</div>
+        <div class="ds-body">
+          Set \(y = 0\) (find where the tangent meets the \(x\)-axis):
+          <div class="math-display">
+            \[ -f(x_{n-1}) \;=\; f'(x_{n-1})\cdot\bigl(x_n - x_{n-1}\bigr) \]
+          </div>
+        </div>
+      </div>
+
+      <div class="derive-step">
+        <div class="ds-num">3</div>
+        <div class="ds-body">
+          Solve for \(x_n\):
+          <div class="math-display">
+            \[ x_n - x_{n-1} \;=\; -\frac{f(x_{n-1})}{f'(x_{n-1})} \]
+          </div>
+          <span class="ds-note">يعني هنا بنستخدم الاشتقاق لنقسم عليه ونعزل \(x_n\).</span>
+        </div>
+      </div>
+
+      <div class="derive-step">
+        <div class="ds-num">4</div>
+        <div class="ds-body">
+          <strong>Newton-Raphson Iteration Formula:</strong>
+          <div class="math-display amber">
+            \[ \boxed{x_n \;=\; x_{n-1} - \frac{f(x_{n-1})}{f'(x_{n-1})}} \]
+          </div>
+          with the stopping condition \(f'(x) \neq 0\) at every step.
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         § 03  CONDITIONS
+    ══════════════════════════════════ -->
+    <div class="sec-head" id="sec-conditions">
+      <span class="sec-badge">§ 03</span>
+      <h2>Applicability Conditions</h2>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Required Conditions</div>
+      <p>Before applying the method on an interval \([a, b]\), check:</p>
+
+      <div class="cond-grid">
+        <div class="cond-tile">
+          <div class="ct-label">Condition 1 — Non-zero Derivative</div>
+          <div class="ct-val">\(f'(x) \neq 0\) for all \(x \in [a,b]\)</div>
+        </div>
+        <div class="cond-tile">
+          <div class="ct-label">Condition 2 — Same Sign</div>
+          <div class="ct-val">\(f'(a)\) and \(f'(b)\) must have the <strong>same sign</strong></div>
+        </div>
+        <div class="cond-tile">
+          <div class="ct-label">Condition 3 — Continuity</div>
+          <div class="ct-val">\(f\) is continuous and differentiable on \([a,b]\)</div>
+        </div>
+        <div class="cond-tile">
+          <div class="ct-label">Initial Guess</div>
+          <div class="ct-val">Choose \(x_0 = \dfrac{a+b}{2}\) (midpoint of interval)</div>
+        </div>
+      </div>
+
+      <span class="ar">الشرط الأهم: المشتقة ما تصيرش صفر داخل الفترة، وكمان إشارة f′(a) تكون نفس إشارة f′(b).</span>
+
+      <p class="mt-md text-muted">
+        <strong>Why same sign?</strong> If \(f'\) doesn't change sign, it can't be zero inside \([a,b]\) (by the Intermediate Value Theorem), guaranteeing the denominator never vanishes.
+      </p>
+    </div>
+
+    <!-- ══════════════════════════════════
+         § 04  CONVERGENCE PROOF
+    ══════════════════════════════════ -->
+    <div class="sec-head" id="sec-convergence">
+      <span class="sec-badge">§ 04</span>
+      <h2>Quadratic Convergence</h2>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Definition</div>
+      <p>Newton-Raphson is said to have <strong>quadratic (second-order) convergence</strong>. If \(e_n = |x^* - x_n|\) is the error at step \(n\), then:</p>
+      <div class="math-display amber">
+        \[ e_n \;\propto\; e_{n-1}^2 \qquad \Longleftrightarrow \qquad e_n = K \cdot e_{n-1}^2 \]
+      </div>
+      <p>Each iteration <em>squares</em> the error — meaning correct decimal digits double each step.</p>
+      <span class="ar">التقارب التربيعي يعني: إذا عندك 3 أرقام صحيحة، بعد خطوة رح يصير عندك 6، وبعدها 12 — تتضاعف!</span>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Formal Proof (Fixed-Point Framework)</div>
+
+      <p>View Newton's method as a fixed-point iteration \(x = g(x)\), where:</p>
+      <div class="math-display">
+        \[ g(x) \;=\; x - \frac{f(x)}{f'(x)} \]
+      </div>
+
+      <div class="ph">Step 1 — Differentiate g(x)</div>
+      <div class="proof-block">
+        g'(x) = 1 - [f'(x)·f'(x) - f(x)·f''(x)] / [f'(x)]²
+      </div>
+      <div class="math-display">
+        \[ g'(x) \;=\; \frac{f(x)\cdot f''(x)}{\bigl[f'(x)\bigr]^2} \]
+      </div>
+
+      <div class="ph">Step 2 — Evaluate at the root x*</div>
+      <p>At \(x^*\), we have \(f(x^*) = 0\), therefore:</p>
+      <div class="math-display green">
+        \[ g'(x^*) \;=\; \frac{0 \cdot f''(x^*)}{\bigl[f'(x^*)\bigr]^2} \;=\; 0 \]
+      </div>
+      <span class="ar">عند الجذر الحقيقي، مشتقة g تساوي صفر — وهاد هو مفتاح الإثبات.</span>
+
+      <div class="ph">Step 3 — Taylor Expansion</div>
+      <p>Expand \(g\) around \(x_{n-1}\) and evaluate at \(x^*\):</p>
+      <div class="math-display">
+        \[ g(x^*) \;=\; g(x_{n-1}) + (x^*-x_{n-1})\,g'(x_{n-1}) + \frac{(x^*-x_{n-1})^2}{2}\,g''(\xi) \]
+      </div>
+      <p>Since \(g'(x^*) = 0\) and the first-order term vanishes:</p>
+      <div class="math-display">
+        \[ x^* - x_n \;=\; \frac{(x^*-x_{n-1})^2}{2}\,g''(\xi) \]
+      </div>
+
+      <div class="ph">Conclusion</div>
+      <div class="math-display green">
+        \[ \boxed{e_n \;=\; K\cdot e_{n-1}^2} \qquad K = \frac{g''(\xi)}{2} = \frac{f''(x^*)}{2\,f'(x^*)} \]
+      </div>
+      <p class="text-muted">This completes the proof that Newton-Raphson has <strong>quadratic convergence</strong> near a simple root.</p>
+    </div>
+
+    <!-- ══════════════════════════════════
+         § 05  VISUALIZATION
+    ══════════════════════════════════ -->
+    <div class="sec-head" id="sec-viz">
+      <span class="sec-badge">§ 05</span>
+      <h2>Interactive Visualization</h2>
+      <div class="sec-rule"></div>
+    </div>
+
+    <div id="viz-section">
+      <div class="viz-controls">
+        <select id="fn-select">
+          <option value="poly">f(x) = x³ − 2x² − 1 &nbsp;on&nbsp; [2, 3]</option>
+          <option value="trig">f(x) = eˣ + 2⁻ˣ + 2cos x − 6 &nbsp;on&nbsp; [1, 2]</option>
+          <option value="log">f(x) = (x−2)² − ln x &nbsp;on&nbsp; [1, 2]</option>
+        </select>
+        <button class="viz-btn primary" id="btn-step">▶&ensp;Next Iteration</button>
+        <button class="viz-btn reset" id="btn-auto">⚡&ensp;Auto Run</button>
+        <button class="viz-btn secondary" id="btn-reset">↺&ensp;Reset</button>
+      </div>
+
+      <canvas id="viz-canvas" width="880" height="340"></canvas>
+
+      <div class="viz-legend">
+        <span class="viz-legend-item">
+          <span class="viz-legend-line" style="background:#0e1b2e"></span> Function curve
+        </span>
+        <span class="viz-legend-item">
+          <span class="viz-legend-line" style="background:#e55;stroke-dasharray:4"></span> Tangent lines
+        </span>
+        <span class="viz-legend-item">
+          <span class="viz-legend-dot" style="background:#b57a10"></span> Iterations xₙ
+        </span>
+        <span class="viz-legend-item">
+          <span class="viz-legend-line" style="background:#1a7a6e;border-top:2px dashed"></span> True root x*
+        </span>
+      </div>
+
+      <div id="viz-log">Select a function and press <strong>Next Iteration</strong> to begin.</div>
+    </div>
+
+    <!-- ══════════════════════════════════
+         § 06  SOLVED PROBLEMS
+    ══════════════════════════════════ -->
+    <div class="sec-head" id="sec-problems">
+      <span class="sec-badge">§ 06</span>
+      <h2>Solved Problems</h2>
+      <div class="sec-rule"></div>
+    </div>
+
+    <!-- ────────────────────────────────────
+         EXAMPLE PROBLEM
+    ──────────────────────────────────── -->
+    <div class="prob-panel" id="prob-ex">
+      <div class="prob-header">
+        <div class="prob-index">Ex.</div>
+        <div class="prob-meta">
+          <div class="prob-label">Example Problem · Full Detail</div>
+          <h3>Solve \(x^3 - 2x^2 - 1 = 0\) on \([2,\,3]\) — 4 Iterations</h3>
+        </div>
+      </div>
+      <div class="prob-body">
+
+        <div class="ph">Setup</div>
+        <div class="math-display">
+          \[
+            f(x) = x^3 - 2x^2 - 1, \qquad x \in [2,\,3]
+          \]
+          \[
+            f'(x) = 3x^2 - 4x
+          \]
+        </div>
+
+        <div class="ph">Condition Check</div>
+        <p>Verify \(f'(a)\) and \(f'(b)\) have the same sign:</p>
+        <div class="math-display">
+          \[
+            f'(2) = 3(2)^2 - 4(2) = 12 - 8 = 4 > 0 \quad (+)
+          \]
+          \[
+            f'(3) = 3(3)^2 - 4(3) = 27 - 12 = 15 > 0 \quad (+)
+          \]
+        </div>
+        <div class="pill-row">
+          <span class="pill pos">✓ f′(2) = 4 &gt; 0</span>
+          <span class="pill pos">✓ f′(3) = 15 &gt; 0</span>
+          <span class="pill ok">✓ Same sign → Method applicable</span>
+        </div>
+
+        <div class="ph">Iteration Formula</div>
+        <div class="math-display amber">
+          \[
+            x_n \;=\; x_{n-1} \;-\; \frac{x_{n-1}^3 - 2x_{n-1}^2 - 1}{3x_{n-1}^2 - 4x_{n-1}}
+          \]
+        </div>
+        <p><strong>Initial guess:</strong> \(x_0 = \dfrac{2+3}{2} = 2.5\)</p>
+        <span class="ar">نبدأ بالنقطة الوسطى للفترة كتخمين أوّلي — هاد دائماً اختيار آمن.</span>
+
+        <div class="ph">Iteration Results</div>
+        <table class="iter-tbl">
+          <thead>
+            <tr>
+              <th>\(n\)</th>
+              <th>\(x_n\)</th>
+              <th>\(f(x_n)\)</th>
+              <th>\(|x_n - x_{n-1}|\)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr class="row-init">
+              <td>0</td>
+              <td>2.500000000</td>
+              <td>2.125000</td>
+              <td class="delta">—</td>
+            </tr>
+            <tr>
+              <td>1</td>
+              <td>2.257142857</td>
+              <td>0.421 820</td>
+              <td class="delta">2.43 × 10⁻¹</td>
+            </tr>
+            <tr>
+              <td>2</td>
+              <td>2.207576294</td>
+              <td>0.014 909</td>
+              <td class="delta">4.96 × 10⁻²</td>
+            </tr>
+            <tr>
+              <td>3</td>
+              <td>2.205572645</td>
+              <td>0.000 020</td>
+              <td class="delta">2.00 × 10⁻³</td>
+            </tr>
+            <tr>
+              <td>4</td>
+              <td>2.205569430</td>
+              <td>3.5 × 10⁻¹¹</td>
+              <td class="delta">3.2 × 10⁻⁶</td>
+            </tr>
+            <tr class="row-converged">
+              <td>5</td>
+              <td>2.205569430</td>
+              <td>≈ 0</td>
+              <td class="delta">≈ 0</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="result-banner">
+          <div class="rb-icon">✓</div>
+          <div>
+            <div class="rb-label">Root — converged at iteration n = 4</div>
+            <div class="rb-value">\(x^* \approx 2.205569430\)</div>
+            <div class="rb-sub">Quadratic convergence observed: error squared each step</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ────────────────────────────────────
+         PROBLEM 2(i)
+    ──────────────────────────────────── -->
+    <div class="prob-panel" id="prob-2i">
+      <div class="prob-header">
+        <div class="prob-index">2i</div>
+        <div class="prob-meta">
+          <div class="prob-label">Problem 2(i) · Accuracy 10⁻⁵</div>
+          <h3>Solve \(e^x + 2^{-x} + 2\cos x - 6 = 0\) on \([1,\,2]\)</h3>
+        </div>
+      </div>
+      <div class="prob-body">
+
+        <div class="ph">Setup</div>
+        <div class="math-display">
+          \[
+            f(x) = e^x + 2^{-x} + 2\cos x - 6, \qquad x \in [1,\,2]
+          \]
+        </div>
+
+        <p><strong>Derivative</strong> (using chain rule on each term):</p>
+        <div class="math-display">
+          \[
+            f'(x) = e^x - 2^{-x}\ln 2 - 2\sin x
+          \]
+        </div>
+        <span class="ar">مشتقة \(2^{-x}\) = \(-2^{-x}\ln 2\) باستخدام قاعدة السلسلة، ومشتقة \(2\cos x = -2\sin x\).</span>
+
+        <div class="ph">Condition Check</div>
+        <div class="math-display">
+          \[
+            f'(1) = e^1 - 2^{-1}\ln 2 - 2\sin 1 \approx 0.6888 > 0 \quad (+)
+          \]
+          \[
+            f'(2) = e^2 - 2^{-2}\ln 2 - 2\sin 2 \approx 5.3972 > 0 \quad (+)
+          \]
+        </div>
+        <div class="pill-row">
+          <span class="pill pos">✓ f′(1) ≈ 0.6888 &gt; 0</span>
+          <span class="pill pos">✓ f′(2) ≈ 5.3972 &gt; 0</span>
+          <span class="pill ok">✓ Same sign → Condition satisfied</span>
+        </div>
+
+        <div class="ph">Iteration Formula</div>
+        <div class="math-display amber">
+          \[
+            x_n = x_{n-1} - \frac{e^{x_{n-1}} + 2^{-x_{n-1}} + 2\cos x_{n-1} - 6}
+                                  {e^{x_{n-1}} - 2^{-x_{n-1}}\ln 2 - 2\sin x_{n-1}}
+          \]
+        </div>
+        <p><strong>Initial guess:</strong> \(x_0 = \dfrac{1+2}{2} = 1.5\)</p>
+
+        <div class="ph">Iteration Results</div>
+        <table class="iter-tbl">
+          <thead>
+            <tr><th>\(n\)</th><th>\(x_n\)</th><th>\(|x_n - x_{n-1}|\)</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr class="row-init"><td>0</td><td>1.500 000 000</td><td class="delta">—</td><td>—</td></tr>
+            <tr><td>1</td><td>1.956 489 721</td><td class="delta">4.56 × 10⁻¹</td><td>Iterating</td></tr>
+            <tr><td>2</td><td>1.841 533 061</td><td class="delta">1.15 × 10⁻¹</td><td>Iterating</td></tr>
+            <tr><td>3</td><td>1.829 506 013</td><td class="delta">1.20 × 10⁻²</td><td>Iterating</td></tr>
+            <tr><td>4</td><td>1.829 383 614</td><td class="delta">1.22 × 10⁻⁴</td><td>Iterating</td></tr>
+            <tr><td>5</td><td>1.829 383 602</td><td class="delta">1.2 × 10⁻⁸ &lt; 10⁻⁵</td><td style="color:var(--teal);font-weight:600">Converged ✓</td></tr>
+            <tr class="row-converged"><td>6</td><td>1.829 383 602</td><td class="delta">≈ 0</td><td>Stable</td></tr>
+          </tbody>
+        </table>
+
+        <div class="result-banner">
+          <div class="rb-icon">✓</div>
+          <div>
+            <div class="rb-label">Root accurate to \(10^{-5}\) — converged at n = 5</div>
+            <div class="rb-value">\(x^* \approx 1.829383602\)</div>
+            <div class="rb-sub">Took 5 iterations from x₀ = 1.5</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ────────────────────────────────────
+         PROBLEM 2(ii)
+    ──────────────────────────────────── -->
+    <div class="prob-panel" id="prob-2ii">
+      <div class="prob-header">
+        <div class="prob-index">2ii</div>
+        <div class="prob-meta">
+          <div class="prob-label">Problem 2(ii) · Accuracy 10⁻⁵</div>
+          <h3>Solve \((x-2)^2 - \ln x = 0\) on \([1,\,2]\)</h3>
+        </div>
+      </div>
+      <div class="prob-body">
+
+        <p class="text-muted" style="margin-bottom:14px;">
+          <em>Same procedure as above — condition check first, then iterate.</em>
+        </p>
+
+        <div class="ph">Setup</div>
+        <div class="math-display">
+          \[
+            f(x) = (x-2)^2 - \ln x, \qquad x \in [1,\,2]
+          \]
+          \[
+            f'(x) = 2(x-2) - \frac{1}{x}
+          \]
+        </div>
+        <span class="ar">مشتقة \((x-2)^2\) = \(2(x-2)\) بقاعدة السلسلة، ومشتقة \(\ln x = \frac{1}{x}\).</span>
+
+        <div class="ph">Condition Check</div>
+        <div class="math-display">
+          \[
+            f'(1) = 2(1-2) - \frac{1}{1} = -2 - 1 = -3 < 0 \quad (-)
+          \]
+          \[
+            f'(2) = 2(2-2) - \frac{1}{2} = 0 - \frac{1}{2} = -\frac{1}{2} < 0 \quad (-)
+          \]
+        </div>
+        <div class="pill-row">
+          <span class="pill neg">f′(1) = −3 &lt; 0</span>
+          <span class="pill neg">f′(2) = −½ &lt; 0</span>
+          <span class="pill ok">✓ Same sign (both −) → Condition satisfied</span>
+        </div>
+
+        <div class="ph">Iteration Formula</div>
+        <div class="math-display amber">
+          \[
+            x_n \;=\; x_{n-1} \;-\; \frac{(x_{n-1}-2)^2 - \ln(x_{n-1})}{2(x_{n-1}-2) - \dfrac{1}{x_{n-1}}}
+          \]
+        </div>
+        <p><strong>Initial guess:</strong> \(x_0 = \dfrac{1+2}{2} = 1.5\)</p>
+
+        <div class="ph">Iteration Results</div>
+        <table class="iter-tbl">
+          <thead>
+            <tr><th>\(n\)</th><th>\(x_n\)</th><th>\(|x_n - x_{n-1}|\)</th><th>Status</th></tr>
+          </thead>
+          <tbody>
+            <tr class="row-init"><td>0</td><td>1.500 000 000</td><td class="delta">—</td><td>—</td></tr>
+            <tr><td>1</td><td>1.406 720 935</td><td class="delta">9.33 × 10⁻²</td><td>Iterating</td></tr>
+            <tr><td>2</td><td>1.412 369 957</td><td class="delta">5.65 × 10⁻³</td><td>Iterating</td></tr>
+            <tr><td>3</td><td>1.412 391 172</td><td class="delta">2.12 × 10⁻⁵</td><td>Iterating</td></tr>
+            <tr class="row-converged"><td>4</td><td>1.412 391 172</td><td class="delta">&lt; 10⁻⁵ ✓</td><td>Stable</td></tr>
+          </tbody>
+        </table>
+
+        <p class="text-muted mt-sm">
+          <strong>Note:</strong> \(f(x) = (x-2)^2 - \ln x\) has two roots. Starting from \(x_0 = 1.5\) (midpoint of \([1,2]\)), the method converges to the root within that interval.
+        </p>
+
+        <div class="result-banner">
+          <div class="rb-icon">✓</div>
+          <div>
+            <div class="rb-label">Root accurate to \(10^{-5}\) — converged at n = 4</div>
+            <div class="rb-value">\(x^* \approx 1.412391172\)</div>
+            <div class="rb-sub">Fastest convergence of all three problems — only 4 iterations</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /page-layout -->
+
+<footer>
+  Math 302 &nbsp;·&nbsp; Section 3 &nbsp;·&nbsp; Newton-Raphson Method &nbsp;·&nbsp; Numerical Analysis
+</footer>
+
+
+<!-- ═══════════════════════════════════════════════
+     VISUALIZATION JAVASCRIPT  —  FIXED v2
+     Fixes:
+       1. DPR coordinate mismatch (CSS px vs physical px)
+       2. Tangent drawn for EVERY iteration (not just n-1)
+       3. Tangent extends across full plot area using canvas clipping
+       4. Solid, thick lines — no transparency, no dashes
+       5. Clear visual hierarchy: curve > tangent > drop > points
+       6. Arrow indicator: tangent x-intercept → next xₙ
+═══════════════════════════════════════════════ -->
+<script>
+(function () {
+  'use strict';
+
+  const canvas  = document.getElementById('viz-canvas');
+  const ctx     = canvas.getContext('2d');
+  const logEl   = document.getElementById('viz-log');
+  const fnSel   = document.getElementById('fn-select');
+  const btnStep = document.getElementById('btn-step');
+  const btnAuto = document.getElementById('btn-auto');
+  const btnReset= document.getElementById('btn-reset');
+
+  /* ─────────────────────────────────────────────
+     FUNCTION LIBRARY
+  ───────────────────────────────────────────── */
+  const FNS = {
+    poly: {
+      f:    x => x**3 - 2*x**2 - 1,
+      fp:   x => 3*x**2 - 4*x,
+      x0:   2.5,
+      dom:  [1.6, 3.2],
+      rng:  [-3, 6.5],
+      root: 2.205569430,
+      label:'f(x) = x³ − 2x² − 1'
+    },
+    trig: {
+      f:    x => Math.exp(x) + Math.pow(2,-x) + 2*Math.cos(x) - 6,
+      fp:   x => Math.exp(x) - Math.pow(2,-x)*Math.LN2 - 2*Math.sin(x),
+      x0:   1.5,
+      dom:  [0.9, 2.1],
+      rng:  [-5, 5],
+      root: 1.829383602,
+      label:'f(x) = eˣ + 2⁻ˣ + 2cos x − 6'
+    },
+    log: {
+      f:    x => (x-2)**2 - Math.log(x),
+      fp:   x => 2*(x-2) - 1/x,
+      x0:   1.5,
+      dom:  [0.6, 2.4],
+      rng:  [-0.6, 3.2],
+      root: 1.412391172,
+      label:'f(x) = (x−2)² − ln x'
+    }
+  };
+
+  /* ─────────────────────────────────────────────
+     COLOR PALETTE — strong, distinguishable
+  ───────────────────────────────────────────── */
+  const ITER_COLORS = [
+    { line:'#c0392b', fill:'#e74c3c', bg:'rgba(192,57,43,0.10)' },  // red
+    { line:'#d35400', fill:'#e67e22', bg:'rgba(211,84,0,0.10)'   },  // orange
+    { line:'#7d3c98', fill:'#9b59b6', bg:'rgba(125,60,152,0.10)' },  // purple
+    { line:'#1a6fa3', fill:'#2980b9', bg:'rgba(26,111,163,0.10)' },  // blue
+    { line:'#117a65', fill:'#1abc9c', bg:'rgba(17,122,101,0.10)' },  // teal
+    { line:'#b7950b', fill:'#d4ac0d', bg:'rgba(183,149,11,0.10)' },  // gold
+    { line:'#154360', fill:'#1a5276', bg:'rgba(21,67,96,0.10)'   },  // navy
+  ];
+
+  /* ─────────────────────────────────────────────
+     STATE & COORDINATE SYSTEM
+     KEY FIX: cssW/cssH track logical (CSS) pixels.
+     canvas.width/height = physical pixels (×DPR).
+     ctx.setTransform scales so drawing uses CSS px.
+  ───────────────────────────────────────────── */
+  let cssW = 800, cssH = 340;
+  let state = {}, autoTimer = null;
+
+  const PAD = { l:62, r:28, t:38, b:50 };
+
+  /* Map world coords → CSS canvas coords */
+  function wX(x, fn) {
+    return PAD.l + (x - fn.dom[0]) / (fn.dom[1] - fn.dom[0]) * (cssW - PAD.l - PAD.r);
+  }
+  function wY(y, fn) {
+    return (cssH - PAD.b) - (y - fn.rng[0]) / (fn.rng[1] - fn.rng[0]) * (cssH - PAD.t - PAD.b);
+  }
+  /* Map canvas Y → world Y */
+  function cY_to_world(cy, fn) {
+    return fn.rng[0] + ((cssH - PAD.b) - cy) / (cssH - PAD.t - PAD.b) * (fn.rng[1] - fn.rng[0]);
+  }
+
+  /* ─────────────────────────────────────────────
+     RESIZE — FIX: use setTransform, track cssW/H
+  ───────────────────────────────────────────── */
+  function resize() {
+    const dpr  = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    cssW = rect.width;
+    cssH = rect.height;
+    canvas.width  = Math.round(cssW * dpr);
+    canvas.height = Math.round(cssH * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);  // ← correct: replaces scale() accumulation
+    draw();
+  }
+
+  /* ─────────────────────────────────────────────
+     HELPERS
+  ───────────────────────────────────────────── */
+  function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+  /* Clip a line (x1,y1)→(x2,y2) to a rect [lx,rx]×[ty,by] in canvas space.
+     Returns null if entirely outside, else [cx1,cy1,cx2,cy2]. */
+  function clipLine(x1, y1, x2, y2, lx, rx, ty, by) {
+    // Cohen-Sutherland simplified for axis-aligned rect
+    let dx = x2 - x1, dy = y2 - y1;
+    let tmin = 0, tmax = 1;
+    function clip(num, den) {
+      if (Math.abs(den) < 1e-10) return num < 0;
+      const t = num / den;
+      if (den < 0) { if (t > tmin) tmin = t; }
+      else         { if (t < tmax) tmax = t; }
+      return true;
+    }
+    if (!clip(-(x1-lx), dx)) return null;
+    if (!clip(  x1-rx,  -dx)) return null;
+    if (!clip(-(y1-ty), dy)) return null;
+    if (!clip(  y1-by,  -dy)) return null;
+    if (tmin > tmax) return null;
+    return [x1+tmin*dx, y1+tmin*dy, x1+tmax*dx, y1+tmax*dy];
+  }
+
+  /* Draw a filled arrow tip at (x,y) pointing in direction angle */
+  function arrowTip(x, y, angle, size, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, 0);
+    ctx.lineTo(-size, -size*0.45);
+    ctx.lineTo(-size,  size*0.45);
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /* ─────────────────────────────────────────────
+     RESET
+  ───────────────────────────────────────────── */
+  function resetState() {
+    clearAuto();
+    const fn = FNS[fnSel.value];
+    state = { fn, xs: [fn.x0], done: false, iter: 0 };
+    draw();
+    setLog('Ready &nbsp;—&nbsp; press <strong>Next Iteration</strong> to begin.', '');
+  }
+
+  /* ─────────────────────────────────────────────
+     MAIN DRAW — complete rewrite
+  ───────────────────────────────────────────── */
+  function draw() {
+    const fn = state.fn;
+    const W = cssW, H = cssH;
+    const { l, r, t, b } = PAD;
+    const plotL = l, plotR = W - r, plotT = t, plotB = H - b;
+
+    /* ── 1. Background ── */
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = '#f8faff';
+    ctx.fillRect(0, 0, W, H);
+
+    /* Plot area background */
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(plotL, plotT, plotR - plotL, plotB - plotT);
+
+    /* ── 2. Grid lines ── */
+    ctx.strokeStyle = '#e2e8f4';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([]);
+
+    /* Vertical grid (x integer ticks) */
+    for (let gx = Math.ceil(fn.dom[0]); gx <= fn.dom[1]; gx += 0.5) {
+      const cx = wX(gx, fn);
+      ctx.beginPath(); ctx.moveTo(cx, plotT); ctx.lineTo(cx, plotB); ctx.stroke();
+    }
+    /* Horizontal grid (y integer ticks) */
+    for (let gy = Math.ceil(fn.rng[0]); gy <= fn.rng[1]; gy++) {
+      const cy = wY(gy, fn);
+      ctx.beginPath(); ctx.moveTo(plotL, cy); ctx.lineTo(plotR, cy); ctx.stroke();
+    }
+
+    /* ── 3. Axes ── */
+    const ax0 = wX(0, fn);   // x-axis (y=0) vertical position
+    const ay0 = wY(0, fn);   // y-axis (x=0) horizontal position
+
+    ctx.strokeStyle = '#8a9cc0';
+    ctx.lineWidth = 2;
+    /* x-axis */
+    ctx.beginPath(); ctx.moveTo(plotL, ay0); ctx.lineTo(plotR, ay0); ctx.stroke();
+    /* y-axis */
+    ctx.beginPath(); ctx.moveTo(ax0, plotT); ctx.lineTo(ax0, plotB); ctx.stroke();
+
+    /* Axis arrows */
+    arrowTip(plotR, ay0, 0, 8, '#8a9cc0');
+    arrowTip(ax0, plotT, -Math.PI/2, 8, '#8a9cc0');
+
+    /* ── 4. Axis labels ── */
+    ctx.fillStyle = '#7080a0';
+    ctx.font = 'bold 11px DM Mono, monospace';
+    ctx.textAlign = 'right';
+    ctx.fillText('x', plotR - 2, ay0 - 8);
+    ctx.textAlign = 'center';
+    ctx.fillText('y', ax0 - 10, plotT + 6);
+
+    /* Tick labels on x-axis */
+    ctx.fillStyle = '#8090b0';
+    ctx.font = '11px DM Mono, monospace';
+    ctx.textAlign = 'center';
+    for (let gx = Math.ceil(fn.dom[0]); gx <= fn.dom[1]; gx++) {
+      const cx = wX(gx, fn);
+      /* tick mark */
+      ctx.strokeStyle = '#8090b0';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(cx, ay0 - 3); ctx.lineTo(cx, ay0 + 3); ctx.stroke();
+      ctx.fillText(gx, cx, ay0 + 16);
+    }
+    /* Tick labels on y-axis */
+    ctx.textAlign = 'right';
+    for (let gy = Math.ceil(fn.rng[0]); gy <= Math.floor(fn.rng[1]); gy++) {
+      if (gy === 0) continue;
+      const cy = wY(gy, fn);
+      ctx.strokeStyle = '#8090b0';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(ax0 - 3, cy); ctx.lineTo(ax0 + 3, cy); ctx.stroke();
+      ctx.fillText(gy, ax0 - 6, cy + 4);
+    }
+
+    /* ── 5. True Root vertical reference line ── */
+    const rx = wX(fn.root, fn);
+    ctx.strokeStyle = '#1a7a6e';
+    ctx.lineWidth = 1.8;
+    ctx.setLineDash([7, 5]);
+    ctx.beginPath(); ctx.moveTo(rx, plotT); ctx.lineTo(rx, plotB); ctx.stroke();
+    ctx.setLineDash([]);
+    /* root label */
+    ctx.fillStyle = '#1a7a6e';
+    ctx.font = 'bold 10.5px DM Mono, monospace';
+    ctx.textAlign = 'center';
+    const rootLabelY = plotT + 14;
+    ctx.fillRect(rx - 42, rootLabelY - 11, 84, 14);
+    ctx.fillStyle = '#fff';
+    ctx.fillText('x* ≈ ' + fn.root.toFixed(6), rx, rootLabelY);
+    /* root dot on x-axis */
+    ctx.fillStyle = '#1a7a6e';
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(rx, ay0, 5.5, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+
+    /* ── 6. Clip future drawing to plot area ── */
+    ctx.save();
+    ctx.rect(plotL, plotT, plotR - plotL, plotB - plotT);
+    ctx.clip();
+
+    /* ── 7. Tangent lines & construction lines (drawn BEHIND curve) ── */
+    const xs = state.xs;
+
+    for (let i = 0; i < xs.length; i++) {
+      const xi  = xs[i];
+      const fi  = fn.f(xi);
+      const fpi = fn.fp(xi);
+      const col = ITER_COLORS[i % ITER_COLORS.length];
+      const cx_i  = wX(xi, fn);
+      const cy_i  = wY(fi, fn);
+      const cy_ax = ay0;                           // y-axis level (y=0)
+
+      /* ── 7a. Tangent line (FIX: drawn for ALL iterations, full width) ── */
+      {
+        /*
+         * Tangent at (xi, fi): y = fi + fpi*(x - xi)
+         * We extend it from dom[0] to dom[1] then CLIP to plot area.
+         * This guarantees it's always visible and crosses y=0 if the
+         * slope allows, regardless of span calculation.
+         */
+        const xL = fn.dom[0], xR = fn.dom[1];
+        const yL = fi + fpi * (xL - xi);
+        const yR = fi + fpi * (xR - xi);
+        const tx1 = wX(xL, fn), ty1 = wY(yL, fn);
+        const tx2 = wX(xR, fn), ty2 = wY(yR, fn);
+
+        const clipped = clipLine(tx1, ty1, tx2, ty2, plotL, plotR, plotT, plotB);
+        if (clipped) {
+          const [cx1, cy1, cx2, cy2] = clipped;
+
+          /* Soft background band behind tangent (faint fill) */
+          ctx.fillStyle = col.bg;
+          ctx.beginPath();
+          ctx.moveTo(cx1, cy1);
+          ctx.lineTo(cx2, cy2);
+          ctx.lineTo(cx2, ay0);
+          ctx.lineTo(cx1, ay0);
+          ctx.closePath();
+          ctx.fill();
+
+          /* Main tangent line — SOLID, THICK */
+          ctx.strokeStyle = col.line;
+          ctx.lineWidth = 2.5;
+          ctx.setLineDash([]);
+          ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(cx1, cy1); ctx.lineTo(cx2, cy2); ctx.stroke();
+        }
+      }
+
+      /* ── 7b. Vertical drop: from curve point straight down to x-axis ── */
+      {
+        /* Solid line, same color, thinner */
+        ctx.strokeStyle = col.line;
+        ctx.lineWidth = 1.6;
+        ctx.setLineDash([5, 3]);
+        ctx.beginPath();
+        ctx.moveTo(cx_i, cy_i);
+        ctx.lineTo(cx_i, cy_ax);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      /* ── 7c. Horizontal guide: x-intercept of tangent → next xₙ ── */
+      if (i + 1 < xs.length) {
+        /* x-intercept of tangent: x_int = xi - fi/fpi */
+        const x_int = xi - fi / fpi;
+        const cx_int = wX(x_int, fn);
+        const cx_next = wX(xs[i+1], fn);
+
+        /* Horizontal connector on x-axis */
+        ctx.strokeStyle = col.line;
+        ctx.lineWidth = 2;
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.moveTo(cx_int, ay0);
+        ctx.lineTo(cx_next, ay0);
+        ctx.stroke();
+
+        /* Small tick at x-intercept */
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(cx_int, ay0 - 5);
+        ctx.lineTo(cx_int, ay0 + 5);
+        ctx.stroke();
+      }
+    }
+
+    /* ── 8. Function curve (drawn ON TOP of tangents) ── */
+    ctx.strokeStyle = '#0e1b2e';
+    ctx.lineWidth = 3;
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    ctx.setLineDash([]);
+    ctx.beginPath();
+    let first = true;
+    const STEPS = Math.ceil((plotR - plotL) * 1.5);
+    for (let px = 0; px <= STEPS; px++) {
+      const x = fn.dom[0] + px / STEPS * (fn.dom[1] - fn.dom[0]);
+      const y = fn.f(x);
+      /* Guard against extreme values outside range */
+      if (!isFinite(y) || y < fn.rng[0] - 3 || y > fn.rng[1] + 3) {
+        first = true; continue;
+      }
+      const cx = wX(x, fn), cy = wY(y, fn);
+      if (first) { ctx.moveTo(cx, cy); first = false; }
+      else        ctx.lineTo(cx, cy);
+    }
+    ctx.stroke();
+
+    /* ── 9. Iteration points (on top of everything) ── */
+    for (let i = 0; i < xs.length; i++) {
+      const xi  = xs[i];
+      const fi  = fn.f(xi);
+      const col = ITER_COLORS[i % ITER_COLORS.length];
+      const cx_i = wX(xi, fn);
+      const cy_i = wY(fi, fn);
+      const cy_ax= ay0;
+
+      /* Point on curve */
+      ctx.fillStyle   = col.fill;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth   = 2.5;
+      ctx.beginPath();
+      ctx.arc(cx_i, cy_i, 7, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      /* Point on x-axis (the drop foot) */
+      ctx.fillStyle   = col.line;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth   = 2;
+      ctx.beginPath();
+      ctx.arc(cx_i, cy_ax, 4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      /* Label above point on curve */
+      const isAbove = fi >= 0;
+      const labelOY  = isAbove ? cy_i - 14 : cy_i + 22;
+      const lbl = 'x' + i + '=' + xi.toFixed(3);
+
+      /* Label background pill */
+      ctx.font = 'bold 10px DM Mono, monospace';
+      const tw = ctx.measureText(lbl).width;
+      ctx.fillStyle = col.line;
+      roundRect(ctx, cx_i - tw/2 - 5, labelOY - 12, tw + 10, 15, 4);
+      ctx.fill();
+
+      /* Label text */
+      ctx.fillStyle   = '#ffffff';
+      ctx.textAlign   = 'center';
+      ctx.fillText(lbl, cx_i, labelOY);
+    }
+
+    /* ── Restore clip ── */
+    ctx.restore();
+
+    /* ── 10. Function label ── */
+    ctx.fillStyle = '#1c2a40';
+    ctx.font = 'bold 12px DM Mono, monospace';
+    ctx.textAlign = 'left';
+    ctx.fillText(fn.label, plotL + 6, plotT - 14);
+
+    /* ── 11. Legend (right side) ── */
+    {
+      const lx = plotR - 6;
+      const items = [
+        { color:'#0e1b2e',  label:'f(x) curve',   lw:3, dash:[] },
+        { color:'#c0392b',  label:'Tangent lines', lw:2.5, dash:[] },
+        { color:'#1a7a6e',  label:'True root x*',  lw:1.8, dash:[7,5] },
+      ];
+      let ly = plotT + 14;
+      items.forEach(item => {
+        ctx.strokeStyle = item.color;
+        ctx.lineWidth   = item.lw;
+        ctx.setLineDash(item.dash);
+        ctx.beginPath(); ctx.moveTo(lx - 30, ly); ctx.lineTo(lx - 6, ly); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle  = '#4a5568';
+        ctx.font       = '10px DM Mono, monospace';
+        ctx.textAlign  = 'right';
+        ctx.fillText(item.label, lx - 34, ly + 4);
+        ly += 18;
+      });
+    }
+  }
+
+  /* Utility: round-rect fill path */
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  /* ─────────────────────────────────────────────
+     STEP — compute next iteration and redraw
+  ───────────────────────────────────────────── */
+  function step() {
+    if (state.done) {
+      setLog('<span class="vl-ok">✓ Fully converged — reset to start again.</span>', '');
+      return;
+    }
+    const fn  = state.fn;
+    const xs  = state.xs;
+    const xi  = xs[xs.length - 1];
+    const fi  = fn.f(xi);
+    const fpi = fn.fp(xi);
+
+    if (Math.abs(fpi) < 1e-14) {
+      setLog('⚠ f′(xₙ) ≈ 0 — method fails here (horizontal tangent, no crossing).', '');
+      state.done = true;
+      return;
+    }
+
+    const xn  = xi - fi / fpi;
+    const err = Math.abs(xn - xi);
+    xs.push(xn);
+    state.iter++;
+
+    const converged = err < 1e-9 || state.iter >= 12;
+    if (converged) state.done = true;
+
+    const errStr = err < 1e-13 ? '≈ 0' : err.toExponential(4);
+    setLog(
+      `<span class="vl-iter">Iter ${state.iter}</span>` +
+      `&nbsp;&nbsp;` +
+      `x<sub>${state.iter-1}</sub> = <strong>${xi.toFixed(9)}</strong>` +
+      `&nbsp;&nbsp;→&nbsp;&nbsp;` +
+      `x<sub>${state.iter}</sub> = <strong>${xn.toFixed(9)}</strong>` +
+      `&nbsp;&nbsp;|Δx| = ${errStr}` +
+      (converged ? `&nbsp;&nbsp;<span class="vl-ok">✓ Converged</span>` : ''),
+      ''
+    );
+    draw();
+  }
+
+  /* ─────────────────────────────────────────────
+     HELPERS
+  ───────────────────────────────────────────── */
+  function setLog(html) {
+    logEl.innerHTML = html;
+  }
+
+  function clearAuto() {
+    if (autoTimer) {
+      clearInterval(autoTimer);
+      autoTimer = null;
+      btnAuto.textContent = '⚡\u2007Auto Run';
+    }
+  }
+
+  /* ─────────────────────────────────────────────
+     EVENT LISTENERS
+  ───────────────────────────────────────────── */
+  btnStep.addEventListener('click', step);
+
+  btnReset.addEventListener('click', resetState);
+
+  btnAuto.addEventListener('click', () => {
+    if (autoTimer) {
+      clearAuto();
+    } else {
+      if (state.done) resetState();
+      btnAuto.textContent = '⏸\u2007Pause';
+      autoTimer = setInterval(() => {
+        step();
+        if (state.done) clearAuto();
+      }, 1100);
+    }
+  });
+
+  fnSel.addEventListener('change', resetState);
+
+  /* ─────────────────────────────────────────────
+     INIT
+  ───────────────────────────────────────────── */
+  resetState();
+  window.addEventListener('load', resize);
+  window.addEventListener('resize', () => {
+    clearTimeout(window._vizRT);
+    window._vizRT = setTimeout(resize, 120);
+  });
+  resize();
+
+})();
+</script>
+
+<!-- Trigger MathJax typeset after page load -->
+<script>
+window.addEventListener('load', function() {
+  if (window.MathJax && MathJax.typesetPromise) {
+    MathJax.typesetPromise().catch(console.error);
+  }
+});
+</script>
+
+</body>
+</html>

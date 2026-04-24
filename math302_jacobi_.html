@@ -1,0 +1,1145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Math 302 — Jacobi Iterative Method</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.2/es5/tex-mml-chtml.min.js"></script>
+<style>
+  :root {
+    --sky:       #e8f4fd;
+    --sky-mid:   #c8e6f8;
+    --blue:      #3a7fc1;
+    --blue-dark: #1e5a9c;
+    --teal:      #2a9d8f;
+    --teal-lt:   #d4f0ec;
+    --green-lt:  #e8f5e9;
+    --green:     #388e3c;
+    --amber-lt:  #fff8e1;
+    --amber:     #f57f17;
+    --red-lt:    #fdecea;
+    --red:       #c62828;
+    --gray-100:  #f7f9fc;
+    --gray-200:  #eef1f5;
+    --gray-300:  #d9dfe8;
+    --gray-600:  #6b7a99;
+    --gray-800:  #2d3a52;
+    --white:     #ffffff;
+    --shadow-sm: 0 2px 8px rgba(0,0,0,.07);
+    --shadow-md: 0 4px 20px rgba(0,0,0,.10);
+    --r:         10px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--gray-100);
+    color: var(--gray-800);
+    line-height: 1.7;
+    font-size: 16px;
+  }
+
+  /* ── HEADER ─────────────────────────────────────────── */
+  header {
+    background: linear-gradient(135deg, #1e5a9c 0%, #2a9d8f 100%);
+    color: #fff;
+    padding: 3rem 2rem 2.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  header::before {
+    content:'';
+    position:absolute;
+    inset:0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+  header .badge {
+    display: inline-block;
+    background: rgba(255,255,255,.18);
+    border: 1px solid rgba(255,255,255,.3);
+    border-radius: 20px;
+    padding: .25rem 1rem;
+    font-size: .8rem;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 1rem;
+  }
+  header h1 {
+    font-family: 'Lora', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 700;
+    line-height: 1.2;
+    margin-bottom: .5rem;
+  }
+  header p.subtitle {
+    font-size: 1.05rem;
+    opacity: .85;
+    max-width: 560px;
+    margin: 0 auto;
+  }
+
+  /* ── NAV ─────────────────────────────────────────────── */
+  nav.toc {
+    background: var(--white);
+    border-bottom: 2px solid var(--gray-300);
+    padding: .6rem 2rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    gap: .4rem;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  nav.toc::-webkit-scrollbar { display: none; }
+  nav.toc a {
+    white-space: nowrap;
+    padding: .35rem .9rem;
+    border-radius: 20px;
+    font-size: .83rem;
+    font-weight: 500;
+    color: var(--gray-600);
+    text-decoration: none;
+    transition: background .2s, color .2s;
+  }
+  nav.toc a:hover { background: var(--sky); color: var(--blue-dark); }
+  nav.toc a.active { background: var(--blue); color: #fff; }
+
+  /* ── LAYOUT ──────────────────────────────────────────── */
+  main { max-width: 900px; margin: 0 auto; padding: 2.5rem 1.5rem 5rem; }
+
+  section { margin-bottom: 3rem; }
+  section > h2 {
+    font-family: 'Lora', serif;
+    font-size: 1.55rem;
+    color: var(--blue-dark);
+    margin-bottom: 1.2rem;
+    padding-bottom: .5rem;
+    border-bottom: 2px solid var(--sky-mid);
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+  }
+  section > h2 .icon { font-size: 1.3rem; }
+
+  /* ── CARDS ───────────────────────────────────────────── */
+  .card {
+    background: var(--white);
+    border-radius: var(--r);
+    box-shadow: var(--shadow-sm);
+    padding: 1.5rem 1.8rem;
+    margin-bottom: 1.2rem;
+    border-left: 4px solid var(--blue);
+  }
+  .card.green  { border-color: var(--teal); }
+  .card.amber  { border-color: var(--amber); background: var(--amber-lt); }
+  .card.red    { border-color: var(--red); background: var(--red-lt); }
+  .card.sky    { border-color: var(--blue); background: var(--sky); }
+  .card.teal   { border-color: var(--teal); background: var(--teal-lt); }
+  .card.plain  { border-left: none; }
+
+  .card h3 {
+    font-family: 'Lora', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--blue-dark);
+    margin-bottom: .7rem;
+  }
+  .card.green h3 { color: var(--teal); }
+  .card.amber h3 { color: var(--amber); }
+
+  /* ── STEP LIST ───────────────────────────────────────── */
+  .steps { counter-reset: step; list-style: none; }
+  .steps li {
+    counter-increment: step;
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    align-items: flex-start;
+  }
+  .steps li::before {
+    content: counter(step);
+    min-width: 2rem;
+    height: 2rem;
+    background: var(--blue);
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: .85rem;
+    flex-shrink: 0;
+    margin-top: .1rem;
+  }
+  .steps li .kw {
+    font-weight: 600;
+    color: var(--blue-dark);
+  }
+  .steps li .ar {
+    color: var(--gray-600);
+    font-size: .88rem;
+    margin-right: .3rem;
+  }
+
+  /* ── FORMULA BOX ─────────────────────────────────────── */
+  .formula {
+    background: var(--gray-100);
+    border: 1.5px solid var(--gray-300);
+    border-radius: 8px;
+    padding: .9rem 1.2rem;
+    margin: .8rem 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: .93rem;
+    overflow-x: auto;
+  }
+  .formula.highlight {
+    background: var(--sky);
+    border-color: var(--blue);
+  }
+  .formula.boxed {
+    border: 2px solid var(--teal);
+    background: var(--teal-lt);
+  }
+
+  /* ── MATH INLINE ─────────────────────────────────────── */
+  .math-block {
+    overflow-x: auto;
+    padding: .5rem 0;
+    text-align: center;
+  }
+
+  /* ── TABLE ───────────────────────────────────────────── */
+  .tbl-wrap { overflow-x: auto; margin: 1rem 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+    min-width: 460px;
+  }
+  thead tr { background: var(--blue); color: #fff; }
+  thead th { padding: .65rem 1rem; text-align: center; font-weight: 600; }
+  tbody tr:nth-child(even) { background: var(--sky); }
+  tbody tr:nth-child(odd)  { background: var(--white); }
+  tbody td { padding: .55rem 1rem; text-align: center; border-bottom: 1px solid var(--gray-200); }
+  tbody tr:hover { background: var(--sky-mid); }
+  tbody tr.highlight-row { background: var(--teal-lt) !important; font-weight: 600; }
+  tbody tr.highlight-row td { color: var(--teal); }
+
+  /* ── GRID 2-COL ──────────────────────────────────────── */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+  @media (max-width: 620px) { .grid2 { grid-template-columns: 1fr; } }
+
+  /* ── CONVERGENCE BADGE ───────────────────────────────── */
+  .conv-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    padding: .3rem .8rem;
+    border-radius: 20px;
+    font-size: .82rem;
+    font-weight: 600;
+  }
+  .conv-badge.yes { background: var(--green-lt); color: var(--green); }
+  .conv-badge.quick { background: var(--teal-lt); color: var(--teal); }
+  .conv-badge.slow { background: var(--amber-lt); color: var(--amber); }
+
+  /* ── MATRIX ──────────────────────────────────────────── */
+  .matrix-wrap {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    flex-wrap: wrap;
+    margin: .5rem 0;
+  }
+
+  /* ── CALLOUT ─────────────────────────────────────────── */
+  .callout {
+    display: flex;
+    gap: .8rem;
+    align-items: flex-start;
+    padding: .9rem 1.1rem;
+    border-radius: 8px;
+    margin: .8rem 0;
+    font-size: .93rem;
+  }
+  .callout.info { background: var(--sky); border-left: 3px solid var(--blue); }
+  .callout.warn { background: var(--amber-lt); border-left: 3px solid var(--amber); }
+  .callout.ok   { background: var(--teal-lt); border-left: 3px solid var(--teal); }
+  .callout.icon-part { font-size: 1.2rem; flex-shrink: 0; }
+
+  /* ── DIFF TABLE ──────────────────────────────────────── */
+  .diff-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: .5rem;
+    margin: .8rem 0;
+  }
+  .diff-cell {
+    background: var(--sky);
+    border: 1px solid var(--sky-mid);
+    border-radius: 6px;
+    padding: .5rem;
+    text-align: center;
+    font-size: .83rem;
+  }
+  .diff-cell .var { font-weight: 600; color: var(--blue-dark); font-size: .75rem; }
+
+  /* ── EQUATION SET ────────────────────────────────────── */
+  .eq-set {
+    background: var(--gray-100);
+    border-radius: 8px;
+    padding: 1rem 1.3rem;
+    margin: .8rem 0;
+  }
+  .eq-set p { margin: .25rem 0; font-family: 'JetBrains Mono', monospace; font-size: .9rem; }
+
+  /* ── REARRANGED EQUATIONS ────────────────────────────── */
+  .rearr {
+    background: var(--teal-lt);
+    border-left: 3px solid var(--teal);
+    border-radius: 0 8px 8px 0;
+    padding: .9rem 1.2rem;
+    margin: .8rem 0;
+  }
+  .rearr p { margin: .3rem 0; font-family: 'JetBrains Mono', monospace; font-size: .9rem; }
+
+  /* ── ACCURACY BLOCK ──────────────────────────────────── */
+  .acc-block {
+    background: var(--white);
+    border: 2px solid var(--blue);
+    border-radius: 10px;
+    padding: 1.2rem 1.5rem;
+    margin: 1rem 0;
+  }
+  .acc-block .result {
+    background: var(--sky);
+    border-radius: 6px;
+    padding: .5rem 1rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--blue-dark);
+    display: inline-block;
+    margin-top: .5rem;
+  }
+
+  /* ── SECTION DIVIDER ─────────────────────────────────── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gray-300), transparent);
+    margin: 2rem 0;
+  }
+
+  /* ── NORM EXAMPLE ────────────────────────────────────── */
+  .norm-row {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: .5rem 0;
+  }
+  .norm-tag {
+    background: var(--blue);
+    color: #fff;
+    padding: .25rem .7rem;
+    border-radius: 6px;
+    font-size: .83rem;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ── FOOTER ──────────────────────────────────────────── */
+  footer {
+    text-align: center;
+    padding: 1.5rem;
+    font-size: .82rem;
+    color: var(--gray-600);
+    border-top: 1px solid var(--gray-300);
+    background: var(--white);
+  }
+
+  /* ── SMOOTH SCROLL ───────────────────────────────────── */
+  html { scroll-behavior: smooth; }
+
+  /* ── RESPONSIVE ──────────────────────────────────────── */
+  @media (max-width: 600px) {
+    main { padding: 1.5rem 1rem 4rem; }
+    header { padding: 2rem 1.2rem 2rem; }
+    nav.toc { padding: .5rem 1rem; }
+    .diff-grid { grid-template-columns: repeat(2,1fr); }
+  }
+
+  /* ── PRINT ────────────────────────────────────────────── */
+  @media print {
+    nav.toc, header .badge { display: none; }
+    body { background: #fff; font-size: 14px; }
+  }
+</style>
+  <link rel="stylesheet" href="mobile.css"/>
+</head>
+<body>
+<!-- Mobile Home Button -->
+<a href="index.html" class="mobile-home-btn" aria-label="Return to Home">
+  <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+  Home
+</a>
+
+<!-- ════════════════════════  HEADER  ════════════════════════ -->
+<header>
+  <div class="badge">Math 302 · Section 4</div>
+  <h1>The Jacobi Iterative Method</h1>
+  <p class="subtitle">Solving Systems of Linear Equations step-by-step — with full worked examples</p>
+</header>
+
+<!-- ════════════════════════  NAV  ═══════════════════════════ -->
+<nav class="toc" id="toc">
+  <a href="#intro">Introduction</a>
+  <a href="#norms">Matrix Norms</a>
+  <a href="#theory">Theory & Steps</a>
+  <a href="#convergence">Convergence</a>
+  <a href="#accuracy">Accuracy</a>
+  <a href="#ex1">Example 1</a>
+  <a href="#ex2">Example 2</a>
+  <a href="#summary">Summary</a>
+</nav>
+
+<main>
+
+<!-- ════════════════════════  §1 INTRODUCTION  ══════════════ -->
+<section id="intro">
+  <h2><span class="icon">📘</span> Introduction</h2>
+
+  <div class="card sky">
+    <h3>What is the Jacobi Method?</h3>
+    <p>The <strong>Jacobi Method</strong> is an <em>iterative</em> numerical technique for solving a system of linear equations <strong>Ax = b</strong>. Instead of computing the exact solution in one shot, it starts from a simple initial guess and <em>keeps improving</em> the answer, iteration by iteration, until it is accurate enough.</p>
+  </div>
+
+  <div class="card">
+    <h3>Why use it?</h3>
+    <p>For large systems, direct methods (like Gaussian Elimination) can be slow and expensive. The Jacobi method is simpler to program and works well when the system has a <strong>diagonally dominant</strong> coefficient matrix — meaning each diagonal entry is larger in absolute value than the sum of all other entries in its row.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card green">
+      <h3>🔵 Linear System</h3>
+      <p>Written as <strong>Ax = b</strong><br/>
+      The unknowns appear only to the <em>first power</em>. The Jacobi method applies here.</p>
+    </div>
+    <div class="card amber">
+      <h3>🔶 Non-linear System</h3>
+      <p>Contains products, powers, trigonometric functions, etc. Requires <em>different</em> methods (Newton-Raphson, etc.).</p>
+    </div>
+  </div>
+
+  <div class="card plain">
+    <h3>Methods for Solving Linear Systems</h3>
+    <div class="grid2">
+      <div style="background:var(--sky);border-radius:8px;padding:1rem;">
+        <p style="font-weight:600;color:var(--blue-dark);margin-bottom:.4rem;">Direct Methods</p>
+        <ul style="padding-left:1.2rem;font-size:.92rem;">
+          <li>Gauss Elimination</li>
+          <li>Back Substitution</li>
+          <li>LU Factorization</li>
+        </ul>
+      </div>
+      <div style="background:var(--teal-lt);border-radius:8px;padding:1rem;">
+        <p style="font-weight:600;color:var(--teal);margin-bottom:.4rem;">Iterative Methods ✅</p>
+        <ul style="padding-left:1.2rem;font-size:.92rem;">
+          <li><strong>Jacobi Method</strong> ← this section</li>
+          <li>Gauss–Seidel Method</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════  §2 MATRIX NORMS  ══════════════ -->
+<section id="norms">
+  <h2><span class="icon">📐</span> Matrix Norms</h2>
+
+  <div class="card">
+    <p>Before applying the Jacobi method, we need to know how to measure the <strong>"size"</strong> of a matrix. Two common norms are used:</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card sky">
+      <h3>‖A‖<sub>∞</sub> — Infinity Norm</h3>
+      <p>Find the <strong>sum of absolute values</strong> in each <strong>row</strong>. The norm is the <strong>maximum</strong> of these sums.</p>
+      <div class="formula highlight">‖A‖<sub>∞</sub> = max<sub>i</sub> Σ<sub>j</sub> |a<sub>ij</sub>|</div>
+    </div>
+    <div class="card teal">
+      <h3>‖A‖<sub>1</sub> — One Norm</h3>
+      <p>Find the <strong>sum of absolute values</strong> in each <strong>column</strong>. The norm is the <strong>maximum</strong> of these sums.</p>
+      <div class="formula boxed">‖A‖<sub>1</sub> = max<sub>j</sub> Σ<sub>i</sub> |a<sub>ij</sub>|</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Example: Computing Norms</h3>
+    <p>Given the matrix:</p>
+    <div class="math-block">
+      \[ A = \begin{pmatrix} 3 & 2 & 1 \\ 4 & -2 & 3 \\ 5 & -1 & -2 \end{pmatrix} \]
+    </div>
+    <div class="grid2" style="margin-top:.8rem;">
+      <div>
+        <p style="font-weight:600;color:var(--blue-dark);margin-bottom:.4rem;">Row sums (∞-norm):</p>
+        <div class="formula">
+          Row 1: |3|+|2|+|1| = 6<br/>
+          Row 2: |4|+|-2|+|3| = 9<br/>
+          Row 3: |5|+|-1|+|-2| = 8
+        </div>
+        <div class="norm-row">
+          <span>‖A‖<sub>∞</sub> = max(6, 9, 8) =</span>
+          <span class="norm-tag">9</span>
+        </div>
+      </div>
+      <div>
+        <p style="font-weight:600;color:var(--teal);margin-bottom:.4rem;">Column sums (1-norm):</p>
+        <div class="formula">
+          Col 1: |3|+|4|+|5| = 12<br/>
+          Col 2: |2|+|-2|+|-1| = 5<br/>
+          Col 3: |1|+|3|+|-2| = 6
+        </div>
+        <div class="norm-row">
+          <span>‖A‖<sub>1</sub> = max(12, 5, 6) =</span>
+          <span class="norm-tag" style="background:var(--teal);">12</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════  §3 THEORY & STEPS  ════════════ -->
+<section id="theory">
+  <h2><span class="icon">⚙️</span> How the Jacobi Method Works — Step by Step</h2>
+
+  <div class="callout info">
+    <span class="icon-part">💡</span>
+    <span>The key idea: solve each equation for <em>one variable</em> using the <em>previous iteration's values</em> of all other variables. Repeat until the values stop changing significantly.</span>
+  </div>
+
+  <div class="card">
+    <ol class="steps">
+      <li>
+        <div>
+          <span class="ar">الخطوة 1 →</span>
+          <span class="kw">Rearrange Equations</span> — إعادة ترتيب المعادلات<br/>
+          <span style="font-size:.92rem;">For each equation <em>i</em>, solve for <strong>x<sub>i</sub></strong> by moving its diagonal term to one side. Every variable on the right-hand side uses the <em>previous</em> iteration's value.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="ar">الخطوة 2 →</span>
+          <span class="kw">Build the Jacobi Matrix J</span> — بناء مصفوفة جاكوبي<br/>
+          <span style="font-size:.92rem;">Write a matrix <strong>J</strong> whose diagonal entries are <strong>0</strong>, and off-diagonal entry at position (i,j) is the coefficient of x<sub>j</sub> in the rearranged equation for x<sub>i</sub>.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="ar">الخطوة 3 →</span>
+          <span class="kw">Compute ‖J‖<sub>∞</sub></span> — حساب معيار المصفوفة<br/>
+          <span style="font-size:.92rem;">Sum the absolute values across each row of J. The norm = the largest row sum.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="ar">الخطوة 4 →</span>
+          <span class="kw">Check Convergence</span> — التحقق من التقارب<br/>
+          <span style="font-size:.92rem;">If ‖J‖<sub>∞</sub> &lt; 1 → the method <strong>converges</strong>. If ≥ 1 → it may diverge.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="ar">الخطوة 5 →</span>
+          <span class="kw">Initial Guess</span> — القيمة الابتدائية<br/>
+          <span style="font-size:.92rem;">Set x<sup>(0)</sup> = (0, 0, 0, …, 0)<sup>T</sup>. This is the starting point (n = 0).</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="ar">الخطوة 6 →</span>
+          <span class="kw">Iterate</span> — التكرار<br/>
+          <span style="font-size:.92rem;">Substitute the previous values into all rearranged equations simultaneously to get x<sup>(1)</sup>, x<sup>(2)</sup>, …, x<sup>(n)</sup>. Record results in a table.</span>
+        </div>
+      </li>
+      <li>
+        <div>
+          <span class="ar">الخطوة 7 →</span>
+          <span class="kw">Calculate Accuracy</span> — حساب الدقة<br/>
+          <span style="font-size:.92rem;">After the required number of iterations, apply the accuracy formula.</span>
+        </div>
+      </li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h3>The Jacobi Iteration Formula</h3>
+    <p>For a system of <em>n</em> equations, the general update rule for variable <em>i</em> at iteration <em>k+1</em> is:</p>
+    <div class="math-block">
+      \[ x_i^{(k+1)} = \frac{1}{a_{ii}} \left( b_i - \sum_{j \ne i} a_{ij}\, x_j^{(k)} \right) \]
+    </div>
+    <p style="font-size:.9rem;color:var(--gray-600);">where a<sub>ii</sub> is the diagonal coefficient, b<sub>i</sub> is the right-hand side, and <strong>all x<sub>j</sub><sup>(k)</sup> are from the previous step</strong>.</p>
+  </div>
+</section>
+
+<!-- ════════════════════════  §4 CONVERGENCE  ═══════════════ -->
+<section id="convergence">
+  <h2><span class="icon">📊</span> Convergence Conditions</h2>
+
+  <div class="card sky">
+    <h3>Main Convergence Condition</h3>
+    <div class="math-block">
+      \[ \|J\|_\infty \;<\; 1 \]
+    </div>
+    <p>If this holds, the Jacobi iterations will get closer and closer to the true solution.</p>
+  </div>
+
+  <div class="grid2">
+    <div class="card teal">
+      <h3>⚡ Quickly Convergent</h3>
+      <p>If <strong>‖J‖<sub>∞</sub> ≈ 0</strong></p>
+      <p style="font-size:.9rem;">The iterates reach the solution in very few steps.</p>
+      <div style="margin-top:.5rem;"><span class="conv-badge quick">⚡ Fast Convergence</span></div>
+    </div>
+    <div class="card amber">
+      <h3>🐌 Slowly Convergent</h3>
+      <p>If <strong>‖J‖<sub>∞</sub> ≈ 1</strong> (but still &lt; 1)</p>
+      <p style="font-size:.9rem;">The method converges but needs many more iterations.</p>
+      <div style="margin-top:.5rem;"><span class="conv-badge slow">🐌 Slow Convergence</span></div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <span class="icon-part">⚠️</span>
+    <span>If ‖J‖<sub>∞</sub> ≥ 1, the method is <strong>not guaranteed to converge</strong>. Do not use it in that case without further analysis.</span>
+  </div>
+</section>
+
+<!-- ════════════════════════  §5 ACCURACY  ══════════════════ -->
+<section id="accuracy">
+  <h2><span class="icon">🎯</span> Accuracy Formula</h2>
+
+  <div class="card sky">
+    <h3>Standard Accuracy Bound</h3>
+    <p>After completing iteration <em>n</em>, the accuracy of x<sup>(n)</sup> satisfies:</p>
+    <div class="math-block">
+      \[ \text{accuracy} \;\leq\; \frac{\|J\|_\infty}{1 - \|J\|_\infty} \cdot \frac{\|x^{(n)} - x^{(n-1)}\|_\infty}{\|x^{(n)}\|_\infty} \]
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>What each part means</h3>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem;font-size:.9rem;">
+      <div style="background:var(--sky);border-radius:6px;padding:.8rem;">
+        <strong>‖J‖<sub>∞</sub> / (1 − ‖J‖<sub>∞</sub>)</strong><br/>
+        <span style="color:var(--gray-600);">A multiplier that depends on how fast the method converges — معامل التقارب</span>
+      </div>
+      <div style="background:var(--sky);border-radius:6px;padding:.8rem;">
+        <strong>‖x<sup>(n)</sup> − x<sup>(n-1)</sup>‖<sub>∞</sub></strong><br/>
+        <span style="color:var(--gray-600);">Max change between last two iterations — أقصى تغيير بين خطوتين</span>
+      </div>
+      <div style="background:var(--sky);border-radius:6px;padding:.8rem;">
+        <strong>‖x<sup>(n)</sup>‖<sub>∞</sub></strong><br/>
+        <span style="color:var(--gray-600);">Max absolute value in the latest iterate — أكبر قيمة مطلقة في الحل الأخير</span>
+      </div>
+      <div style="background:var(--teal-lt);border-radius:6px;padding:.8rem;">
+        <strong>Result ≤ ?</strong><br/>
+        <span style="color:var(--gray-600);">The smaller this number, the more accurate the solution</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card teal">
+    <h3>Alternative: Condition Number k(J)</h3>
+    <p>Another way to bound the accuracy uses the <strong>condition number</strong>:</p>
+    <div class="math-block">
+      \[ k(J) = \frac{1 - \|J\|}{1 + \|J\|} \]
+    </div>
+    <div class="math-block">
+      \[ \text{accuracy} \;\leq\; k(J) \times 5 \times 10^{-5} \]
+    </div>
+    <div class="callout ok" style="margin-top:.6rem;">
+      <span class="icon-part">📌</span>
+      <span>The condition number gives a <strong>tighter</strong> (better) accuracy bound. It is an alternative — not a replacement — for the standard formula.</span>
+    </div>
+    <p style="font-size:.88rem;margin-top:.5rem;"><strong>Example (with ‖J‖ = 0.3):</strong></p>
+    <div class="formula">
+      k(J) = (1 − 0.3) / (1 + 0.3) = 0.7 / 1.3 = 7/13<br/>
+      accuracy ≤ (7/13) × 5 × 10⁻⁵
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════  §6 EXAMPLE 1  ═════════════════ -->
+<section id="ex1">
+  <h2><span class="icon">✏️</span> Example 1 — Full Solution</h2>
+
+  <div class="card sky">
+    <h3>Problem Statement</h3>
+    <p>Using the iterative (Jacobi) method, solve the following system and calculate the accuracy after <strong>4 iterations</strong>. Also state the convergence condition.</p>
+    <div class="math-block">
+      \[
+        \begin{cases}
+          -x_1 - x_2 - x_3 + 10x_4 = -14 \\
+          10x_1 - x_2 - x_3 - x_4 = 8 \\
+          x_1 - x_2 + 10x_3 - x_4 = 21 \\
+          -x_1 + 10x_2 - x_3 - x_4 = 8
+        \end{cases}
+      \]
+    </div>
+  </div>
+
+  <!-- STEP 1: REARRANGE -->
+  <div class="card">
+    <h3>Step 1 — Rearrange each equation — إعادة ترتيب المعادلات</h3>
+    <p style="margin-bottom:.6rem;">For each equation, isolate its <strong>leading variable</strong> (the one with the largest coefficient on that row's diagonal). Divide through by that diagonal coefficient.</p>
+
+    <p style="font-size:.9rem;margin-bottom:.3rem;"><strong>Equation 2</strong> → solve for x<sub>1</sub>:</p>
+    <div class="eq-set">
+      <p>10x₁ − x₂ − x₃ − x₄ = 8</p>
+      <p>10x₁ = 8 + x₂ + x₃ + x₄</p>
+    </div>
+    <div class="rearr">
+      <p><strong>x₁ = 0.8 + 0.1x₂ + 0.1x₃ + 0.1x₄</strong></p>
+    </div>
+
+    <p style="font-size:.9rem;margin:.6rem 0 .3rem;"><strong>Equation 4</strong> → solve for x<sub>2</sub>:</p>
+    <div class="eq-set">
+      <p>−x₁ + 10x₂ − x₃ − x₄ = 8</p>
+      <p>10x₂ = 8 + x₁ + x₃ + x₄</p>
+    </div>
+    <div class="rearr">
+      <p><strong>x₂ = 0.8 + 0.1x₁ + 0.1x₃ + 0.1x₄</strong></p>
+    </div>
+
+    <p style="font-size:.9rem;margin:.6rem 0 .3rem;"><strong>Equation 3</strong> → solve for x<sub>3</sub>:</p>
+    <div class="eq-set">
+      <p>x₁ − x₂ + 10x₃ − x₄ = 21</p>
+      <p>10x₃ = 21 − x₁ + x₂ + x₄</p>
+    </div>
+    <div class="rearr">
+      <p><strong>x₃ = 2.1 − 0.1x₁ + 0.1x₂ + 0.1x₄</strong></p>
+    </div>
+
+    <p style="font-size:.9rem;margin:.6rem 0 .3rem;"><strong>Equation 1</strong> → solve for x<sub>4</sub>:</p>
+    <div class="eq-set">
+      <p>−x₁ − x₂ − x₃ + 10x₄ = −14</p>
+      <p>10x₄ = −14 + x₁ + x₂ + x₃</p>
+    </div>
+    <div class="rearr">
+      <p><strong>x₄ = −1.4 + 0.1x₁ + 0.1x₂ + 0.1x₃</strong></p>
+    </div>
+  </div>
+
+  <!-- STEP 2: JACOBI MATRIX -->
+  <div class="card">
+    <h3>Step 2 — Build the Jacobi Matrix J — بناء مصفوفة جاكوبي</h3>
+    <p style="margin-bottom:.6rem;">Extract the <em>off-diagonal</em> coefficients from the rearranged equations. Diagonal entries = 0.</p>
+    <div class="math-block">
+      \[
+        J = \begin{pmatrix}
+          0 & 0.1 & 0.1 & 0.1 \\
+          0.1 & 0 & 0.1 & 0.1 \\
+          -0.1 & 0.1 & 0 & 0.1 \\
+          0.1 & 0.1 & 0.1 & 0
+        \end{pmatrix}
+        \quad
+        \begin{aligned}
+          &\to\; 0.3 \\
+          &\to\; 0.3 \\
+          &\to\; 0.3 \\
+          &\to\; 0.3
+        \end{aligned}
+      \]
+    </div>
+    <p style="font-size:.9rem;color:var(--gray-600);">Row sums (absolute values): each row sums to 0.3</p>
+  </div>
+
+  <!-- STEP 3: CONVERGENCE -->
+  <div class="card green">
+    <h3>Step 3 — Check Convergence — التحقق من التقارب</h3>
+    <div class="formula highlight">‖J‖<sub>∞</sub> = max(0.3, 0.3, 0.3, 0.3) = 0.3 &lt; 1</div>
+    <div style="margin-top:.6rem;">
+      <span class="conv-badge yes">✅ Convergent</span>
+      &nbsp;
+      <span class="conv-badge slow" style="margin-left:.5rem;">‖J‖ = 0.3 (moderate speed)</span>
+    </div>
+    <p style="margin-top:.6rem;font-size:.9rem;">Since 0.3 is not close to 0 and not close to 1, the method converges at a <strong>moderate rate</strong>.</p>
+  </div>
+
+  <!-- STEP 4: ITERATION TABLE -->
+  <div class="card">
+    <h3>Step 4 — Iterations (starting from x<sup>(0)</sup> = (0,0,0,0)<sup>T</sup>)</h3>
+    <p style="margin-bottom:.6rem;font-size:.9rem;">At each step, substitute the <em>previous</em> row's values into all four rearranged equations simultaneously.</p>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>n</th>
+            <th>x<sub>1</sub></th>
+            <th>x<sub>2</sub></th>
+            <th>x<sub>3</sub></th>
+            <th>x<sub>4</sub></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+          <tr><td>1</td><td>0.8</td><td>0.8</td><td>2.1</td><td>−1.4</td></tr>
+          <tr><td>2</td><td>0.95</td><td>0.95</td><td>1.96</td><td>−1.03</td></tr>
+          <tr><td>3</td><td>0.988</td><td>0.988</td><td>1.997</td><td>−1.014</td></tr>
+          <tr class="highlight-row"><td>4</td><td>0.9971</td><td>0.9971</td><td>1.9986</td><td>−1.0027</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout ok" style="margin-top:.8rem;">
+      <span class="icon-part">🎯</span>
+      <span>The exact solution is (1, 1, 2, −1). The iterations are clearly approaching these values.</span>
+    </div>
+  </div>
+
+  <!-- STEP 5: ACCURACY -->
+  <div class="card">
+    <h3>Step 5 — Accuracy Calculation after 4 Iterations</h3>
+
+    <p style="margin-bottom:.5rem;font-size:.9rem;"><strong>① Compute the differences x<sup>(4)</sup> − x<sup>(3)</sup>:</strong></p>
+    <div class="diff-grid">
+      <div class="diff-cell">
+        <div class="var">x₁</div>
+        0.9971 − 0.988<br/>= 9.1 × 10<sup>−3</sup>
+      </div>
+      <div class="diff-cell">
+        <div class="var">x₂</div>
+        0.9971 − 0.988<br/>= 9.1 × 10<sup>−3</sup>
+      </div>
+      <div class="diff-cell">
+        <div class="var">x₃</div>
+        1.9986 − 1.997<br/>= 1.6 × 10<sup>−3</sup>
+      </div>
+      <div class="diff-cell">
+        <div class="var">x₄</div>
+        1.0027 − 1.014<br/>= 11.3 × 10<sup>−3</sup>
+      </div>
+    </div>
+
+    <div class="formula" style="margin-top:.6rem;">
+      ‖x<sup>(4)</sup> − x<sup>(3)</sup>‖<sub>∞</sub> = max(9.1×10⁻³, 9.1×10⁻³, 1.6×10⁻³, 11.3×10⁻³)
+      <br/><strong>= 11.3 × 10⁻³</strong>
+    </div>
+
+    <p style="margin:.8rem 0 .4rem;font-size:.9rem;"><strong>② Compute ‖x<sup>(4)</sup>‖<sub>∞</sub>:</strong></p>
+    <div class="formula">
+      ‖x<sup>(4)</sup>‖<sub>∞</sub> = max(0.9971, 0.9971, 1.9986, 1.0027) = <strong>1.9986</strong>
+    </div>
+
+    <p style="margin:.8rem 0 .4rem;font-size:.9rem;"><strong>③ Apply the accuracy formula:</strong></p>
+    <div class="acc-block">
+      <div class="math-block">
+        \[
+          \text{accuracy} \;\leq\; \frac{0.3}{1 - 0.3} \cdot \frac{11.3 \times 10^{-3}}{1.9986}
+          \;=\; \frac{0.3}{0.7} \cdot \frac{11.3 \times 10^{-3}}{1.9986}
+        \]
+      </div>
+      <div class="result">≈ 2.4231 × 10⁻³</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════  §7 EXAMPLE 2  ═════════════════ -->
+<section id="ex2">
+  <h2><span class="icon">✏️</span> Example 2 — Full Solution</h2>
+
+  <div class="card sky">
+    <h3>Problem Statement</h3>
+    <p>Solve the following system using the Jacobi method. A <strong>10-digit machine</strong> gave the results after 4 iterations (shown in the table below). <strong>Perform one further iteration (n = 5)</strong> and calculate the accuracy. Also explain why the results converge rather quickly.</p>
+    <div class="math-block">
+      \[
+        \begin{cases}
+          100x_1 - x_2 - x_3 - x_4 = 91 \\
+          -x_1 + 100x_2 - x_3 - x_4 = 192 \\
+          -x_1 - x_2 + 100x_3 - x_4 = 293 \\
+          -x_1 - x_2 - x_3 + 100x_4 = 394
+        \end{cases}
+      \]
+    </div>
+  </div>
+
+  <!-- STEP 1: REARRANGE -->
+  <div class="card">
+    <h3>Step 1 — Rearrange Each Equation</h3>
+
+    <p style="font-size:.9rem;margin-bottom:.3rem;"><strong>Equation 1</strong> → solve for x<sub>1</sub>:</p>
+    <div class="eq-set">
+      <p>100x₁ = 91 + x₂ + x₃ + x₄</p>
+    </div>
+    <div class="rearr"><p><strong>x₁ = 0.91 + 0.01x₂ + 0.01x₃ + 0.01x₄</strong></p></div>
+
+    <p style="font-size:.9rem;margin:.5rem 0 .3rem;"><strong>Equation 2</strong> → solve for x<sub>2</sub>:</p>
+    <div class="eq-set">
+      <p>100x₂ = 192 + x₁ + x₃ + x₄</p>
+    </div>
+    <div class="rearr"><p><strong>x₂ = 1.92 + 0.01x₁ + 0.01x₃ + 0.01x₄</strong></p></div>
+
+    <p style="font-size:.9rem;margin:.5rem 0 .3rem;"><strong>Equation 3</strong> → solve for x<sub>3</sub>:</p>
+    <div class="eq-set">
+      <p>100x₃ = 293 + x₁ + x₂ + x₄</p>
+    </div>
+    <div class="rearr"><p><strong>x₃ = 2.93 + 0.01x₁ + 0.01x₂ + 0.01x₄</strong></p></div>
+
+    <p style="font-size:.9rem;margin:.5rem 0 .3rem;"><strong>Equation 4</strong> → solve for x<sub>4</sub>:</p>
+    <div class="eq-set">
+      <p>100x₄ = 394 + x₁ + x₂ + x₃</p>
+    </div>
+    <div class="rearr"><p><strong>x₄ = 3.94 + 0.01x₁ + 0.01x₂ + 0.01x₃</strong></p></div>
+  </div>
+
+  <!-- STEP 2: JACOBI MATRIX -->
+  <div class="card">
+    <h3>Step 2 — Jacobi Matrix J</h3>
+    <div class="math-block">
+      \[
+        J = \begin{pmatrix}
+          0 & 0.01 & 0.01 & 0.01 \\
+          0.01 & 0 & 0.01 & 0.01 \\
+          0.01 & 0.01 & 0 & 0.01 \\
+          0.01 & 0.01 & 0.01 & 0
+        \end{pmatrix}
+        \quad
+        \begin{aligned}
+          &\to 0.03 \\
+          &\to 0.03 \\
+          &\to 0.03 \\
+          &\to 0.03
+        \end{aligned}
+      \]
+    </div>
+  </div>
+
+  <!-- STEP 3: CONVERGENCE -->
+  <div class="card green">
+    <h3>Step 3 — Convergence Check</h3>
+    <div class="formula highlight">‖J‖<sub>∞</sub> = max(0.03, 0.03, 0.03, 0.03) = 0.03 &lt; 1</div>
+    <div style="margin-top:.6rem;display:flex;gap:.6rem;flex-wrap:wrap;">
+      <span class="conv-badge yes">✅ Convergent</span>
+      <span class="conv-badge quick">⚡ Quickly Convergent (‖J‖ ≈ 0)</span>
+    </div>
+    <p style="margin-top:.7rem;font-size:.9rem;">Since ‖J‖<sub>∞</sub> = 0.03 ≈ 0, <strong>the method converges very quickly</strong> to the exact solution.</p>
+  </div>
+
+  <!-- STEP 4: ITERATION TABLE 0–4 -->
+  <div class="card">
+    <h3>Step 4 — Iterations 0–4 (given from 10-digit machine)</h3>
+    <div class="tbl-wrap">
+      <table>
+        <thead>
+          <tr><th>n</th><th>x<sub>1</sub></th><th>x<sub>2</sub></th><th>x<sub>3</sub></th><th>x<sub>4</sub></th></tr>
+        </thead>
+        <tbody>
+          <tr><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+          <tr><td>1</td><td>0.91</td><td>1.92</td><td>2.93</td><td>3.94</td></tr>
+          <tr><td>2</td><td>0.9979</td><td>1.9978</td><td>2.9977</td><td>3.9976</td></tr>
+          <tr><td>3</td><td>0.999931</td><td>1.999053</td><td>2.999054</td><td>3.999055</td></tr>
+          <tr><td>4</td><td>0.99997162</td><td>1.9999804</td><td>2.99998039</td><td>3.99998038</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="callout ok" style="margin-top:.8rem;">
+      <span class="icon-part">🎯</span>
+      <span>The exact solution is (1, 2, 3, 4). By iteration 4 we are already very close!</span>
+    </div>
+  </div>
+
+  <!-- STEP 5: 5TH ITERATION -->
+  <div class="card">
+    <h3>Step 5 — Perform the 5th Iteration (n = 5)</h3>
+    <p style="margin-bottom:.6rem;font-size:.9rem;">Use the n = 4 values as inputs:</p>
+
+    <div style="background:var(--gray-100);border-radius:6px;padding:.7rem 1rem;margin-bottom:.8rem;font-size:.88rem;">
+      x₁<sup>(4)</sup> = 0.99997162 &nbsp;|&nbsp; x₂<sup>(4)</sup> = 1.9999804 &nbsp;|&nbsp; x₃<sup>(4)</sup> = 2.99998039 &nbsp;|&nbsp; x₄<sup>(4)</sup> = 3.99998038
+    </div>
+
+    <p style="font-size:.9rem;margin-bottom:.3rem;"><strong>x₁<sup>(5)</sup>:</strong></p>
+    <div class="formula">
+      x₁ = 0.91 + 0.01(1.9999804) + 0.01(2.99998039) + 0.01(3.99998038)<br/>
+         = 0.91 + 0.019999804 + 0.0299998039 + 0.0399998038<br/>
+         = <strong>0.9999994117</strong>
+    </div>
+
+    <p style="font-size:.9rem;margin:.6rem 0 .3rem;"><strong>x₂<sup>(5)</sup>:</strong></p>
+    <div class="formula">
+      x₂ = 1.92 + 0.01(0.99997162) + 0.01(2.99998039) + 0.01(3.99998038)<br/>
+         = 1.92 + 0.0099997162 + 0.0299998039 + 0.0399998038<br/>
+         = <strong>1.999999324</strong>
+    </div>
+
+    <p style="font-size:.9rem;margin:.6rem 0 .3rem;"><strong>x₃<sup>(5)</sup>:</strong></p>
+    <div class="formula">
+      x₃ = 2.93 + 0.01(0.99997162) + 0.01(1.9999804) + 0.01(3.99998038)<br/>
+         = 2.93 + 0.0099997162 + 0.019999804 + 0.0399998038<br/>
+         = <strong>2.999999324</strong>
+    </div>
+
+    <p style="font-size:.9rem;margin:.6rem 0 .3rem;"><strong>x₄<sup>(5)</sup>:</strong></p>
+    <div class="formula">
+      x₄ = 3.94 + 0.01(0.99997162) + 0.01(1.9999804) + 0.01(2.99998039)<br/>
+         = 3.94 + 0.0099997162 + 0.019999804 + 0.0299998039<br/>
+         = <strong>3.999999324</strong>
+    </div>
+
+    <div class="tbl-wrap" style="margin-top:1rem;">
+      <table>
+        <thead>
+          <tr><th>n</th><th>x<sub>1</sub></th><th>x<sub>2</sub></th><th>x<sub>3</sub></th><th>x<sub>4</sub></th></tr>
+        </thead>
+        <tbody>
+          <tr><td>4</td><td>0.99997162</td><td>1.9999804</td><td>2.99998039</td><td>3.99998038</td></tr>
+          <tr class="highlight-row"><td>5</td><td>0.9999994117</td><td>1.999999324</td><td>2.999999324</td><td>3.999999324</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- STEP 6: ACCURACY -->
+  <div class="card">
+    <h3>Step 6 — Accuracy Calculation</h3>
+
+    <p style="font-size:.9rem;margin-bottom:.5rem;"><strong>① Compute x<sup>(5)</sup> − x<sup>(4)</sup>:</strong></p>
+    <div class="diff-grid">
+      <div class="diff-cell">
+        <div class="var">x₁</div>
+        2.77917 × 10<sup>−5</sup>
+      </div>
+      <div class="diff-cell">
+        <div class="var">x₂</div>
+        1.89239 × 10<sup>−5</sup>
+      </div>
+      <div class="diff-cell">
+        <div class="var">x₃</div>
+        1.8934 × 10<sup>−5</sup>
+      </div>
+      <div class="diff-cell">
+        <div class="var">x₄</div>
+        1.8944 × 10<sup>−5</sup>
+      </div>
+    </div>
+    <div class="formula" style="margin-top:.5rem;">
+      ‖x<sup>(5)</sup> − x<sup>(4)</sup>‖<sub>∞</sub> = max(2.77917×10⁻⁵, 1.89239×10⁻⁵, 1.8934×10⁻⁵, 1.8944×10⁻⁵)
+      <br/><strong>= 2.77917 × 10⁻⁵</strong>
+    </div>
+
+    <p style="font-size:.9rem;margin:.7rem 0 .3rem;"><strong>② Compute ‖x<sup>(5)</sup>‖<sub>∞</sub>:</strong></p>
+    <div class="formula">
+      ‖x<sup>(5)</sup>‖<sub>∞</sub> = max(0.9999994117, 1.999999324, 2.999999324, 3.999999324) = <strong>3.999999324</strong>
+    </div>
+
+    <p style="font-size:.9rem;margin:.7rem 0 .3rem;"><strong>③ Apply accuracy formula:</strong></p>
+    <div class="acc-block">
+      <div class="math-block">
+        \[
+          \text{accuracy} \;\leq\; \frac{0.03}{1 - 0.03} \cdot \frac{2.77917 \times 10^{-5}}{3.999999324}
+          \;=\; \frac{0.03}{0.97} \cdot \frac{2.77917 \times 10^{-5}}{3.999999324}
+        \]
+      </div>
+      <div class="result">≈ 2.14885 × 10⁻⁷</div>
+    </div>
+
+    <div class="callout ok" style="margin-top:.8rem;">
+      <span class="icon-part">🔍</span>
+      <div>
+        <strong>Why does it converge so quickly?</strong><br/>
+        Because ‖J‖<sub>∞</sub> = 0.03 ≈ 0. When the Jacobi norm is very close to zero, the error at each iteration shrinks by a factor of 0.03 — meaning each step gives roughly <strong>2 more correct decimal places</strong>.
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ════════════════════════  §8 SUMMARY  ═══════════════════ -->
+<section id="summary">
+  <h2><span class="icon">📋</span> Summary & Key Reminders</h2>
+
+  <div class="grid2">
+    <div class="card sky">
+      <h3>📌 The 3 Key Quantities</h3>
+      <ul style="padding-left:1.2rem;font-size:.93rem;line-height:2;">
+        <li><strong>J</strong> — Jacobi matrix (zeros on diagonal)</li>
+        <li><strong>‖J‖<sub>∞</sub></strong> — infinity norm of J</li>
+        <li><strong>accuracy bound</strong> — error guarantee</li>
+      </ul>
+    </div>
+    <div class="card green">
+      <h3>🔁 Iteration Logic</h3>
+      <ul style="padding-left:1.2rem;font-size:.93rem;line-height:2;">
+        <li>Always use <strong>previous</strong> iteration values</li>
+        <li>Update all variables <strong>simultaneously</strong></li>
+        <li>Start from x<sup>(0)</sup> = (0, 0, …, 0)</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>📊 Convergence Quick Reference</h3>
+    <div class="tbl-wrap">
+      <table style="min-width:300px;">
+        <thead>
+          <tr><th>‖J‖<sub>∞</sub> value</th><th>Convergence</th><th>Speed</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>≥ 1</td><td style="color:var(--red);font-weight:600;">❌ Not guaranteed</td><td>—</td></tr>
+          <tr><td>&lt; 1 but ≈ 1</td><td style="color:var(--amber);font-weight:600;">⚠️ Slowly</td><td>Many iterations needed</td></tr>
+          <tr><td>&lt; 1 (moderate)</td><td style="color:var(--green);font-weight:600;">✅ Converges</td><td>Moderate</td></tr>
+          <tr class="highlight-row"><td>≈ 0</td><td style="color:var(--teal);font-weight:600;">⚡ Quickly!</td><td>Few iterations needed</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card amber">
+    <h3>⚠️ Common Mistakes to Avoid</h3>
+    <ul style="padding-left:1.2rem;font-size:.93rem;line-height:2;">
+      <li>Using <em>current</em> (not previous) values when computing a new iteration — this turns it into Gauss-Seidel, not Jacobi!</li>
+      <li>Forgetting the absolute value when computing row sums for ‖J‖<sub>∞</sub></li>
+      <li>Using the wrong denominator in the accuracy formula (use ‖x<sup>(n)</sup>‖, not ‖x<sup>(n-1)</sup>‖)</li>
+      <li>Declaring convergence if ‖J‖<sub>∞</sub> = 1 exactly — it must be <em>strictly less than</em> 1</li>
+    </ul>
+  </div>
+
+  <div class="card teal">
+    <h3>✅ Complete Checklist</h3>
+    <ul style="padding-left:1.2rem;font-size:.93rem;line-height:2.2;">
+      <li>☐ Rearrange equations — one per variable</li>
+      <li>☐ Build matrix J (zeros on diagonal)</li>
+      <li>☐ Compute ‖J‖<sub>∞</sub> (row-sum max of |entries|)</li>
+      <li>☐ Verify ‖J‖<sub>∞</sub> &lt; 1 (convergence condition)</li>
+      <li>☐ Note convergence speed (‖J‖ ≈ 0 → fast, ‖J‖ ≈ 1 → slow)</li>
+      <li>☐ Set x<sup>(0)</sup> = 0, fill iteration table</li>
+      <li>☐ Compute ‖x<sup>(n)</sup> − x<sup>(n-1)</sup>‖<sub>∞</sub> and ‖x<sup>(n)</sup>‖<sub>∞</sub></li>
+      <li>☐ Apply accuracy formula and state final bound</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<script>
+  // Active nav link on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const links = document.querySelectorAll('nav.toc a');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        links.forEach(l => l.classList.remove('active'));
+        const active = document.querySelector(`nav.toc a[href="#${entry.target.id}"]`);
+        if (active) {
+          active.classList.add('active');
+          active.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }
+      }
+    });
+  }, { rootMargin: '-30% 0px -60% 0px' });
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>
