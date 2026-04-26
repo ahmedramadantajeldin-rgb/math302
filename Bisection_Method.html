@@ -1083,14 +1083,15 @@ strong { font-weight: 600; }
       <div class="prob-index">P3</div>
       <div class="prob-meta">
         <div class="prob-label">Problem 3 · Mixed Function on [0, 1]</div>
-        <h3>Find \(x_3\) for \(f(x) = \sqrt{x} - \cos x = 0\) on \([0, 1]\)</h3>
+        <h3>Find \(x_5\) for \(f(x) = \sqrt{x} - \cos x = 0\) on \([0, 1]\) — 5 Iterations</h3>
       </div>
     </div>
     <div class="prob-body">
 
       <div class="prob-question">
-        Use the Bisection Method to find \(x_3\) for \(f(x) = \sqrt{x} - \cos x\) on \([0, 1]\).
-        All angles in radians. <span class="ar-inline">(الزوايا بالتقدير الدائري)</span>
+        Use the Bisection Method to find \(x_5\) for \(f(x) = \sqrt{x} - \cos x\) on \([0, 1]\).
+        Execute <strong>5 iterations</strong>. All angles are evaluated in
+        <span style="text-decoration: underline; text-decoration-color: red; font-weight:600;">radian</span>.
       </div>
 
       <div class="ph">Setup &amp; Applicability</div>
@@ -1104,38 +1105,57 @@ strong { font-weight: 600; }
       </div>
       <div class="pill-row">
         <span class="pill neg">f(0) = −1 &lt; 0</span>
-        <span class="pill pos">f(1) ≈ +0.46 &gt; 0</span>
+        <span class="pill pos">f(1) ≈ +0.4597 &gt; 0</span>
         <span class="pill ok">✓ Root exists on [0, 1]</span>
       </div>
 
-      <div class="ph">Iteration Table — Finding x₃</div>
+      <div class="ph">Iteration Table — 5 Iterations</div>
       <div style="overflow-x:auto">
         <table class="iter-tbl">
           <thead>
-            <tr><th>\(n\)</th><th>\(a_n\) (−ve)</th><th>\(b_n\) (+ve)</th><th>\(x_n\)</th><th>\(f(x_n)\)</th></tr>
+            <tr>
+              <th>\(n\)</th>
+              <th>\(a_n\) (−ve)</th>
+              <th>\(b_n\) (+ve)</th>
+              <th>\(x_n = \dfrac{a_n + b_n}{2}\)</th>
+              <th>\(F(X_n)\)</th>
+            </tr>
           </thead>
           <tbody>
-            <tr class="row-init"><td>0</td><td>0</td><td>1</td><td>0.5</td><td class="td-neg">−ve</td></tr>
-            <tr><td>1</td><td>0.5</td><td>1</td><td>0.75</td><td class="td-neg">−ve</td></tr>
-            <tr><td>2</td><td>0.75</td><td>1</td><td>0.875</td><td class="td-neg">−ve</td></tr>
-            <tr class="row-hl"><td>3</td><td>0.875</td><td>1</td><td><strong>0.9375</strong></td><td class="td-neg">−ve</td></tr>
-            <tr><td>4</td><td>0.9375</td><td>1</td><td>0.96875</td><td class="delta">—</td></tr>
+            <tr class="row-init">
+              <td>0</td><td>0</td><td>1</td><td>0.5</td>
+              <td class="td-neg">−ve</td>
+            </tr>
+            <tr>
+              <td>1</td><td>0.5</td><td>1</td><td>0.75</td>
+              <td class="td-pos">+ve</td>
+            </tr>
+            <tr>
+              <td>2</td><td>0.5</td><td>0.75</td><td>0.625</td>
+              <td class="td-neg">−ve</td>
+            </tr>
+            <tr>
+              <td>3</td><td>0.625</td><td>0.75</td><td>0.6875</td>
+              <td class="td-pos">+ve</td>
+            </tr>
+            <tr>
+              <td>4</td><td>0.625</td><td>0.6875</td><td>0.65625</td>
+              <td class="td-pos">+ve</td>
+            </tr>
+            <tr class="row-hl">
+              <td>5</td><td>0.625</td><td>0.65625</td><td><strong>0.640625</strong></td>
+              <td class="td-neg">−ve</td>
+            </tr>
           </tbody>
         </table>
       </div>
 
-      <p class="text-muted mt-sm">
-        <strong>Note:</strong> The table matches the recorded problem sheet values.
-        The true root of \(\sqrt{x} = \cos x\) (radians) is approximately \(x \approx 0.6417\).
-        The table values reflect the given problem sheet, which appears to use cosine in degrees, yielding a root near \(x \approx 1\).
-      </p>
-      <span class="ar">القيم الدقيقة تعتمد على الآلة الحاسبة والوحدات — الجدول يطابق قيم الملف الأصلي.</span>
-
       <div class="result-banner">
         <div class="rb-icon">✓</div>
         <div>
-          <div class="rb-label">Third approximation (as given in problem sheet)</div>
-          <div class="rb-value">\(x_3 = 0.9375\)</div>
+          <div class="rb-label">After 5 iterations — all angles in <span style="text-decoration:underline;text-decoration-color:red;color:var(--amber-lt);">radian</span></div>
+          <div class="rb-value">\(x_5 = 0.640625\)</div>
+          <div class="rb-sub">Error bound \(\leq \dfrac{b - a}{2^5} = \dfrac{1}{32} = 0.03125\) &nbsp;·&nbsp; True root \(\approx 0.6417\)</div>
         </div>
       </div>
 
@@ -1285,8 +1305,8 @@ strong { font-weight: 600; }
       <div class="sc-val">n = 14</div>
     </div>
     <div class="sum-card amber">
-      <div class="sc-label">P3 — x₃</div>
-      <div class="sc-val">0.9375</div>
+      <div class="sc-label">P3 — x₅ (5 Iterations)</div>
+      <div class="sc-val">0.640625</div>
     </div>
     <div class="sum-card rust">
       <div class="sc-label">P4 — Accuracy (n=10)</div>
