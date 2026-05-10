@@ -1,0 +1,987 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math 302 — Euler Method</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- MathJax -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* ── CSS CUSTOM PROPERTIES ── */
+        :root {
+            --ivory:    #f7f4ef;
+            --white:    #ffffff;
+            --paper:    #fdfbf7;
+            --fog:      #eee9e0;
+            --border:   #ddd6c8;
+            --ink:      #1c1a18;
+            --ink-soft: #4a4540;
+            --muted:    #8a8078;
+            --midnight: #0e1b2e;
+            --navy:     #163256;
+            --cobalt:   #1e4d8c;
+            --sky:      #3b82c4;
+            --teal:     #1a7a6e;
+            --amber:    #b57a10;
+            --amber-lt: #f5c842;
+            --rust:     #b53a2a;
+            --green:    #1e6b45;
+            --purple:   #5b3f9a;
+            --ff-body:  'EB Garamond', Georgia, 'Times New Roman', serif;
+            --ff-ui:    'DM Sans', system-ui, sans-serif;
+            --ff-mono:  'DM Mono', 'Courier New', monospace;
+            --r-sm: 6px;
+            --r-md: 10px;
+            --r-lg: 16px;
+            --shadow-sm: 0 1px 6px rgba(0,0,0,.06);
+            --shadow-md: 0 4px 20px rgba(0,0,0,.08);
+            --shadow-lg: 0 8px 40px rgba(0,0,0,.10);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; font-size: 16px; }
+
+        body {
+            background: var(--ivory);
+            color: var(--ink);
+            font-family: var(--ff-body);
+            font-size: 1.0625rem;
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+
+        /* ── HEADER ── */
+        .doc-header {
+            background: var(--midnight);
+            position: relative;
+            overflow: hidden;
+        }
+        .doc-header::before {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 50%, rgba(30,77,140,.45) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 80% 20%, rgba(26,122,110,.25) 0%, transparent 55%);
+        }
+        .doc-header::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+        }
+        .header-inner {
+            position: relative; z-index: 1;
+            max-width: 900px; margin: 0 auto;
+            padding: 64px 32px 56px;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+        }
+        .header-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,.1);
+            border: 1px solid rgba(255,255,255,.18);
+            border-radius: 30px;
+            padding: 5px 18px;
+            font-family: var(--ff-mono);
+            font-size: .72rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.7);
+            margin-bottom: 22px;
+        }
+        .header-pill::before { content: '◆'; color: var(--amber-lt); margin-right: 2px; }
+        .doc-header h1 {
+            font-family: var(--ff-body);
+            font-size: clamp(2rem, 5vw, 3.4rem);
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: -.5px;
+            line-height: 1.18;
+            margin-bottom: 14px;
+        }
+        .doc-header h1 em { color: var(--amber-lt); font-style: italic; }
+        .header-sub {
+            font-family: var(--ff-ui);
+            font-size: .92rem;
+            font-weight: 300;
+            color: rgba(255,255,255,.55);
+            max-width: 560px;
+            line-height: 1.65;
+        }
+        .header-meta {
+            font-family: var(--ff-mono);
+            font-size: .72rem;
+            color: rgba(255,255,255,.4);
+            margin-top: 12px;
+            letter-spacing: .5px;
+        }
+        .header-tags {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+            margin-top: 20px;
+        }
+        .htag {
+            font-family: var(--ff-ui);
+            font-size: .73rem; font-weight: 500;
+            padding: 4px 13px; border-radius: 20px;
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.14);
+            color: rgba(255,255,255,.62);
+        }
+
+        /* ── TOC ── */
+        .toc-wrap { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+        .toc-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-top: 4px solid var(--cobalt);
+            border-radius: 0 0 var(--r-md) var(--r-md);
+            padding: 28px 36px;
+            box-shadow: var(--shadow-md);
+            animation: fadeUp .4s ease both;
+        }
+        .toc-head {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 18px;
+        }
+        .toc-badge {
+            font-family: var(--ff-mono); font-size: .66rem; font-weight: 500;
+            letter-spacing: 2px; text-transform: uppercase;
+            background: var(--cobalt); color: #fff;
+            padding: 4px 12px; border-radius: 4px;
+        }
+        .toc-title {
+            font-family: var(--ff-body); font-size: 1.1rem; font-weight: 600;
+            color: var(--midnight);
+        }
+        .toc-rule { flex: 1; height: 1px; background: var(--border); }
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 6px 24px;
+        }
+        .toc-link {
+            display: flex; align-items: center; gap: 10px;
+            font-family: var(--ff-ui); font-size: .82rem;
+            color: var(--cobalt); text-decoration: none;
+            padding: 6px 10px; border-radius: var(--r-sm);
+            transition: background .15s, color .15s;
+        }
+        .toc-link:hover { background: #e8f0fb; color: var(--midnight); }
+        .toc-num {
+            font-family: var(--ff-mono); font-size: .62rem;
+            background: var(--fog); color: var(--muted);
+            padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+        }
+
+        /* ── PAGE LAYOUT ── */
+        .page-wrap {
+            max-width: 900px; margin: 0 auto;
+            padding: 8px 24px 80px;
+        }
+
+        /* ── SECTION HEADS ── */
+        .sec-head {
+            display: flex; align-items: center; gap: 14px;
+            margin: 52px 0 24px;
+        }
+        .sec-head:first-of-type { margin-top: 40px; }
+        .sec-badge {
+            font-family: var(--ff-mono); font-size: .68rem; font-weight: 500;
+            letter-spacing: 2px; text-transform: uppercase;
+            background: var(--navy); color: #fff;
+            padding: 4px 11px; border-radius: 4px; white-space: nowrap;
+        }
+        .sec-head h2 {
+            font-family: var(--ff-body);
+            font-size: 1.6rem; font-weight: 600;
+            color: var(--midnight); white-space: nowrap; letter-spacing: -.2px;
+        }
+        .sec-rule { flex: 1; height: 1px; background: var(--border); }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: 26px 30px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 20px;
+            animation: fadeUp .4s ease both;
+        }
+        .card-title {
+            font-family: var(--ff-ui); font-size: .78rem; font-weight: 500;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--cobalt);
+            margin-bottom: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .card-title::before {
+            content: '';
+            display: inline-block;
+            width: 3px; height: 14px;
+            background: var(--cobalt); border-radius: 2px; flex-shrink: 0;
+        }
+        .card-title.amber::before { background: var(--amber); }
+        .card-title.amber         { color: var(--amber); }
+        .card-title.teal::before  { background: var(--teal); }
+        .card-title.teal          { color: var(--teal); }
+        .card-title.rust::before  { background: var(--rust); }
+        .card-title.rust          { color: var(--rust); }
+        .card-title.purple::before{ background: var(--purple); }
+        .card-title.purple        { color: var(--purple); }
+
+        /* ── LEFT-BORDER BLOCKS ── */
+        .block {
+            padding: 16px 22px;
+            margin: 14px 0;
+            border-radius: 0 var(--r-sm) var(--r-sm) 0;
+        }
+        .block-cobalt  { background: #f0f4fa; border: 1px solid #c4d4ec; border-left: 4px solid var(--cobalt); }
+        .block-amber   { background: #fdf8ec; border: 1px solid #e8d090; border-left: 4px solid var(--amber); }
+        .block-teal    { background: #edf7f2; border: 1px solid #9fd4b8; border-left: 4px solid var(--teal); }
+        .block-rust    { background: #fdf0ee; border: 1px solid #e8b4ae; border-left: 4px solid var(--rust); }
+        .block-purple  { background: #f6f4ff; border: 1px solid #c8baf2; border-left: 4px solid var(--purple); }
+
+        /* ── ARABIC TEACHING BLOCK ── */
+        .ar-teach {
+            direction: rtl;
+            text-align: right;
+            background: #fefbf0;
+            border: 1px solid #f0dfa0;
+            border-right: 4px solid var(--amber);
+            border-radius: 0 var(--r-sm) var(--r-sm) 0;
+            padding: 14px 18px 14px 14px;
+            margin: 14px 0;
+        }
+        .ar-teach p {
+            font-family: var(--ff-ui);
+            font-size: .9rem;
+            color: var(--ink-soft);
+            line-height: 1.8;
+            margin-bottom: 6px;
+        }
+        .ar-teach p:last-child { margin-bottom: 0; }
+        .ar-teach strong { color: var(--midnight); font-weight: 600; }
+
+        /* ── PROCEDURE STEPS ── */
+        .steps { margin: 14px 0; }
+        .step {
+            display: flex; gap: 16px; align-items: flex-start;
+            background: var(--paper);
+            border: 1px solid var(--fog);
+            border-radius: var(--r-sm);
+            padding: 10px 14px;
+            margin: 10px 0;
+        }
+        .step-num {
+            font-family: var(--ff-mono); font-size: .7rem; font-weight: 500;
+            background: var(--navy); color: white;
+            min-width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 2px;
+        }
+        .step-body { font-size: .97rem; line-height: 1.7; font-family: var(--ff-body); }
+        .step-note {
+            font-family: var(--ff-ui); font-size: .8rem;
+            color: var(--muted); font-style: italic;
+            display: block; margin-top: 4px;
+        }
+
+        /* ── PROBLEM PANEL ── */
+        .prob-panel {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 32px;
+            animation: fadeUp .4s ease both;
+        }
+        .prob-header {
+            background: var(--navy);
+            color: #fff;
+            padding: 20px 28px;
+            display: flex; align-items: flex-start; gap: 16px;
+        }
+        .prob-num {
+            font-family: var(--ff-body);
+            font-size: 2.2rem; font-weight: 600;
+            color: var(--amber-lt); line-height: 1; min-width: 52px;
+        }
+        .prob-meta { flex: 1; }
+        .prob-label {
+            font-family: var(--ff-mono); font-size: .65rem;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: rgba(255,255,255,.5); margin-bottom: 6px;
+        }
+        .prob-title {
+            font-family: var(--ff-body); font-size: 1.1rem; font-weight: 500;
+            color: #fff; line-height: 1.45;
+        }
+        .prob-body { padding: 26px 28px; }
+
+        /* ── GIVEN DATA GRID ── */
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(175px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .data-chip {
+            padding: 12px 14px;
+            border-radius: 0 var(--r-sm) var(--r-sm) 0;
+            font-size: .9rem;
+            text-align: center;
+        }
+
+        /* ── ITERATION TABLE ── */
+        .iter-wrap { overflow-x: auto; margin: 18px 0; }
+        .iter-tbl {
+            width: 100%; border-collapse: collapse;
+            border-radius: var(--r-sm); overflow: hidden;
+            border: 1px solid var(--border);
+            font-family: var(--ff-mono);
+            min-width: 420px;
+        }
+        .iter-tbl thead tr { background: var(--midnight); }
+        .iter-tbl th {
+            color: rgba(255,255,255,.85);
+            font-family: var(--ff-mono); font-size: .7rem;
+            font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase;
+            padding: 10px 14px; text-align: center;
+        }
+        .iter-tbl td {
+            padding: 10px 14px; font-family: var(--ff-mono); font-size: .82rem;
+            border-bottom: 1px solid var(--fog); text-align: center;
+        }
+        .iter-tbl tbody tr:nth-child(even) { background: var(--paper); }
+        .iter-tbl tbody tr.row-result {
+            background: #eaf6f0; color: var(--teal); font-weight: 600;
+        }
+
+        /* ── RESULT BANNER ── */
+        .result-banner {
+            background: linear-gradient(130deg, var(--midnight) 0%, #1e3d6e 100%);
+            border-radius: var(--r-md);
+            padding: 20px 24px;
+            display: flex; align-items: center; gap: 18px;
+            box-shadow: 0 4px 20px rgba(14,27,46,.2);
+            margin: 18px 0;
+        }
+        .rb-icon { font-size: 1.9rem; flex-shrink: 0; }
+        .rb-content { flex: 1; }
+        .rb-label {
+            font-family: var(--ff-ui); font-size: .78rem;
+            color: rgba(255,255,255,.55); margin-bottom: 4px;
+        }
+        .rb-value {
+            font-family: var(--ff-mono); font-size: 1.3rem; font-weight: 500;
+            color: var(--amber-lt); letter-spacing: .5px;
+        }
+        .rb-sub {
+            font-family: var(--ff-ui); font-size: .75rem;
+            color: rgba(255,255,255,.38); margin-top: 3px;
+        }
+
+        /* ── ERROR BANNER ── */
+        .error-banner {
+            background: linear-gradient(130deg, #2a0e0e 0%, #4a1a14 100%);
+            border-radius: var(--r-md);
+            padding: 18px 24px;
+            display: flex; align-items: center; gap: 18px;
+            box-shadow: 0 4px 20px rgba(181,58,42,.18);
+            margin: 16px 0;
+        }
+        .eb-value {
+            font-family: var(--ff-mono); font-size: 1.25rem; font-weight: 500;
+            color: #ff9e8a; letter-spacing: .5px;
+        }
+        .eb-label {
+            font-family: var(--ff-ui); font-size: .78rem;
+            color: rgba(255,200,180,.55); margin-bottom: 4px;
+        }
+
+        /* ── DEFINITION GRID ── */
+        .def-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 14px;
+        }
+
+        p { margin-bottom: 10px; }
+        p:last-child { margin-bottom: 0; }
+        strong { font-weight: 600; }
+
+        /* ── ANIMATION ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            text-align: center; padding: 32px 24px;
+            color: var(--muted); font-family: var(--ff-mono);
+            font-size: .72rem; letter-spacing: 1px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 600px) {
+            .header-inner { padding: 44px 20px 40px; }
+            .toc-card { padding: 20px 20px; }
+            .card { padding: 18px 18px; }
+            .prob-body { padding: 18px; }
+            .result-banner { flex-direction: column; text-align: center; }
+            .error-banner  { flex-direction: column; text-align: center; }
+            .def-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 540px) {
+            .data-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 420px) {
+            .toc-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  HEADER                                               -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<header class="doc-header">
+    <div class="header-inner">
+        <div class="header-pill">Math 302 · Numerical Methods</div>
+        <h1>Differential Equations — <em>Euler Method</em></h1>
+        <p class="header-sub">Complete lecture notes with step-by-step solved examples and local truncation error analysis</p>
+        <div class="header-meta">First-Order ODE · Numerical Integration · 3 Fully Worked Examples</div>
+        <div class="header-tags">
+            <span class="htag">Euler's Method</span>
+            <span class="htag">ODE Solver</span>
+            <span class="htag">Iteration Tables</span>
+            <span class="htag">Error Analysis</span>
+            <span class="htag">Bilingual Notes</span>
+        </div>
+    </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  TABLE OF CONTENTS                                    -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="toc-wrap">
+    <div class="toc-card">
+        <div class="toc-head">
+            <span class="toc-badge">Contents</span>
+            <span class="toc-title">Table of Contents</span>
+            <div class="toc-rule"></div>
+        </div>
+        <div class="toc-grid">
+            <a href="#sec-01" class="toc-link"><span class="toc-num">§ 01</span>Definitions &amp; Theory</a>
+            <a href="#sec-02" class="toc-link"><span class="toc-num">§ 02</span>Euler Method Algorithm</a>
+            <a href="#sec-03" class="toc-link"><span class="toc-num">§ 03</span>Example 1 — y′ = x + y³</a>
+            <a href="#sec-04" class="toc-link"><span class="toc-num">§ 04</span>Example 2 — y′ = 2y² + x³</a>
+            <a href="#sec-05" class="toc-link"><span class="toc-num">§ 05</span>Example 3 — y′ = x² + y²</a>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  PAGE BODY                                            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page-wrap">
+
+    <!-- ─────────────────────────────── § 01 ─── -->
+    <div class="sec-head" id="sec-01">
+        <span class="sec-badge">§ 01</span>
+        <h2>Definitions &amp; Theory</h2>
+        <div class="sec-rule"></div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Differential Equation — Core Concepts</div>
+        <div class="block block-cobalt">
+            <p><strong>Differential Equation (D.E.):</strong> An equation relating an unknown function \( y(x) \) to one or more of its derivatives. The <em>solution</em> is finding the function \( y(x) \) that satisfies the equation — analytically or numerically.</p>
+        </div>
+
+        <div class="def-grid">
+            <div class="block block-amber" style="margin:0;">
+                <p style="margin-bottom:6px;"><strong>Order of D.E.</strong></p>
+                <p style="font-size:.92rem;">The <em>highest derivative</em> present in the equation.</p>
+                <p style="font-family:var(--ff-mono);font-size:.8rem;margin-top:8px;color:var(--midnight);">
+                    \( y'' + 2y' = 0 \) → Order = <strong>2</strong>
+                </p>
+            </div>
+            <div class="block block-purple" style="margin:0;">
+                <p style="margin-bottom:6px;"><strong>Degree of D.E.</strong></p>
+                <p style="font-size:.92rem;">The <em>power</em> of the highest derivative.</p>
+                <p style="font-family:var(--ff-mono);font-size:.8rem;margin-top:8px;color:var(--midnight);">
+                    \( (y'')^3 + y = 0 \) → Degree = <strong>3</strong>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────── § 02 ─── -->
+    <div class="sec-head" id="sec-02">
+        <span class="sec-badge">§ 02</span>
+        <h2>Euler Method — Algorithm</h2>
+        <div class="sec-rule"></div>
+    </div>
+
+    <div class="card">
+        <div class="card-title amber">Core Idea &amp; Intuition</div>
+        <div class="ar-teach">
+            <p>طريقة <strong>Euler</strong> هي أبسط طريقة عددية لحل الـ ODE من الدرجة الأولى.</p>
+            <p>الفكرة الأساسية: بدل ما نحل المعادلة تحليلياً، إحنا بنقرّب الحل بتدريجياً — خطوة خطوة — من نقطة معروفة لنقطة مجهولة، باستخدام <strong>المشتقة كميل تقريبي</strong>.</p>
+            <p>يعني لو عندي القيمة \( y_0 \) عند \( x_0 \)، وعارف الميل \( y'_0 \) عند تلك النقطة من المعادلة التفاضلية، أقدر أحسب قيمة \( y \) عند الخطوة التالية \( x_1 = x_0 + h \) مباشرة.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title amber">Recurrence Formula</div>
+        <div class="block block-amber" style="text-align:center;">
+            \[ y_{n+1} = y_n + h \cdot y'_n \]
+        </div>
+        <p style="color:var(--ink-soft);font-size:.92rem;margin-top:10px;">
+            where <span style="font-family:var(--ff-mono);">\( h \)</span> is the step size, and <span style="font-family:var(--ff-mono);">\( y'_n = f(x_n,\, y_n) \)</span> is evaluated directly from the given ODE at each row.
+        </p>
+        <div class="block block-cobalt" style="margin-top:14px;">
+            <p style="font-size:.92rem;"><strong>Step Size:</strong></p>
+            \[ h = \frac{X - x_0}{n} \]
+            <p style="font-size:.88rem;color:var(--ink-soft);margin-top:6px;">where \( X \) is the target x-value and \( n \) is the number of steps.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title rust">Error Formula — Local Truncation Error</div>
+        <div class="ar-teach">
+            <p>الخطأ في طريقة Euler بيجي من أننا بنستخدم الميل عند <strong>بداية الخطوة فقط</strong>، مش متوسط الميل على طولها. ده بيعمل خطأ محلي لكل خطوة يتحسب من:</p>
+        </div>
+        <div class="block block-rust" style="text-align:center;">
+            \[ \text{Error} \leq \frac{1}{2}\, h^2\, y'' \]
+        </div>
+        <p style="color:var(--ink-soft);font-size:.92rem;margin-top:8px;">
+            \( y'' \) is the second derivative of \( y \) (obtained by differentiating the ODE), evaluated at the final computed point.
+        </p>
+    </div>
+
+    <div class="card">
+        <div class="card-title teal">Solution Procedure — Step by Step</div>
+        <div class="ar-teach">
+            <p>خطوات الحل دايماً ثابتة. اتبعها بالترتيب ده بدون ما تتخطى خطوة:</p>
+        </div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <strong>Identify the given data:</strong> Extract \( x_0 \), \( y_0 \), target value \( X \), and either \( h \) or \( n \).
+                    <span class="step-note">لو معطي \( n \) بدل \( h \): احسب \( h = (X - x_0)/n \) أولاً قبل ما تبدأ الجدول.</span>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <strong>Build the iteration table:</strong> Columns are \( x_n \), \( y_n \), and \( h \cdot y'_n \).
+                    <span class="step-note">في كل صف: احسب \( y'_n = f(x_n, y_n) \) بتعويض القيم مباشرة في المعادلة التفاضلية، واضرب في \( h \).</span>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <strong>Advance the solution:</strong> \( y_{n+1} = y_n + h \cdot y'_n \) — add column 3 to column 2 to get the next row.
+                    <span class="step-note">كرّر لحد ما تعدي عند قيمة \( x = X \) المطلوبة.</span>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-body">
+                    <strong>Compute error (if required):</strong> Differentiate the ODE to get \( y'' \), substitute final \( (x, y) \) values, then apply \( \text{Error} = \frac{1}{2} h^2 y'' \).
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────── § 03 ─── -->
+    <div class="sec-head" id="sec-03">
+        <span class="sec-badge">§ 03</span>
+        <h2>Example 1</h2>
+        <div class="sec-rule"></div>
+    </div>
+
+    <div class="prob-panel">
+        <div class="prob-header">
+            <div class="prob-num">01</div>
+            <div class="prob-meta">
+                <div class="prob-label">Euler Method · Step Size Given · Error Required</div>
+                <div class="prob-title">
+                    Use an approximate method to find \( y(0.8) \) by iteration, given
+                    \( \dfrac{dy}{dx} = x + y^3 \) with \( y(0) = 0 \) and step size \( h = 0.2 \). Find the error.
+                </div>
+            </div>
+        </div>
+        <div class="prob-body">
+
+            <!-- Given Data -->
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-title">Given Data</div>
+                <div class="data-grid">
+                    <div class="data-chip block-cobalt" style="margin:0;">
+                        \( \dfrac{dy}{dx} = x + y^3 \)
+                    </div>
+                    <div class="data-chip block-cobalt" style="margin:0;">
+                        \( x_0 = 0,\quad y_0 = 0 \)
+                    </div>
+                    <div class="data-chip block-amber" style="margin:0;">
+                        \( h = 0.2 \)
+                    </div>
+                    <div class="data-chip block-amber" style="margin:0;">
+                        Find \( y(0.8) \) + Error
+                    </div>
+                </div>
+            </div>
+
+            <!-- Iteration Table -->
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-title teal">Iteration Table</div>
+                <p style="color:var(--ink-soft);font-size:.9rem;margin-bottom:12px;">
+                    Applying \( y_{n+1} = y_n + h\,y'_n \) with \( h\,y'_n = 0.2\,(x_n + y_n^3) \):
+                </p>
+                <div class="iter-wrap">
+                <table class="iter-tbl">
+                    <thead>
+                        <tr>
+                            <th>\( x_n \)</th>
+                            <th>\( y_n \)</th>
+                            <th>\( h \cdot y'_n \;=\; 0.2\,(x_n + y_n^3) \)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0</td>
+                            <td>0</td>
+                            <td>\( 0.2\,(0 + 0^3) = 0 \)</td>
+                        </tr>
+                        <tr>
+                            <td>0.2</td>
+                            <td>0</td>
+                            <td>\( 0.2\,(0.2 + 0^3) = 0.04 \)</td>
+                        </tr>
+                        <tr>
+                            <td>0.4</td>
+                            <td>0.04</td>
+                            <td>\( 0.2\,(0.4 + (0.04)^3) = 0.0800128 \)</td>
+                        </tr>
+                        <tr>
+                            <td>0.6</td>
+                            <td>0.1200128</td>
+                            <td>\( 0.2\,(0.6 + (0.1200128)^3) = 0.1203457106 \)</td>
+                        </tr>
+                        <tr class="row-result">
+                            <td><strong>0.8</strong></td>
+                            <td><strong>0.2403585106</strong></td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+                <div class="block block-teal" style="margin-top:12px;font-size:.88rem;">
+                    <strong>How each y is computed:</strong><br>
+                    \( y_1 = 0 + 0 = 0 \quad\to\quad y_2 = 0 + 0.04 = 0.04 \quad\to\quad y_3 = 0.04 + 0.0800128 = 0.1200128 \quad\to\quad y_4 = 0.1200128 + 0.1203457106 = 0.2403585106 \)
+                </div>
+            </div>
+
+            <div class="result-banner">
+                <div class="rb-icon">✓</div>
+                <div class="rb-content">
+                    <div class="rb-label">Final Answer — y(0.8)</div>
+                    <div class="rb-value">y(0.8) ≈ 0.2403585</div>
+                    <div class="rb-sub">Obtained after 4 Euler iterations with h = 0.2</div>
+                </div>
+            </div>
+
+            <!-- Error Calculation -->
+            <div class="card" style="margin-top:20px;margin-bottom:16px;">
+                <div class="card-title rust">Error Calculation</div>
+
+                <p style="margin-bottom:10px;"><strong>Step 1 — Differentiate the ODE to obtain \( y'' \):</strong></p>
+                <div class="block block-cobalt">
+                    \[ y' = x + y^3 \]
+                    \[ y'' = \frac{d}{dx}\bigl(x + y^3\bigr) = 1 + 3y^2 \cdot y' = 1 + 3y^2\,(x + y^3) \]
+                </div>
+
+                <p style="margin:14px 0 8px;"><strong>Step 2 — Evaluate at the final values \( x = 0.8 \), \( y = 0.2403585106 \):</strong></p>
+                <div class="block block-amber">
+                    \[ y'' = 1 + 3\,(0.2403585106)^2\,(0.8 + (0.2403585106)^3) \]
+                    \[ y'' = 1 + 3\,(0.057772)\,(0.8 + 0.013878) \]
+                    \[ y'' = 1 + 3\,(0.057772)\,(0.813878) \approx 1.141059995 \]
+                </div>
+
+                <p style="margin:14px 0 8px;"><strong>Step 3 — Apply the local truncation error formula:</strong></p>
+                <div class="block block-rust">
+                    \[ \text{Error} = \frac{1}{2}\,h^2\,y'' = \frac{1}{2}\,(0.2)^2\,(1.141059995) = \frac{1}{2}\,(0.04)\,(1.141059995) \]
+                </div>
+            </div>
+
+            <div class="error-banner">
+                <div class="rb-icon" style="font-size:1.6rem;">⚠</div>
+                <div class="rb-content">
+                    <div class="eb-label">Local Truncation Error</div>
+                    <div class="eb-value">Error ≤ 0.0228211999</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────── § 04 ─── -->
+    <div class="sec-head" id="sec-04">
+        <span class="sec-badge">§ 04</span>
+        <h2>Example 2</h2>
+        <div class="sec-rule"></div>
+    </div>
+
+    <div class="prob-panel">
+        <div class="prob-header">
+            <div class="prob-num">02</div>
+            <div class="prob-meta">
+                <div class="prob-label">Euler Method · Number of Steps Given</div>
+                <div class="prob-title">
+                    Use a numerical method to calculate \( y(0.3) \) by iteration, given
+                    \( \dfrac{dy}{dx} = 2y^2 + x^3 \) with \( y(0) = 1 \). Use \( n = 3 \) steps.
+                </div>
+            </div>
+        </div>
+        <div class="prob-body">
+
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-title">Given Data</div>
+                <div class="data-grid">
+                    <div class="data-chip block-cobalt" style="margin:0;">
+                        \( y' = 2y^2 + x^3 \)
+                    </div>
+                    <div class="data-chip block-cobalt" style="margin:0;">
+                        \( x_0 = 0,\quad y_0 = 1 \)
+                    </div>
+                    <div class="data-chip block-amber" style="margin:0;">
+                        \( n = 3,\quad X = 0.3 \)
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-title">Step Size Calculation</div>
+                <div class="block block-cobalt" style="text-align:center;">
+                    \[ h = \frac{X - x_0}{n} = \frac{0.3 - 0}{3} = 0.1 \]
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-title teal">Iteration Table</div>
+                <p style="color:var(--ink-soft);font-size:.9rem;margin-bottom:12px;">
+                    Applying \( y_{n+1} = y_n + h\,y'_n \) with \( h\,y'_n = 0.1\,(2y_n^2 + x_n^3) \):
+                </p>
+                <div class="iter-wrap">
+                <table class="iter-tbl">
+                    <thead>
+                        <tr>
+                            <th>\( x_n \)</th>
+                            <th>\( y_n \)</th>
+                            <th>\( h \cdot y'_n \;=\; 0.1\,(2y_n^2 + x_n^3) \)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0</td>
+                            <td>1</td>
+                            <td>\( 0.1\,(2(1)^2 + 0^3) = 0.2 \)</td>
+                        </tr>
+                        <tr>
+                            <td>0.1</td>
+                            <td>1.2</td>
+                            <td>\( 0.1\,(2(1.2)^2 + (0.1)^3) = 0.2881 \)</td>
+                        </tr>
+                        <tr>
+                            <td>0.2</td>
+                            <td>1.4881</td>
+                            <td>\( 0.1\,(2(1.4881)^2 + (0.2)^3) = 0.443688322 \)</td>
+                        </tr>
+                        <tr class="row-result">
+                            <td><strong>0.3</strong></td>
+                            <td><strong>1.931788322</strong></td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+                <div class="block block-teal" style="margin-top:12px;font-size:.88rem;">
+                    <strong>Verification of row 2 computation:</strong><br>
+                    \( 2(1.2)^2 = 2(1.44) = 2.88 \quad;\quad (0.1)^3 = 0.001 \quad;\quad h\,y'_1 = 0.1\times 2.881 = 0.2881 \)<br>
+                    \( y_2 = 1.2 + 0.2881 = 1.4881 \;\checkmark \)
+                </div>
+            </div>
+
+            <div class="result-banner">
+                <div class="rb-icon">✓</div>
+                <div class="rb-content">
+                    <div class="rb-label">Final Answer — y(0.3)</div>
+                    <div class="rb-value">y(0.3) ≈ 1.931788322</div>
+                    <div class="rb-sub">Obtained after 3 Euler iterations with h = 0.1</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────── § 05 ─── -->
+    <div class="sec-head" id="sec-05">
+        <span class="sec-badge">§ 05</span>
+        <h2>Example 3</h2>
+        <div class="sec-rule"></div>
+    </div>
+
+    <div class="prob-panel">
+        <div class="prob-header">
+            <div class="prob-num">03</div>
+            <div class="prob-meta">
+                <div class="prob-label">Euler Method · 4 Iterations · Error Required</div>
+                <div class="prob-title">
+                    Use a numerical method to solve \( y' = x^2 + y^2 \) and find \( y(1) \),
+                    given \( y(0) = 1 \), using 4 iterations. Find the error.
+                </div>
+            </div>
+        </div>
+        <div class="prob-body">
+
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-title">Given Data</div>
+                <div class="data-grid">
+                    <div class="data-chip block-cobalt" style="margin:0;">
+                        \( y' = x^2 + y^2 \)
+                    </div>
+                    <div class="data-chip block-cobalt" style="margin:0;">
+                        \( x_0 = 0,\quad y_0 = 1 \)
+                    </div>
+                    <div class="data-chip block-amber" style="margin:0;">
+                        \( n = 4,\quad X = 1 \)
+                    </div>
+                    <div class="data-chip block-amber" style="margin:0;">
+                        Find \( y(1) \) + Error
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-title">Step Size Calculation</div>
+                <div class="block block-cobalt" style="text-align:center;">
+                    \[ h = \frac{X - x_0}{n} = \frac{1 - 0}{4} = 0.25 \]
+                </div>
+            </div>
+
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-title teal">Iteration Table</div>
+                <p style="color:var(--ink-soft);font-size:.9rem;margin-bottom:12px;">
+                    Applying \( y_{n+1} = y_n + h\,y'_n \) with \( h\,y'_n = 0.25\,(x_n^2 + y_n^2) \):
+                </p>
+                <div class="iter-wrap">
+                <table class="iter-tbl">
+                    <thead>
+                        <tr>
+                            <th>\( x_n \)</th>
+                            <th>\( y_n \)</th>
+                            <th>\( h \cdot y'_n \;=\; 0.25\,(x_n^2 + y_n^2) \)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>0</td>
+                            <td>1</td>
+                            <td>\( 0.25\,(0^2 + 1^2) = 0.25 \)</td>
+                        </tr>
+                        <tr>
+                            <td>0.25</td>
+                            <td>1.25</td>
+                            <td>\( 0.25\,(0.25^2 + 1.25^2) = 0.40625 \)</td>
+                        </tr>
+                        <tr>
+                            <td>0.50</td>
+                            <td>1.65625</td>
+                            <td>\( 0.25\,(0.5^2 + 1.65625^2) \approx 0.74829 \)</td>
+                        </tr>
+                        <tr>
+                            <td>0.75</td>
+                            <td>2.40454</td>
+                            <td>\( 0.25\,(0.75^2 + 2.40454^2) \approx 1.58598 \)</td>
+                        </tr>
+                        <tr class="row-result">
+                            <td><strong>1.00</strong></td>
+                            <td><strong>3.99052</strong></td>
+                            <td>—</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+                <div class="block block-teal" style="margin-top:12px;font-size:.88rem;">
+                    <strong>Verification of row 3 computation:</strong><br>
+                    \( 0.5^2 = 0.25 \;;\quad 1.65625^2 \approx 2.7432 \;;\quad h\,y'_2 = 0.25\times(0.25 + 2.7432) = 0.25\times 2.9932 = 0.74829 \)<br>
+                    \( y_3 = 1.25 + 0.40625 = 1.65625 \;\to\; y_4 = 1.65625 + 0.74829 = 2.40454 \;\checkmark \)
+                </div>
+            </div>
+
+            <div class="result-banner">
+                <div class="rb-icon">✓</div>
+                <div class="rb-content">
+                    <div class="rb-label">Final Answer — y(1)</div>
+                    <div class="rb-value">y(1) ≈ 3.99052</div>
+                    <div class="rb-sub">Obtained after 4 Euler iterations with h = 0.25</div>
+                </div>
+            </div>
+
+            <!-- Error Calculation -->
+            <div class="card" style="margin-top:20px;margin-bottom:16px;">
+                <div class="card-title rust">Error Calculation</div>
+
+                <p style="margin-bottom:10px;"><strong>Step 1 — Differentiate the ODE to obtain \( y'' \):</strong></p>
+                <div class="block block-cobalt">
+                    \[ y' = x^2 + y^2 \]
+                    \[ y'' = \frac{d}{dx}\bigl(x^2 + y^2\bigr) = 2x + 2y \cdot y' = 2x + 2y\,(x^2 + y^2) \]
+                </div>
+
+                <p style="margin:14px 0 8px;"><strong>Step 2 — Evaluate at the final values \( x = 1 \), \( y = 3.99052 \):</strong></p>
+                <div class="block block-amber">
+                    \[ y'' = 2(1) + 2(3.99052)\bigl((1)^2 + (3.99052)^2\bigr) \]
+                    \[ y'' = 2 + 7.98104 \times (1 + 15.9242) \]
+                    \[ y'' = 2 + 7.98104 \times 16.9242 \approx 137.0829 \]
+                </div>
+
+                <p style="margin:14px 0 8px;"><strong>Step 3 — Apply the local truncation error formula:</strong></p>
+                <div class="block block-rust">
+                    \[ \text{Error} = \frac{1}{2}\,h^2\,y'' = \frac{1}{2}\,(0.25)^2\,(137.0829) = \frac{1}{2}\,(0.0625)\,(137.0829) \]
+                </div>
+            </div>
+
+            <div class="error-banner">
+                <div class="rb-icon" style="font-size:1.6rem;">⚠</div>
+                <div class="rb-content">
+                    <div class="eb-label">Local Truncation Error</div>
+                    <div class="eb-value">Error ≤ 4.28384</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div><!-- /page-wrap -->
+
+<footer>
+    Math 302 · Numerical Methods · Euler Method · Differential Equations
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Math 302 — MacLaurin's Expansion</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)'], ['$','$']], displayMath: [['\\[','\\]']] },
+      options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+    };
+  </script>
+
+  <style>
+    :root {
+      --ivory:    #f7f4ef;
+      --white:    #ffffff;
+      --paper:    #fdfbf7;
+      --fog:      #eee9e0;
+      --border:   #ddd6c8;
+      --ink:      #1c1a18;
+      --ink-soft: #4a4540;
+      --muted:    #8a8078;
+      --midnight: #0e1b2e;
+      --navy:     #163256;
+      --cobalt:   #1e4d8c;
+      --sky:      #3b82c4;
+      --teal:     #1a7a6e;
+      --amber:    #b57a10;
+      --amber-lt: #f5c842;
+      --rust:     #b53a2a;
+      --green:    #1e6b45;
+      --purple:   #5b3f9a;
+      --ff-body:  'EB Garamond', Georgia, 'Times New Roman', serif;
+      --ff-ui:    'DM Sans', system-ui, sans-serif;
+      --ff-mono:  'DM Mono', 'Courier New', monospace;
+      --r-sm:  6px;
+      --r-md:  10px;
+      --r-lg:  16px;
+      --shadow-sm: 0 1px 6px rgba(0,0,0,.06);
+      --shadow-md: 0 4px 20px rgba(0,0,0,.08);
+      --shadow-lg: 0 8px 40px rgba(0,0,0,.10);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+
+    body {
+      background: var(--ivory);
+      color: var(--ink);
+      font-family: var(--ff-body);
+      font-size: 1.0625rem;
+      line-height: 1.8;
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    .doc-header {
+      background: var(--midnight);
+      position: relative;
+      overflow: hidden;
+    }
+    .doc-header::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 50%, rgba(30,77,140,.45) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 80% 20%, rgba(26,122,110,.25) 0%, transparent 55%);
+    }
+    .doc-header::after {
+      content: '';
+      position: absolute; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+    }
+    .header-inner {
+      position: relative; z-index: 1;
+      max-width: 900px; margin: 0 auto;
+      padding: 64px 32px 56px;
+      display: flex; flex-direction: column; align-items: center; text-align: center;
+    }
+    .header-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.18);
+      border-radius: 30px;
+      padding: 5px 18px;
+      font-family: var(--ff-mono);
+      font-size: .72rem;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: rgba(255,255,255,.7);
+      margin-bottom: 22px;
+    }
+    .header-pill::before { content: '◆'; color: var(--amber-lt); }
+    .doc-header h1 {
+      font-family: var(--ff-body);
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -.5px;
+      line-height: 1.18;
+      margin-bottom: 14px;
+    }
+    .doc-header h1 em { color: var(--amber-lt); font-style: italic; }
+    .header-sub {
+      font-family: var(--ff-ui);
+      font-size: .92rem;
+      font-weight: 300;
+      color: rgba(255,255,255,.55);
+      max-width: 560px;
+      line-height: 1.65;
+    }
+    .header-meta {
+      font-family: var(--ff-mono);
+      font-size: .74rem;
+      color: rgba(255,255,255,.4);
+      margin-top: 14px;
+      letter-spacing: 1px;
+    }
+    .header-tags {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+      margin-top: 20px;
+    }
+    .htag {
+      font-family: var(--ff-ui);
+      font-size: .75rem; font-weight: 500;
+      padding: 4px 13px; border-radius: 20px;
+      background: rgba(255,255,255,.08);
+      border: 1px solid rgba(255,255,255,.13);
+      color: rgba(255,255,255,.65);
+    }
+
+    /* ── TOC ── */
+    .toc-wrap {
+      max-width: 900px; margin: 0 auto;
+      padding: 0 24px;
+    }
+    .toc-card {
+      background: var(--white);
+      border-top: 4px solid var(--cobalt);
+      border-radius: 0 0 10px 10px;
+      padding: 28px 36px;
+      box-shadow: var(--shadow-md);
+    }
+    .toc-header {
+      display: flex; align-items: center; gap: 14px; margin-bottom: 18px;
+    }
+    .toc-badge {
+      font-family: var(--ff-mono); font-size: .66rem; font-weight: 500;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: #fff; background: var(--cobalt);
+      padding: 4px 11px; border-radius: 4px; white-space: nowrap;
+    }
+    .toc-heading {
+      font-family: var(--ff-body); font-size: 1.1rem; font-weight: 600;
+      color: var(--midnight);
+    }
+    .toc-rule { flex: 1; height: 1px; background: var(--border); }
+    .toc-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 6px 24px;
+    }
+    .toc-link {
+      display: flex; align-items: center; gap: 8px;
+      font-family: var(--ff-ui); font-size: .82rem;
+      color: var(--cobalt); text-decoration: none;
+      padding: 5px 8px; border-radius: var(--r-sm);
+      transition: background .15s, color .15s;
+    }
+    .toc-link:hover { background: #e8f0fb; color: var(--midnight); }
+    .toc-num {
+      font-family: var(--ff-mono); font-size: .65rem;
+      background: var(--fog); color: var(--muted);
+      padding: 2px 7px; border-radius: 4px; white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    /* ── LAYOUT ── */
+    .page-wrap {
+      max-width: 900px; margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── SECTION HEADS ── */
+    .sec-head {
+      display: flex; align-items: center; gap: 14px;
+      margin: 52px 0 24px;
+    }
+    .sec-badge {
+      font-family: var(--ff-mono); font-size: .68rem; font-weight: 500;
+      letter-spacing: 2px; color: #fff; background: var(--navy);
+      padding: 4px 11px; border-radius: 4px; white-space: nowrap;
+    }
+    .sec-head h2 {
+      font-family: var(--ff-body);
+      font-size: 1.45rem; font-weight: 600;
+      color: var(--midnight); letter-spacing: -.2px;
+    }
+    .sec-rule { flex: 1; height: 1px; background: var(--border); min-width: 20px; }
+
+    /* ── CARDS ── */
+    .card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-md);
+      padding: 26px 30px;
+      box-shadow: var(--shadow-sm);
+      margin-bottom: 20px;
+      animation: fadeUp .4s ease both;
+    }
+    .card-title {
+      font-family: var(--ff-ui); font-size: .78rem; font-weight: 500;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: var(--cobalt);
+      margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title::before {
+      content: '';
+      display: inline-block;
+      width: 3px; height: 14px;
+      background: var(--cobalt);
+      border-radius: 2px;
+      flex-shrink: 0;
+    }
+    .card-title.amber::before { background: var(--amber); }
+    .card-title.amber { color: var(--amber); }
+    .card-title.teal::before  { background: var(--teal); }
+    .card-title.teal  { color: var(--teal); }
+    .card-title.rust::before  { background: var(--rust); }
+    .card-title.rust  { color: var(--rust); }
+    .card-title.purple::before{ background: var(--purple); }
+    .card-title.purple{ color: var(--purple); }
+
+    /* ── PROB PANEL ── */
+    .prob-panel {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-md);
+      margin-bottom: 32px;
+      animation: fadeUp .4s ease both;
+    }
+    .prob-header {
+      background: var(--navy);
+      color: #fff;
+      padding: 22px 28px;
+      display: flex; align-items: flex-start; gap: 18px;
+    }
+    .prob-num {
+      font-family: var(--ff-body);
+      font-size: 2.2rem; font-weight: 600;
+      color: var(--amber-lt);
+      line-height: 1.1;
+      flex-shrink: 0;
+    }
+    .prob-meta {
+      display: flex; flex-direction: column; gap: 5px; padding-top: 4px;
+    }
+    .prob-label {
+      font-family: var(--ff-mono); font-size: .65rem;
+      letter-spacing: 2px; text-transform: uppercase;
+      color: rgba(255,255,255,.5);
+    }
+    .prob-title {
+      font-family: var(--ff-body); font-size: 1.15rem; font-weight: 500;
+      color: #fff; line-height: 1.4;
+    }
+    .prob-body {
+      padding: 26px 28px;
+    }
+
+    /* ── ACCENT BLOCKS ── */
+    .block {
+      border-radius: 0 var(--r-sm) var(--r-sm) 0;
+      padding: 16px 22px;
+      margin: 14px 0;
+    }
+    .block.cobalt {
+      background: #f0f4fa; border: 1px solid #c4d4ec;
+      border-left: 4px solid var(--cobalt);
+    }
+    .block.amber {
+      background: #fdf8ec; border: 1px solid #e8d090;
+      border-left: 4px solid var(--amber);
+    }
+    .block.teal {
+      background: #edf7f2; border: 1px solid #9fd4b8;
+      border-left: 4px solid var(--teal);
+    }
+    .block.rust {
+      background: #fdf0ee; border: 1px solid #e8b4ae;
+      border-left: 4px solid var(--rust);
+    }
+    .block.purple {
+      background: #f6f4ff; border: 1px solid #c8baf2;
+      border-left: 4px solid var(--purple);
+      font-family: var(--ff-ui);
+    }
+
+    /* ── STEP COMPONENT ── */
+    .step-row {
+      display: flex; gap: 14px; align-items: flex-start;
+      background: var(--paper); border: 1px solid var(--fog);
+      border-radius: 6px; padding: 14px 16px; margin: 10px 0;
+    }
+    .step-num {
+      font-family: var(--ff-mono); font-size: .7rem; font-weight: 500;
+      background: var(--navy); color: #fff;
+      min-width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-body { font-size: .97rem; line-height: 1.75; width: 100%; }
+    .step-note {
+      font-family: var(--ff-ui); font-size: .8rem;
+      color: var(--muted); font-style: italic;
+      display: block; margin-top: 5px;
+    }
+
+    /* ── FORMULA BOX ── */
+    .formula-box {
+      background: var(--paper);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      padding: 16px 22px;
+      margin: 12px 0;
+      overflow-x: auto;
+      text-align: center;
+    }
+
+    /* ── RESULT BANNER ── */
+    .result-banner {
+      background: linear-gradient(130deg, var(--midnight) 0%, #1e3d6e 100%);
+      border-radius: var(--r-md);
+      padding: 18px 24px;
+      display: flex; align-items: center; gap: 18px;
+      box-shadow: 0 4px 20px rgba(14,27,46,.2);
+      margin-top: 20px;
+    }
+    .result-icon { font-size: 1.8rem; flex-shrink: 0; }
+    .result-content { display: flex; flex-direction: column; gap: 2px; }
+    .result-label {
+      font-family: var(--ff-ui); font-size: .76rem;
+      color: rgba(255,255,255,.55);
+    }
+    .result-value {
+      font-family: var(--ff-mono); font-size: 1.2rem; font-weight: 500;
+      color: var(--amber-lt); letter-spacing: .5px;
+    }
+    .result-sub {
+      font-family: var(--ff-ui); font-size: .73rem;
+      color: rgba(255,255,255,.38);
+    }
+
+    /* ── ERROR RESULT ── */
+    .error-banner {
+      background: linear-gradient(130deg, #1c1010 0%, #2e1a1a 100%);
+      border-radius: var(--r-md);
+      padding: 18px 24px;
+      display: flex; align-items: center; gap: 18px;
+      box-shadow: 0 4px 20px rgba(46,14,14,.18);
+      margin-top: 14px;
+    }
+    .error-value {
+      font-family: var(--ff-mono); font-size: 1.15rem; font-weight: 500;
+      color: #f5a0a0; letter-spacing: .5px;
+    }
+
+    /* ── ARABIC TEACHING STYLE ── */
+    .ar-explain {
+      font-family: var(--ff-ui);
+      direction: rtl; text-align: right;
+      font-size: .89rem; line-height: 2;
+      color: var(--amber);
+      background: #fefbf0;
+      border: 1px solid #f0dfa0;
+      border-right: 3px solid var(--amber);
+      border-radius: 0 5px 5px 0;
+      padding: 14px 16px 14px 12px;
+      margin: 14px 0;
+    }
+
+    p { margin-bottom: 10px; }
+    p:last-child { margin-bottom: 0; }
+    strong { font-weight: 600; }
+
+    /* ── ANIMATION ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(14px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    footer {
+      text-align: center; padding: 32px 24px;
+      color: var(--muted); font-family: var(--ff-mono);
+      font-size: .72rem; letter-spacing: 1px;
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 600px) {
+      .header-inner { padding: 44px 20px 40px; }
+      .toc-card { padding: 20px 18px; }
+      .card { padding: 18px 18px; }
+      .prob-body { padding: 18px 18px; }
+      .result-banner, .error-banner { flex-direction: column; align-items: flex-start; gap: 10px; }
+      .sec-head { flex-wrap: wrap; }
+    }
+    @media (max-width: 420px) {
+      .toc-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════════════════════ HEADER ══════════════════════════════════════ -->
+<header class="doc-header">
+  <div class="header-inner">
+    <div class="header-pill">Math 302 · Numerical Methods</div>
+    <h1>MacLaurin's <em>Expansion</em></h1>
+    <p class="header-sub">Approximating definite integrals using MacLaurin series with rigorous error bound analysis — step-by-step engineering approach.</p>
+    <div class="header-meta">Taylor/MacLaurin Series &nbsp;·&nbsp; Definite Integrals &nbsp;·&nbsp; Error Analysis</div>
+    <div class="header-tags">
+      <span class="htag">MacLaurin Series</span>
+      <span class="htag">Substitution Method</span>
+      <span class="htag">Error Bounds</span>
+      <span class="htag">5 Problems</span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════════════════════════ TOC ══════════════════════════════════════ -->
+<div class="toc-wrap">
+  <div class="toc-card">
+    <div class="toc-header">
+      <span class="toc-badge">Contents</span>
+      <span class="toc-heading">Problem Set — MacLaurin Expansion</span>
+      <div class="toc-rule"></div>
+    </div>
+    <div class="toc-grid">
+      <a href="#prob1" class="toc-link"><span class="toc-num">§ 01</span>&ensp;∫ sin(x³) dx &nbsp;[0, 0.4]</a>
+      <a href="#prob2" class="toc-link"><span class="toc-num">§ 02</span>&ensp;∫ cos(x³) dx &nbsp;[0, 0.5]</a>
+      <a href="#prob3" class="toc-link"><span class="toc-num">§ 03</span>&ensp;∫ ln(1+x²) dx &nbsp;[0, 0.3]</a>
+      <a href="#prob4" class="toc-link"><span class="toc-num">§ 04</span>&ensp;∫ 1/(1+x⁴) dx &nbsp;[−0.5, 0.5]</a>
+      <a href="#prob5" class="toc-link"><span class="toc-num">§ 05</span>&ensp;∫ 1/(1+x⁴) dx &nbsp;[0, 0.8]</a>
+    </div>
+  </div>
+</div>
+
+<div class="page-wrap">
+
+<!-- ══════════════════════════════════════════════════════════════════════════════════ -->
+<!--  § 01  ·  sin(x³)  ·  METHOD INTRODUCTION (First Time)                          -->
+<!-- ══════════════════════════════════════════════════════════════════════════════════ -->
+
+  <div class="sec-head" id="prob1">
+    <span class="sec-badge">§ 01</span>
+    <h2>Evaluate \(\displaystyle\int_{0}^{0.4}\sin(x^3)\,dx\)</h2>
+    <div class="sec-rule"></div>
+  </div>
+
+  <!-- Method Explanation — First Appearance -->
+  <div class="card">
+    <div class="card-title purple">Method: MacLaurin Expansion for Integral Approximation</div>
+
+    <p>
+      الفكرة الأساسية في الطريقة دي إننا بنستبدل الدالة المعقدة
+      (زي \(\sin(x^3)\)) بـ <strong>polynomial</strong> بسيط — عشان نقدر نحسب
+      الـ <em>integral</em> بسهولة، مع حساب دقيق لحد الخطأ.
+    </p>
+
+    <div class="ar-explain">
+      <strong>الخطوة الأولى:</strong> هنبدأ بالـ MacLaurin expansion المعروفة للدالة الأساسية
+      (زي sin x أو cos x أو ln(1+x) إلخ) وبتكون معطاة في السؤال.
+      <br><br>
+      <strong>الخطوة التانية:</strong> هنعمل <em>substitution</em> — بنبدّل x بالتعبير الجديد
+      (زي x³) في كل حد في الـ expansion.
+      <br><br>
+      <strong>الخطوة التالتة:</strong> بنقسم النتيجة لجزأين:
+      الـ <em>approximation part</em> (الحدود الـ polynomial اللي هنتكامل بيها)
+      والـ <em>remainder / error term</em> (الحد الأخير اللي بيمثل الخطأ).
+      <br><br>
+      <strong>الخطوة الرابعة:</strong> بنحسب الـ integral تقريبياً باستخدام الحدود الـ polynomial بس.
+      <br><br>
+      <strong>الخطوة الخامسة:</strong> بنحسب <em>upper bound</em> للخطأ عن طريق تكامل حد
+      الخطأ مع استخدام إن |الدالة المثلثية| ≤ 1 أو إن
+      \(\frac{1}{(1+\xi)^n} \le 1\) على الـ interval اللي بنشتغل فيه.
+    </div>
+
+    <div class="block cobalt">
+      <strong>General Structure of the Expansion:</strong>
+      <div class="formula-box">
+        \[
+          f(x) = \underbrace{P_n(x)}_{\text{Approximation (integrate this)}}
+                 +\; \underbrace{R_n(x)}_{\text{Error / Remainder term}}
+        \]
+      </div>
+      After substituting and integrating: &emsp;
+      \(\displaystyle\int_a^b f(x)\,dx \approx \int_a^b P_n(x)\,dx\)
+      &emsp; with error &emsp;
+      \(\displaystyle\left|\text{Error}\right| \le \int_a^b |R_n(x)|\,dx\)
+    </div>
+  </div>
+
+  <!-- Problem Panel -->
+  <div class="prob-panel">
+    <div class="prob-header">
+      <div class="prob-num">01</div>
+      <div class="prob-meta">
+        <div class="prob-label">Problem · MacLaurin Expansion</div>
+        <div class="prob-title">
+          Evaluate \(\displaystyle\int_{0}^{0.4}\sin(x^3)\,dx\) and calculate the accuracy of your result.
+        </div>
+      </div>
+    </div>
+    <div class="prob-body">
+
+      <!-- Given -->
+      <div class="card">
+        <div class="card-title">Given Data</div>
+        <div class="block cobalt">
+          The MacLaurin expansion of \(\sin x\) with remainder:
+          \[
+            \sin x = x - \frac{x^3}{3!} + \frac{x^5}{5!}\cos\xi,
+            \qquad 0 < \xi < x
+          \]
+        </div>
+      </div>
+
+      <!-- Solution -->
+      <div class="card">
+        <div class="card-title amber">Step-by-Step Solution</div>
+
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>Substitution:</strong> Replace every \(x\) with \(x^3\) in the expansion.
+            <div class="formula-box">
+              \[
+                \sin(x^3) = x^3 - \frac{(x^3)^3}{3!} + \frac{(x^3)^5}{5!}\cos\xi
+                          = x^3 - \frac{x^9}{6} + \frac{x^{15}}{120}\cos\xi
+              \]
+            </div>
+            <span class="step-note">where \(0 < \xi < x^3\)</span>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>Identify the two parts:</strong>
+            <div class="block amber" style="margin:8px 0 0 0">
+              Approximation: &ensp;\(\displaystyle x^3 - \frac{x^9}{6}\)
+              &emsp;|&emsp;
+              Error term: &ensp;\(\displaystyle\frac{x^{15}}{120}\cos\xi\)
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>Integrate the approximation over \([0,\, 0.4]\):</strong>
+            <div class="formula-box">
+              \[
+                \int_0^{0.4}\!\sin(x^3)\,dx
+                \;\approx\;
+                \int_0^{0.4}\!\left(x^3 - \frac{x^9}{6}\right)dx
+                = \left[\frac{x^4}{4} - \frac{x^{10}}{60}\right]_0^{0.4}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <strong>Substitute the upper limit \(x = 0.4\):</strong>
+            <div class="formula-box">
+              \[
+                = \frac{(0.4)^4}{4} - \frac{(0.4)^{10}}{60}
+                = \frac{0.0256}{4} - \frac{1.04858 \times 10^{-4}}{60}
+                = 0.0064 - 0.000001748
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="result-banner">
+          <div class="result-icon">✓</div>
+          <div class="result-content">
+            <div class="result-label">Approximate Value</div>
+            <div class="result-value">\(\approx\; 6.398 \times 10^{-3}\)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div class="card">
+        <div class="card-title rust">Error Bound Calculation</div>
+
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            Apply \(|\cos\xi| \le 1\) to bound the error integral:
+            <div class="formula-box">
+              \[
+                |\text{Error}|
+                \;\le\;
+                \int_0^{0.4}\frac{x^{15}}{120}\,dx
+                = \left[\frac{x^{16}}{1920}\right]_0^{0.4}
+                = \frac{(0.4)^{16}}{1920}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            Compute:
+            <div class="formula-box">
+              \[
+                (0.4)^{16} = 4.295 \times 10^{-7}
+                \;\;\Longrightarrow\;\;
+                \frac{4.295 \times 10^{-7}}{1920} \approx 2.237 \times 10^{-10}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="error-banner">
+          <div class="result-icon">🎯</div>
+          <div class="result-content">
+            <div class="result-label">Error Bound</div>
+            <div class="error-value">\(\text{Error} \;\le\; 2.237 \times 10^{-10}\)</div>
+            <div class="result-sub" style="color:rgba(255,255,255,.4)">Extremely high accuracy</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /.prob-panel -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════════════ -->
+<!--  § 02  ·  cos(x³)  ·  [0, 0.5]                                                  -->
+<!-- ══════════════════════════════════════════════════════════════════════════════════ -->
+
+  <div class="sec-head" id="prob2">
+    <span class="sec-badge">§ 02</span>
+    <h2>Evaluate \(\displaystyle\int_{0}^{0.5}\cos(x^3)\,dx\)</h2>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div class="prob-panel">
+    <div class="prob-header">
+      <div class="prob-num">02</div>
+      <div class="prob-meta">
+        <div class="prob-label">Problem · MacLaurin Expansion</div>
+        <div class="prob-title">
+          Evaluate \(\displaystyle\int_{0}^{0.5}\cos(x^3)\,dx\) and calculate the accuracy of your result.
+        </div>
+      </div>
+    </div>
+    <div class="prob-body">
+
+      <div class="card">
+        <div class="card-title">Given Data</div>
+        <div class="block cobalt">
+          The MacLaurin expansion of \(\cos x\) with remainder:
+          \[
+            \cos x = 1 - \frac{x^2}{2!} + \frac{x^4}{4!}\cos\xi,
+            \qquad 0 < \xi < x
+          \]
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title amber">Step-by-Step Solution</div>
+
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>Substitution:</strong> Replace \(x\) with \(x^3\):
+            <div class="formula-box">
+              \[
+                \cos(x^3)
+                = 1 - \frac{(x^3)^2}{2!} + \frac{(x^3)^4}{4!}\cos\xi
+                = 1 - \frac{x^6}{2} + \frac{x^{12}}{24}\cos\xi
+              \]
+            </div>
+            <span class="step-note">where \(0 < \xi < x^3\)</span>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>Integrate the approximation over \([0,\, 0.5]\):</strong>
+            <div class="formula-box">
+              \[
+                \int_0^{0.5}\!\cos(x^3)\,dx
+                \approx
+                \int_0^{0.5}\!\left(1 - \frac{x^6}{2}\right)dx
+                = \left[x - \frac{x^7}{14}\right]_0^{0.5}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>Substitute \(x = 0.5\):</strong>
+            <div class="formula-box">
+              \[
+                = 0.5 - \frac{(0.5)^7}{14}
+                = 0.5 - \frac{7.8125 \times 10^{-3}}{14}
+                = 0.5 - 5.580 \times 10^{-4}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="result-banner">
+          <div class="result-icon">✓</div>
+          <div class="result-content">
+            <div class="result-label">Approximate Value</div>
+            <div class="result-value">\(\approx\; 0.49944196\)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title rust">Error Bound Calculation</div>
+
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            Apply \(|\cos\xi| \le 1\):
+            <div class="formula-box">
+              \[
+                |\text{Error}|
+                \le
+                \int_0^{0.5}\frac{x^{12}}{24}\,dx
+                = \left[\frac{x^{13}}{312}\right]_0^{0.5}
+                = \frac{(0.5)^{13}}{312}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            Compute:
+            <div class="formula-box">
+              \[
+                (0.5)^{13} = \frac{1}{8192} \approx 1.2207 \times 10^{-4}
+                \;\;\Longrightarrow\;\;
+                \frac{1.2207 \times 10^{-4}}{312} \approx 3.9125 \times 10^{-7}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="error-banner">
+          <div class="result-icon">🎯</div>
+          <div class="result-content">
+            <div class="result-label">Error Bound</div>
+            <div class="error-value">\(\text{Error} \;\le\; 3.9125 \times 10^{-7}\)</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /.prob-panel -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════════════ -->
+<!--  § 03  ·  ln(1+x²)  ·  [0, 0.3]                                                 -->
+<!-- ══════════════════════════════════════════════════════════════════════════════════ -->
+
+  <div class="sec-head" id="prob3">
+    <span class="sec-badge">§ 03</span>
+    <h2>Evaluate \(\displaystyle\int_{0}^{0.3}\ln(1+x^2)\,dx\)</h2>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div class="prob-panel">
+    <div class="prob-header">
+      <div class="prob-num">03</div>
+      <div class="prob-meta">
+        <div class="prob-label">Problem · MacLaurin Expansion</div>
+        <div class="prob-title">
+          Evaluate \(\displaystyle\int_{0}^{0.3}\ln(1+x^2)\,dx\) and calculate the accuracy.
+        </div>
+      </div>
+    </div>
+    <div class="prob-body">
+
+      <div class="card">
+        <div class="card-title">Given Data</div>
+        <div class="block cobalt">
+          The MacLaurin expansion of \(\ln(1+x)\) with remainder:
+          \[
+            \ln(1+x) = x - \frac{x^2}{2} + \frac{x^3}{3} - \frac{x^4}{4(1+\xi)^4},
+            \qquad 0 < \xi < x
+          \]
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title amber">Step-by-Step Solution</div>
+
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>Substitution:</strong> Replace \(x\) with \(x^2\) throughout:
+            <div class="formula-box">
+              \[
+                \ln(1+x^2)
+                = x^2 - \frac{x^4}{2} + \frac{x^6}{3} - \frac{x^8}{4(1+\xi)^4}
+              \]
+            </div>
+            <span class="step-note">where \(0 < \xi < x^2\)</span>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>Integrate the approximation over \([0,\, 0.3]\):</strong>
+            <div class="formula-box">
+              \[
+                \int_0^{0.3}\!\ln(1+x^2)\,dx
+                \approx
+                \int_0^{0.3}\!\left(x^2 - \frac{x^4}{2} + \frac{x^6}{3}\right)dx
+                = \left[\frac{x^3}{3} - \frac{x^5}{10} + \frac{x^7}{21}\right]_0^{0.3}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>Substitute \(x = 0.3\):</strong>
+            <div class="formula-box">
+              \[
+                = \frac{(0.3)^3}{3} - \frac{(0.3)^5}{10} + \frac{(0.3)^7}{21}
+              \]
+              \[
+                = \frac{0.027}{3} - \frac{0.00243}{10} + \frac{2.187\times10^{-4}}{21}
+                = 0.009 - 0.000243 + 1.041\times10^{-5}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="result-banner">
+          <div class="result-icon">✓</div>
+          <div class="result-content">
+            <div class="result-label">Approximate Value</div>
+            <div class="result-value">\(\approx\; 8.767 \times 10^{-3}\)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title rust">Error Bound Calculation</div>
+
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            Since \(\xi > 0\), we have \(\dfrac{1}{(1+\xi)^4} \le 1\). Therefore:
+            <div class="formula-box">
+              \[
+                |\text{Error}|
+                \;\le\;
+                \int_0^{0.3}\frac{x^8}{4}\,dx
+                = \left[\frac{x^9}{36}\right]_0^{0.3}
+                = \frac{(0.3)^9}{36}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            Compute:
+            <div class="formula-box">
+              \[
+                (0.3)^9 = 1.9683 \times 10^{-5}
+                \;\;\Longrightarrow\;\;
+                \frac{1.9683 \times 10^{-5}}{36} \approx 5.4675 \times 10^{-7}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="error-banner">
+          <div class="result-icon">🎯</div>
+          <div class="result-content">
+            <div class="result-label">Error Bound</div>
+            <div class="error-value">\(\text{Error} \;\le\; 5.4675 \times 10^{-7}\)</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /.prob-panel -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════════════ -->
+<!--  § 04  ·  1/(1+x⁴)  ·  [−0.5, 0.5]                                              -->
+<!-- ══════════════════════════════════════════════════════════════════════════════════ -->
+
+  <div class="sec-head" id="prob4">
+    <span class="sec-badge">§ 04</span>
+    <h2>Evaluate \(\displaystyle\int_{-0.5}^{0.5}\frac{1}{1+x^4}\,dx\)</h2>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div class="prob-panel">
+    <div class="prob-header">
+      <div class="prob-num">04</div>
+      <div class="prob-meta">
+        <div class="prob-label">Problem · MacLaurin Expansion</div>
+        <div class="prob-title">
+          Evaluate \(\displaystyle\int_{-0.5}^{0.5}\frac{1}{1+x^4}\,dx\) and calculate the accuracy.
+        </div>
+      </div>
+    </div>
+    <div class="prob-body">
+
+      <div class="card">
+        <div class="card-title">Given Data</div>
+        <div class="block cobalt">
+          The MacLaurin expansion of \(\dfrac{1}{1+x^2}\) with remainder:
+          \[
+            \frac{1}{1+x^2} = 1 - x^2 + x^4 - \frac{x^6}{(1+\xi)^4},
+            \qquad 0 < \xi < x
+          \]
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title amber">Step-by-Step Solution</div>
+
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>Substitution:</strong> Replace \(x^2\) with \(x^4\) (i.e., set \(x \to x^2\)):
+            <div class="formula-box">
+              \[
+                \frac{1}{1+x^4}
+                = 1 - x^4 + x^8 - \frac{x^{12}}{(1+\xi)^4},
+                \qquad 0 < \xi < x^2
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>Observe symmetry:</strong> The function \(\dfrac{1}{1+x^4}\) is <em>even</em>
+            (since \(x^4 = (-x)^4\)), so:
+            <div class="block teal" style="margin:8px 0 0 0">
+              \[
+                \int_{-0.5}^{0.5}f(x)\,dx = 2\int_0^{0.5}f(x)\,dx
+              \]
+              The polynomial approximation \(1-x^4+x^8\) is also even — consistent.
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>Integrate the approximation over \([-0.5,\, 0.5]\):</strong>
+            <div class="formula-box">
+              \[
+                \int_{-0.5}^{0.5}\!\frac{1}{1+x^4}\,dx
+                \approx
+                \int_{-0.5}^{0.5}\!\left(1 - x^4 + x^8\right)dx
+                = \left[x - \frac{x^5}{5} + \frac{x^9}{9}\right]_{-0.5}^{0.5}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">4</div>
+          <div class="step-body">
+            <strong>Evaluate at the bounds and apply symmetry:</strong>
+            <div class="formula-box">
+              \[
+                = 2\!\left[0.5 - \frac{(0.5)^5}{5} + \frac{(0.5)^9}{9}\right]
+                = 2\!\left[0.5 - \frac{0.03125}{5} + \frac{1.9531\times10^{-3}}{9}\right]
+              \]
+              \[
+                = 2\left[0.5 - 0.00625 + 0.000217\right]
+                = 2 \times 0.493967 = 0.987934
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="result-banner">
+          <div class="result-icon">✓</div>
+          <div class="result-content">
+            <div class="result-label">Approximate Value</div>
+            <div class="result-value">\(\approx\; 0.987934\)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title rust">Error Bound Calculation</div>
+
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            Since \(\dfrac{1}{(1+\xi)^4} \le 1\) for \(\xi > 0\):
+            <div class="formula-box">
+              \[
+                |\text{Error}|
+                \;\le\;
+                \int_{-0.5}^{0.5}x^{12}\,dx
+                = \left[\frac{x^{13}}{13}\right]_{-0.5}^{0.5}
+                = \frac{2\,(0.5)^{13}}{13}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            Compute:
+            <div class="formula-box">
+              \[
+                (0.5)^{13} = \frac{1}{8192} \approx 1.2207 \times 10^{-4}
+                \;\;\Longrightarrow\;\;
+                \frac{2 \times 1.2207 \times 10^{-4}}{13} \approx 1.878 \times 10^{-5}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="error-banner">
+          <div class="result-icon">🎯</div>
+          <div class="result-content">
+            <div class="result-label">Error Bound</div>
+            <div class="error-value">\(\text{Error} \;\le\; 1.878 \times 10^{-5}\)</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /.prob-panel -->
+
+
+<!-- ══════════════════════════════════════════════════════════════════════════════════ -->
+<!--  § 05  ·  1/(1+x⁴)  ·  [0, 0.8]                                                 -->
+<!-- ══════════════════════════════════════════════════════════════════════════════════ -->
+
+  <div class="sec-head" id="prob5">
+    <span class="sec-badge">§ 05</span>
+    <h2>Evaluate \(\displaystyle\int_{0}^{0.8}\frac{1}{1+x^4}\,dx\)</h2>
+    <div class="sec-rule"></div>
+  </div>
+
+  <div class="prob-panel">
+    <div class="prob-header">
+      <div class="prob-num">05</div>
+      <div class="prob-meta">
+        <div class="prob-label">Problem · MacLaurin Expansion</div>
+        <div class="prob-title">
+          Evaluate \(\displaystyle\int_{0}^{0.8}\frac{1}{1+x^4}\,dx\) and calculate the accuracy.
+        </div>
+      </div>
+    </div>
+    <div class="prob-body">
+
+      <div class="card">
+        <div class="card-title">Given Data</div>
+        <div class="block cobalt">
+          The MacLaurin expansion of \((1+x)^{-1}\) with remainder:
+          \[
+            (1+x)^{-1} = 1 - x + x^2 - x^3 + \frac{x^4}{(1+\xi)^5},
+            \qquad 0 < \xi < x
+          \]
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title amber">Step-by-Step Solution</div>
+
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            <strong>Substitution:</strong> Replace \(x\) with \(x^4\) throughout:
+            <div class="formula-box">
+              \[
+                \frac{1}{1+x^4}
+                = 1 - x^4 + x^8 - x^{12} + \frac{x^{16}}{(1+\xi)^5},
+                \qquad 0 < \xi < x^4
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            <strong>Integrate the approximation over \([0,\, 0.8]\):</strong>
+            <div class="formula-box">
+              \[
+                \int_0^{0.8}\!\frac{1}{1+x^4}\,dx
+                \approx
+                \int_0^{0.8}\!\left(1 - x^4 + x^8 - x^{12}\right)dx
+                = \left[x - \frac{x^5}{5} + \frac{x^9}{9} - \frac{x^{13}}{13}\right]_0^{0.8}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">3</div>
+          <div class="step-body">
+            <strong>Substitute \(x = 0.8\):</strong>
+            <div class="formula-box">
+              \[
+                = 0.8 - \frac{(0.8)^5}{5} + \frac{(0.8)^9}{9} - \frac{(0.8)^{13}}{13}
+              \]
+              \[
+                = 0.8 - \frac{0.32768}{5} + \frac{0.13422}{9} - \frac{0.054976}{13}
+              \]
+              \[
+                = 0.8 - 0.065536 + 0.014913 - 0.004229
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="result-banner">
+          <div class="result-icon">✓</div>
+          <div class="result-content">
+            <div class="result-label">Approximate Value</div>
+            <div class="result-value">\(\approx\; 0.745148\)</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title rust">Error Bound Calculation</div>
+
+        <div class="step-row">
+          <div class="step-num">1</div>
+          <div class="step-body">
+            Since \(\dfrac{1}{(1+\xi)^5} \le 1\) for \(\xi > 0\):
+            <div class="formula-box">
+              \[
+                |\text{Error}|
+                \;\le\;
+                \int_0^{0.8}x^{16}\,dx
+                = \left[\frac{x^{17}}{17}\right]_0^{0.8}
+                = \frac{(0.8)^{17}}{17}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-num">2</div>
+          <div class="step-body">
+            Compute:
+            <div class="formula-box">
+              \[
+                (0.8)^{17} = (0.8)^{16} \times 0.8 = 0.028147 \times 0.8 = 0.022518
+                \;\;\Longrightarrow\;\;
+                \frac{0.022518}{17} \approx 1.3246 \times 10^{-3}
+              \]
+            </div>
+          </div>
+        </div>
+
+        <div class="error-banner">
+          <div class="result-icon">🎯</div>
+          <div class="result-content">
+            <div class="result-label">Error Bound</div>
+            <div class="error-value">\(\text{Error} \;\le\; 1.3246 \times 10^{-3}\)</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div><!-- /.prob-panel -->
+
+</div><!-- /.page-wrap -->
+
+<footer>
+  Math 302 &nbsp;·&nbsp; MacLaurin's Expansion &nbsp;·&nbsp; Numerical Methods
+</footer>
+
+</body>
+</html>
