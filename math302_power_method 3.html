@@ -1,0 +1,1182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math 302 — Eigenvalues &amp; Power Method</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <!-- MathJax -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <style>
+        /* ── CSS CUSTOM PROPERTIES ── */
+        :root {
+            --ivory:    #f7f4ef;
+            --white:    #ffffff;
+            --paper:    #fdfbf7;
+            --fog:      #eee9e0;
+            --border:   #ddd6c8;
+            --ink:      #1c1a18;
+            --ink-soft: #4a4540;
+            --muted:    #8a8078;
+            --midnight: #0e1b2e;
+            --navy:     #163256;
+            --cobalt:   #1e4d8c;
+            --sky:      #3b82c4;
+            --teal:     #1a7a6e;
+            --amber:    #b57a10;
+            --amber-lt: #f5c842;
+            --rust:     #b53a2a;
+            --green:    #1e6b45;
+            --purple:   #5b3f9a;
+            --ff-body:  'EB Garamond', Georgia, 'Times New Roman', serif;
+            --ff-ui:    'DM Sans', system-ui, sans-serif;
+            --ff-mono:  'DM Mono', 'Courier New', monospace;
+            --r-sm: 6px;
+            --r-md: 10px;
+            --r-lg: 16px;
+            --shadow-sm: 0 1px 6px rgba(0,0,0,.06);
+            --shadow-md: 0 4px 20px rgba(0,0,0,.08);
+            --shadow-lg: 0 8px 40px rgba(0,0,0,.10);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; font-size: 16px; }
+
+        body {
+            background: var(--ivory);
+            color: var(--ink);
+            font-family: var(--ff-body);
+            font-size: 1.0625rem;
+            line-height: 1.8;
+            min-height: 100vh;
+        }
+
+        /* ── HEADER ── */
+        .doc-header {
+            background: var(--midnight);
+            position: relative;
+            overflow: hidden;
+        }
+        .doc-header::before {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 20% 50%, rgba(30,77,140,.45) 0%, transparent 60%),
+                radial-gradient(ellipse 60% 80% at 80% 20%, rgba(26,122,110,.25) 0%, transparent 55%);
+        }
+        .doc-header::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+        }
+        .header-inner {
+            position: relative; z-index: 1;
+            max-width: 900px; margin: 0 auto;
+            padding: 64px 32px 56px;
+            display: flex; flex-direction: column; align-items: center; text-align: center;
+        }
+        .header-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(255,255,255,.1);
+            border: 1px solid rgba(255,255,255,.18);
+            border-radius: 30px;
+            padding: 5px 18px;
+            font-family: var(--ff-mono);
+            font-size: .72rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,.7);
+            margin-bottom: 22px;
+        }
+        .header-pill::before { content: '◆'; color: var(--amber-lt); margin-right: 2px; }
+        .doc-header h1 {
+            font-family: var(--ff-body);
+            font-size: clamp(2rem, 5vw, 3.4rem);
+            font-weight: 600;
+            color: #fff;
+            letter-spacing: -.5px;
+            line-height: 1.18;
+            margin-bottom: 14px;
+        }
+        .doc-header h1 em { color: var(--amber-lt); font-style: italic; }
+        .header-sub {
+            font-family: var(--ff-ui);
+            font-size: .92rem;
+            font-weight: 300;
+            color: rgba(255,255,255,.55);
+            max-width: 560px;
+            line-height: 1.65;
+        }
+        .header-meta {
+            font-family: var(--ff-mono);
+            font-size: .72rem;
+            color: rgba(255,255,255,.4);
+            margin-top: 12px;
+            letter-spacing: .5px;
+        }
+        .header-tags {
+            display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+            margin-top: 20px;
+        }
+        .htag {
+            font-family: var(--ff-ui);
+            font-size: .73rem; font-weight: 500;
+            padding: 4px 13px; border-radius: 20px;
+            background: rgba(255,255,255,.08);
+            border: 1px solid rgba(255,255,255,.14);
+            color: rgba(255,255,255,.62);
+        }
+
+        /* ── TOC ── */
+        .toc-wrap { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+        .toc-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-top: 4px solid var(--cobalt);
+            border-radius: 0 0 var(--r-md) var(--r-md);
+            padding: 28px 36px;
+            box-shadow: var(--shadow-md);
+            animation: fadeUp .4s ease both;
+        }
+        .toc-head {
+            display: flex; align-items: center; gap: 14px;
+            margin-bottom: 18px;
+        }
+        .toc-badge {
+            font-family: var(--ff-mono); font-size: .66rem; font-weight: 500;
+            letter-spacing: 2px; text-transform: uppercase;
+            background: var(--cobalt); color: #fff;
+            padding: 4px 12px; border-radius: 4px;
+        }
+        .toc-title {
+            font-family: var(--ff-body); font-size: 1.1rem; font-weight: 600;
+            color: var(--midnight);
+        }
+        .toc-rule { flex: 1; height: 1px; background: var(--border); }
+        .toc-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 6px 24px;
+        }
+        .toc-link {
+            display: flex; align-items: center; gap: 10px;
+            font-family: var(--ff-ui); font-size: .82rem;
+            color: var(--cobalt); text-decoration: none;
+            padding: 6px 10px; border-radius: var(--r-sm);
+            transition: background .15s, color .15s;
+        }
+        .toc-link:hover { background: #e8f0fb; color: var(--midnight); }
+        .toc-num {
+            font-family: var(--ff-mono); font-size: .62rem;
+            background: var(--fog); color: var(--muted);
+            padding: 2px 7px; border-radius: 4px; flex-shrink: 0;
+        }
+
+        /* ── PAGE LAYOUT ── */
+        .page-wrap {
+            max-width: 900px; margin: 0 auto;
+            padding: 8px 24px 80px;
+        }
+
+        /* ── SECTION HEADS ── */
+        .sec-head {
+            display: flex; align-items: center; gap: 14px;
+            margin: 52px 0 24px;
+        }
+        .sec-head:first-of-type { margin-top: 40px; }
+        .sec-badge {
+            font-family: var(--ff-mono); font-size: .68rem; font-weight: 500;
+            letter-spacing: 2px; text-transform: uppercase;
+            background: var(--navy); color: #fff;
+            padding: 4px 11px; border-radius: 4px; white-space: nowrap;
+        }
+        .sec-head h2 {
+            font-family: var(--ff-body);
+            font-size: 1.6rem; font-weight: 600;
+            color: var(--midnight); white-space: nowrap; letter-spacing: -.2px;
+        }
+        .sec-rule { flex: 1; height: 1px; background: var(--border); }
+
+        /* ── CARDS ── */
+        .card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: 26px 30px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 20px;
+            animation: fadeUp .4s ease both;
+        }
+        .card-title {
+            font-family: var(--ff-ui); font-size: .78rem; font-weight: 500;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: var(--cobalt);
+            margin-bottom: 14px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .card-title::before {
+            content: '';
+            display: inline-block;
+            width: 3px; height: 14px;
+            background: var(--cobalt); border-radius: 2px; flex-shrink: 0;
+        }
+        .card-title.amber::before { background: var(--amber); }
+        .card-title.amber         { color: var(--amber); }
+        .card-title.teal::before  { background: var(--teal); }
+        .card-title.teal          { color: var(--teal); }
+        .card-title.rust::before  { background: var(--rust); }
+        .card-title.rust          { color: var(--rust); }
+        .card-title.purple::before{ background: var(--purple); }
+        .card-title.purple        { color: var(--purple); }
+
+        /* ── LEFT-BORDER BLOCKS ── */
+        .block {
+            padding: 16px 22px;
+            margin: 14px 0;
+            border-radius: 0 var(--r-sm) var(--r-sm) 0;
+        }
+        .block-cobalt  { background: #f0f4fa; border: 1px solid #c4d4ec; border-left: 4px solid var(--cobalt); }
+        .block-amber   { background: #fdf8ec; border: 1px solid #e8d090; border-left: 4px solid var(--amber); }
+        .block-teal    { background: #edf7f2; border: 1px solid #9fd4b8; border-left: 4px solid var(--teal); }
+        .block-rust    { background: #fdf0ee; border: 1px solid #e8b4ae; border-left: 4px solid var(--rust); }
+        .block-purple  { background: #f6f4ff; border: 1px solid #c8baf2; border-left: 4px solid var(--purple); }
+
+        /* ── ARABIC TEACHING BLOCK ── */
+        .ar-teach {
+            direction: rtl;
+            text-align: right;
+            background: #fefbf0;
+            border: 1px solid #f0dfa0;
+            border-right: 4px solid var(--amber);
+            border-radius: 0 var(--r-sm) var(--r-sm) 0;
+            padding: 14px 18px 14px 14px;
+            margin: 14px 0;
+        }
+        .ar-teach p {
+            font-family: var(--ff-ui);
+            font-size: .9rem;
+            color: var(--ink-soft);
+            line-height: 1.8;
+            margin-bottom: 6px;
+        }
+        .ar-teach p:last-child { margin-bottom: 0; }
+        .ar-teach strong { color: var(--midnight); font-weight: 600; }
+
+        /* ── PROCEDURE STEPS ── */
+        .steps { margin: 14px 0; }
+        .step {
+            display: flex; gap: 16px; align-items: flex-start;
+            background: var(--paper);
+            border: 1px solid var(--fog);
+            border-radius: var(--r-sm);
+            padding: 10px 14px;
+            margin: 10px 0;
+        }
+        .step-num {
+            font-family: var(--ff-mono); font-size: .7rem; font-weight: 500;
+            background: var(--navy); color: white;
+            min-width: 22px; height: 22px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0; margin-top: 2px;
+        }
+        .step-body { font-size: .97rem; line-height: 1.7; font-family: var(--ff-body); }
+        .step-note {
+            font-family: var(--ff-ui); font-size: .8rem;
+            color: var(--muted); font-style: italic;
+            display: block; margin-top: 4px;
+        }
+
+        /* ── PROBLEM PANEL ── */
+        .prob-panel {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            overflow: hidden;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 32px;
+            animation: fadeUp .4s ease both;
+        }
+        .prob-header {
+            background: var(--navy);
+            color: #fff;
+            padding: 20px 28px;
+            display: flex; align-items: flex-start; gap: 16px;
+        }
+        .prob-num {
+            font-family: var(--ff-body);
+            font-size: 2.2rem; font-weight: 600;
+            color: var(--amber-lt); line-height: 1; min-width: 52px;
+        }
+        .prob-meta { flex: 1; }
+        .prob-label {
+            font-family: var(--ff-mono); font-size: .65rem;
+            letter-spacing: 2px; text-transform: uppercase;
+            color: rgba(255,255,255,.5); margin-bottom: 6px;
+        }
+        .prob-title {
+            font-family: var(--ff-body); font-size: 1.1rem; font-weight: 500;
+            color: #fff; line-height: 1.45;
+        }
+        .prob-body { padding: 26px 28px; }
+
+        /* ── GIVEN DATA GRID ── */
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .data-chip {
+            padding: 12px 14px;
+            border-radius: 0 var(--r-sm) var(--r-sm) 0;
+            font-size: .88rem;
+            text-align: center;
+        }
+
+        /* ── ITERATION STEP CARD ── */
+        .iter-step {
+            background: var(--paper);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: 18px 22px;
+            margin: 14px 0;
+            box-shadow: var(--shadow-sm);
+            animation: fadeUp .4s ease both;
+        }
+        .iter-step-head {
+            font-family: var(--ff-mono); font-size: .72rem; font-weight: 500;
+            letter-spacing: 1.8px; text-transform: uppercase;
+            color: var(--cobalt); margin-bottom: 12px;
+            display: flex; align-items: center; gap: 8px;
+        }
+        .iter-badge {
+            background: var(--cobalt); color: #fff;
+            font-family: var(--ff-mono); font-size: .65rem;
+            padding: 2px 10px; border-radius: 4px;
+        }
+
+        /* ── RATIO TABLE ── */
+        .ratio-wrap { overflow-x: auto; margin: 12px 0; }
+        .ratio-tbl {
+            width: 100%; border-collapse: collapse;
+            border: 1px solid var(--border);
+            border-radius: var(--r-sm); overflow: hidden;
+            font-family: var(--ff-mono); font-size: .78rem;
+            min-width: 340px;
+        }
+        .ratio-tbl thead tr { background: var(--midnight); }
+        .ratio-tbl th {
+            color: rgba(255,255,255,.85);
+            font-family: var(--ff-mono); font-size: .68rem;
+            font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase;
+            padding: 8px 14px; text-align: center;
+        }
+        .ratio-tbl td {
+            padding: 8px 14px; text-align: center;
+            border-bottom: 1px solid var(--fog);
+        }
+        .ratio-tbl tbody tr:nth-child(even) { background: var(--paper); }
+        .ratio-tbl td.converging { color: var(--teal); font-weight: 600; }
+        .ratio-tbl td.diverging  { color: var(--rust); font-weight: 600; }
+        .ratio-tbl td.close      { color: var(--amber); font-weight: 600; }
+
+        /* ── STATUS PILL ── */
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-family: var(--ff-mono); font-size: .72rem; font-weight: 500;
+            padding: 4px 12px; border-radius: 20px;
+        }
+        .pill-no   { background: #fdecea; color: #93261c; border: 1px solid #e8aca8; }
+        .pill-close{ background: #fdf8ec; color: var(--amber); border: 1px solid #e8d090; }
+        .pill-yes  { background: #e6f5ed; color: #1b6b3a; border: 1px solid #9fd4b0; }
+
+        /* ── RESULT BANNER ── */
+        .result-banner {
+            background: linear-gradient(130deg, var(--midnight) 0%, #1e3d6e 100%);
+            border-radius: var(--r-md);
+            padding: 20px 24px;
+            display: flex; align-items: center; gap: 18px;
+            box-shadow: 0 4px 20px rgba(14,27,46,.2);
+            margin: 18px 0;
+        }
+        .rb-icon { font-size: 1.9rem; flex-shrink: 0; }
+        .rb-content { flex: 1; }
+        .rb-label {
+            font-family: var(--ff-ui); font-size: .78rem;
+            color: rgba(255,255,255,.55); margin-bottom: 4px;
+        }
+        .rb-value {
+            font-family: var(--ff-mono); font-size: 1.15rem; font-weight: 500;
+            color: var(--amber-lt); letter-spacing: .5px; line-height: 1.5;
+        }
+        .rb-sub {
+            font-family: var(--ff-ui); font-size: .75rem;
+            color: rgba(255,255,255,.38); margin-top: 3px;
+        }
+
+        /* ── NOTE BANNER (oscillation warning) ── */
+        .note-banner {
+            background: #fdf8ec; border: 1px solid #e8d090;
+            border-left: 4px solid var(--amber);
+            border-radius: 0 var(--r-md) var(--r-md) 0;
+            padding: 14px 20px; margin: 14px 0;
+            font-size: .92rem;
+        }
+
+        p { margin-bottom: 10px; }
+        p:last-child { margin-bottom: 0; }
+        strong { font-weight: 600; }
+
+        /* ── ANIMATION ── */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(14px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── FOOTER ── */
+        footer {
+            text-align: center; padding: 32px 24px;
+            color: var(--muted); font-family: var(--ff-mono);
+            font-size: .72rem; letter-spacing: 1px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ── RESPONSIVE ── */
+        @media (max-width: 600px) {
+            .header-inner { padding: 44px 20px 40px; }
+            .toc-card { padding: 20px 20px; }
+            .card { padding: 18px 18px; }
+            .prob-body { padding: 18px; }
+            .result-banner { flex-direction: column; text-align: center; }
+        }
+        @media (max-width: 540px) {
+            .data-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 420px) {
+            .toc-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  HEADER                                               -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<header class="doc-header">
+    <div class="header-inner">
+        <div class="header-pill">Math 302 · Numerical Methods</div>
+        <h1>Eigenvalues &amp; <em>Power Method</em></h1>
+        <p class="header-sub">Complete lecture notes with iterative eigenpair computation, ratio-convergence analysis, and 4 fully worked examples</p>
+        <div class="header-meta">Dominant Eigenvalue · 3×3 Matrices · Convergence Checking · Bilingual Notes</div>
+        <div class="header-tags">
+            <span class="htag">Power Method</span>
+            <span class="htag">Eigenvalues</span>
+            <span class="htag">Eigenvectors</span>
+            <span class="htag">Convergence Analysis</span>
+            <span class="htag">Bilingual Notes</span>
+        </div>
+    </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  TABLE OF CONTENTS                                    -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="toc-wrap">
+    <div class="toc-card">
+        <div class="toc-head">
+            <span class="toc-badge">Contents</span>
+            <span class="toc-title">Table of Contents</span>
+            <div class="toc-rule"></div>
+        </div>
+        <div class="toc-grid">
+            <a href="#sec-01" class="toc-link"><span class="toc-num">§ 01</span>Fundamental Concepts</a>
+            <a href="#sec-02" class="toc-link"><span class="toc-num">§ 02</span>Power Method Algorithm</a>
+            <a href="#sec-03" class="toc-link"><span class="toc-num">§ 03</span>Example 1 — 10×10 Matrix</a>
+            <a href="#sec-04" class="toc-link"><span class="toc-num">§ 04</span>Example 2 — 5×5 Matrix</a>
+            <a href="#sec-05" class="toc-link"><span class="toc-num">§ 05</span>Exercise 1 — Block Matrix</a>
+            <a href="#sec-06" class="toc-link"><span class="toc-num">§ 06</span>Exercise 2 — Symmetric Matrix</a>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<!--  PAGE BODY                                            -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div class="page-wrap">
+
+    <!-- ─────────────────────────────── § 01 ─── -->
+    <div class="sec-head" id="sec-01">
+        <span class="sec-badge">§ 01</span>
+        <h2>Fundamental Concepts</h2>
+        <div class="sec-rule"></div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Eigenvalue Problem — Definition</div>
+        <div class="ar-teach">
+            <p>فكرة الـ <strong>Eigenvalue</strong> بتقول: لو عندك مصفوفة \( A \)، فيه متجهات خاصة اسمها <strong>eigenvectors</strong> — لما بنضرب فيها المصفوفة، ما بتتغيرش اتجاهها، بس بتتضاعف بعامل عددي اسمه <strong>eigenvalue</strong>.</p>
+            <p>يعني المصفوفة بتعمل زي كإنها بس <strong>بتمط</strong> أو <strong>بتعكس</strong> المتجه ده، مش بتغير اتجاهه.</p>
+        </div>
+        <div class="block block-amber" style="text-align:center;">
+            \[ A\,\vec{x} = \lambda\,\vec{x} \]
+        </div>
+        <p style="color:var(--ink-soft);font-size:.92rem;margin-top:8px;">
+            Where \( \vec{x} \neq \vec{0} \) is the <strong>eigenvector</strong> (direction that remains unchanged under \( A \)) and \( \lambda \) is the corresponding <strong>eigenvalue</strong> (the scalar factor).
+        </p>
+    </div>
+
+    <div class="card">
+        <div class="card-title purple">Theoretical Derivation</div>
+        <div class="ar-teach">
+            <p>عشان نوصل لطريقة نحسب بيها الـ eigenvalue، هننقل كل حاجة لجنب واحد:</p>
+        </div>
+        <div class="block block-cobalt">
+            \[ A\vec{x} = \lambda\vec{x}
+            \quad\Longrightarrow\quad
+            A\vec{x} - \lambda\vec{x} = \vec{0}
+            \quad\Longrightarrow\quad
+            (A - \lambda I)\,\vec{x} = \vec{0} \]
+        </div>
+        <p style="margin-top:10px;">For a <strong>non-trivial solution</strong> (\( \vec{x} \neq \vec{0} \)) to exist, the matrix \( (A - \lambda I) \) must be singular:</p>
+        <div class="block block-amber" style="text-align:center;">
+            \[ \det(A - \lambda I) = 0 \]
+        </div>
+        <p style="color:var(--ink-soft);font-size:.9rem;">
+            This is the <strong>characteristic equation</strong>. Solving it analytically gives eigenvalues exactly, but for large matrices the Power Method provides an iterative numerical approximation to the <em>dominant eigenvalue</em> (the one with the largest absolute value).
+        </p>
+    </div>
+
+    <!-- ─────────────────────────────── § 02 ─── -->
+    <div class="sec-head" id="sec-02">
+        <span class="sec-badge">§ 02</span>
+        <h2>Power Method — Algorithm</h2>
+        <div class="sec-rule"></div>
+    </div>
+
+    <div class="card">
+        <div class="card-title amber">Core Idea &amp; Intuition</div>
+        <div class="ar-teach">
+            <p><strong>Power Method</strong> هي أبسط وأسرع طريقة عددية للإيجاد الـ dominant eigenvalue (القيمة الذاتية الأكبر مطلقاً) لمصفوفة.</p>
+            <p>الفكرة: بنبدأ بمتجه ابتدائي عشوائي \( X^{(0)} \)، وبنضرب فيه المصفوفة \( A \) مرة وراء مرة. مع تكرار الضرب، المتجه بيتجه ناحية الـ eigenvector المقابل للـ eigenvalue الأكبر. والنسبة بين عناصر الناتج الجديد للقديم بتقترب من الـ eigenvalue نفسه.</p>
+            <p>هنعرف إننا وصلنا للتقارب <strong>Convergence</strong> لما نسب عناصر المتجه الجديد على القديم تبقى متساوية (أو قريبة من بعض).</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title amber">Iterative Formula</div>
+        <div class="block block-amber" style="text-align:center;">
+            \[ X^{(n+1)} = A\,X^{(n)} \]
+        </div>
+        <p style="color:var(--ink-soft);font-size:.92rem;margin-top:8px;">
+            Starting from an initial guess \( X^{(0)} \), each iteration multiplies by \( A \) to produce the next approximation. The <strong>eigenvalue</strong> is estimated by the element-wise ratio:
+        </p>
+        <div class="block block-cobalt" style="text-align:center;">
+            \[ \lambda \approx \frac{X^{(n+1)}_i}{X^{(n)}_i} \quad\text{for each component } i \]
+        </div>
+        <p style="color:var(--ink-soft);font-size:.9rem;">
+            When all ratios converge to the same value → that value is the dominant eigenvalue \( \lambda \).
+        </p>
+    </div>
+
+    <div class="card">
+        <div class="card-title teal">Convergence Criterion</div>
+        <div class="block block-teal">
+            <p><strong>Not Converged:</strong> Ratios \( X^{(n+1)}_i / X^{(n)}_i \) differ significantly between components.</p>
+            <p style="margin-top:8px;"><strong>Converged:</strong> All ratios (for nonzero components) approach the same value \( \lambda \). The iteration vector \( X^{(n)} \) is the approximate eigenvector.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title teal">Solution Procedure</div>
+        <div class="ar-teach">
+            <p>اتبع الخطوات دي بالترتيب في كل مثال:</p>
+        </div>
+        <div class="steps">
+            <div class="step">
+                <div class="step-num">1</div>
+                <div class="step-body">
+                    <strong>Start with initial vector</strong> \( X^{(0)} \) — typically \( (1, 0, 0, \ldots)^T \) unless otherwise specified.
+                    <span class="step-note">المتجه الابتدائي بنختاره بسيط. المهم إنه مش الصفر.</span>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <div class="step-body">
+                    <strong>Compute</strong> \( X^{(n+1)} = A \cdot X^{(n)} \) — a standard matrix-vector multiplication.
+                    <span class="step-note">كل عنصر في المتجه الجديد = الصف المقابل من \( A \) مضروب نقطياً في المتجه القديم.</span>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <div class="step-body">
+                    <strong>Compute ratios:</strong> divide each component of \( X^{(n+1)} \) by the corresponding component of \( X^{(n)} \).
+                    <span class="step-note">تجاهل المكونات اللي قيمتها صفر في القسمة — مش معرّفة.</span>
+                </div>
+            </div>
+            <div class="step">
+                <div class="step-num">4</div>
+                <div class="step-body">
+                    <strong>Check convergence:</strong> if ratios are equal (or close) → stopped; that ratio is \( \lambda \) and \( X^{(n+1)} \) is the eigenvector. Otherwise → repeat from step 2.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────── § 03 ─── -->
+    <div class="sec-head" id="sec-03">
+        <span class="sec-badge">§ 03</span>
+        <h2>Example 1</h2>
+        <div class="sec-rule"></div>
+    </div>
+
+    <div class="prob-panel">
+        <div class="prob-header">
+            <div class="prob-num">01</div>
+            <div class="prob-meta">
+                <div class="prob-label">Power Method · 3 Iterations · 3×3 Matrix</div>
+                <div class="prob-title">
+                    Obtain an approximate eigenpair \( (\lambda,\, X) \) for the matrix \( A \) using initial vector \( X^{(0)} = (1,\,0,\,0)^T \). Perform 3 iterations.
+                </div>
+            </div>
+        </div>
+        <div class="prob-body">
+
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-title">Given Data</div>
+                <div class="block block-cobalt" style="text-align:center;">
+                    \[ A = \begin{pmatrix} 10 & -4 & -8 \\ -4 & 4 & 4 \\ -8 & 4 & 10 \end{pmatrix}, \qquad X^{(0)} = \begin{pmatrix} 1 \\ 0 \\ 0 \end{pmatrix} \]
+                </div>
+            </div>
+
+            <!-- Iteration 1 -->
+            <div class="iter-step">
+                <div class="iter-step-head">
+                    <span class="iter-badge">Iter 1</span>
+                    \( X^{(1)} = A\,X^{(0)} \)
+                </div>
+                <div class="block block-cobalt" style="text-align:center; margin-top:8px;">
+                    \[ X^{(1)} = \begin{pmatrix} 10 & -4 & -8 \\ -4 & 4 & 4 \\ -8 & 4 & 10 \end{pmatrix} \begin{pmatrix} 1 \\ 0 \\ 0 \end{pmatrix} = \begin{pmatrix} (10)(1)+(-4)(0)+(-8)(0) \\ (-4)(1)+(4)(0)+(4)(0) \\ (-8)(1)+(4)(0)+(10)(0) \end{pmatrix} = \begin{pmatrix} 10 \\ -4 \\ -8 \end{pmatrix} \]
+                </div>
+                <p style="margin-top:10px;font-size:.88rem;color:var(--ink-soft);">Ratio check — \( X^{(1)} / X^{(0)} \): division by zero in components 2 and 3 → <span class="status-pill pill-no">Not converged</span></p>
+            </div>
+
+            <!-- Iteration 2 -->
+            <div class="iter-step">
+                <div class="iter-step-head">
+                    <span class="iter-badge">Iter 2</span>
+                    \( X^{(2)} = A\,X^{(1)} \)
+                </div>
+                <div class="block block-cobalt" style="text-align:center; margin-top:8px;">
+                    \[ X^{(2)} = \begin{pmatrix} 10 & -4 & -8 \\ -4 & 4 & 4 \\ -8 & 4 & 10 \end{pmatrix} \begin{pmatrix} 10 \\ -4 \\ -8 \end{pmatrix} = \begin{pmatrix} 100+16+64 \\ -40-16-32 \\ -80-16-80 \end{pmatrix} = \begin{pmatrix} 180 \\ -88 \\ -176 \end{pmatrix} \]
+                </div>
+                <p style="margin-top:10px;font-size:.9rem;">Ratio check — \( X^{(2)}_i \,/\, X^{(1)}_i \):</p>
+                <div class="ratio-wrap">
+                <table class="ratio-tbl">
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>\( X^{(1)}_i \)</th>
+                            <th>\( X^{(2)}_i \)</th>
+                            <th>Ratio \( X^{(2)}/X^{(1)} \)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1st</td>
+                            <td>10</td>
+                            <td>180</td>
+                            <td class="diverging">18</td>
+                            <td rowspan="3" style="vertical-align:middle;"><span class="status-pill pill-no">Not converged</span><br><small style="color:var(--muted);font-size:.7rem;display:block;margin-top:4px;">18 ≠ 22</small></td>
+                        </tr>
+                        <tr>
+                            <td>2nd</td>
+                            <td>-4</td>
+                            <td>-88</td>
+                            <td class="diverging">22</td>
+                        </tr>
+                        <tr>
+                            <td>3rd</td>
+                            <td>-8</td>
+                            <td>-176</td>
+                            <td class="diverging">22</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+
+            <!-- Iteration 3 -->
+            <div class="iter-step">
+                <div class="iter-step-head">
+                    <span class="iter-badge">Iter 3</span>
+                    \( X^{(3)} = A\,X^{(2)} \)
+                </div>
+                <div class="block block-cobalt" style="text-align:center; margin-top:8px;">
+                    \[ X^{(3)} = \begin{pmatrix} 10 & -4 & -8 \\ -4 & 4 & 4 \\ -8 & 4 & 10 \end{pmatrix} \begin{pmatrix} 180 \\ -88 \\ -176 \end{pmatrix} = \begin{pmatrix} 1800+352+1408 \\ -720-352-704 \\ -1440-352-1760 \end{pmatrix} = \begin{pmatrix} 3560 \\ -1776 \\ -3552 \end{pmatrix} \]
+                </div>
+                <p style="margin-top:10px;font-size:.9rem;">Ratio check — \( X^{(3)}_i \,/\, X^{(2)}_i \):</p>
+                <div class="ratio-wrap">
+                <table class="ratio-tbl">
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>\( X^{(2)}_i \)</th>
+                            <th>\( X^{(3)}_i \)</th>
+                            <th>Ratio \( X^{(3)}/X^{(2)} \)</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1st</td>
+                            <td>180</td>
+                            <td>3560</td>
+                            <td class="close">≈ 19.78</td>
+                            <td rowspan="3" style="vertical-align:middle;"><span class="status-pill pill-close">Converging</span><br><small style="color:var(--muted);font-size:.7rem;display:block;margin-top:4px;">19.78 ≈ 20.18</small></td>
+                        </tr>
+                        <tr>
+                            <td>2nd</td>
+                            <td>-88</td>
+                            <td>-1776</td>
+                            <td class="converging">≈ 20.18</td>
+                        </tr>
+                        <tr>
+                            <td>3rd</td>
+                            <td>-176</td>
+                            <td>-3552</td>
+                            <td class="converging">≈ 20.18</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+                <div class="block block-teal" style="margin-top:12px;font-size:.9rem;">
+                    Two out of three ratios are identical at 20.18, and the first is approaching that value. The iteration is converging to the dominant eigenvalue.
+                </div>
+            </div>
+
+            <div class="result-banner">
+                <div class="rb-icon">✓</div>
+                <div class="rb-content">
+                    <div class="rb-label">Dominant Eigenvalue (after 3 iterations)</div>
+                    <div class="rb-value">\( \lambda \approx 20.18 \)</div>
+                    <div class="rb-sub">Eigenvector: \( X^{(3)} = (3560,\; -1776,\; -3552)^T \)</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────── § 04 ─── -->
+    <div class="sec-head" id="sec-04">
+        <span class="sec-badge">§ 04</span>
+        <h2>Example 2</h2>
+        <div class="sec-rule"></div>
+    </div>
+
+    <div class="prob-panel">
+        <div class="prob-header">
+            <div class="prob-num">02</div>
+            <div class="prob-meta">
+                <div class="prob-label">Power Method · 3 Iterations · 3×3 Symmetric Matrix</div>
+                <div class="prob-title">
+                    Obtain the dominant eigenvalue and eigenvector of \( A \) using initial vector \( X^{(0)} = (1,\,0,\,0)^T \).
+                </div>
+            </div>
+        </div>
+        <div class="prob-body">
+
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-title">Given Data</div>
+                <div class="block block-cobalt" style="text-align:center;">
+                    \[ A = \begin{pmatrix} 5 & -2 & -4 \\ -2 & 2 & 2 \\ -4 & 2 & 5 \end{pmatrix}, \qquad X^{(0)} = \begin{pmatrix} 1 \\ 0 \\ 0 \end{pmatrix} \]
+                </div>
+            </div>
+
+            <!-- Iteration 1 -->
+            <div class="iter-step">
+                <div class="iter-step-head">
+                    <span class="iter-badge">Iter 1</span>
+                    \( X^{(1)} = A\,X^{(0)} \)
+                </div>
+                <div class="block block-cobalt" style="text-align:center; margin-top:8px;">
+                    \[ X^{(1)} = \begin{pmatrix} 5 & -2 & -4 \\ -2 & 2 & 2 \\ -4 & 2 & 5 \end{pmatrix} \begin{pmatrix} 1 \\ 0 \\ 0 \end{pmatrix} = \begin{pmatrix} 5 \\ -2 \\ -4 \end{pmatrix} \]
+                </div>
+                <p style="margin-top:8px;font-size:.88rem;color:var(--ink-soft);">
+                    Ratio \( X^{(1)}/X^{(0)} \): \( 5/1 = 5,\quad -2/0 = \infty \) → <span class="status-pill pill-no">Not converged</span>
+                </p>
+            </div>
+
+            <!-- Iteration 2 -->
+            <div class="iter-step">
+                <div class="iter-step-head">
+                    <span class="iter-badge">Iter 2</span>
+                    \( X^{(2)} = A\,X^{(1)} \)
+                </div>
+                <div class="block block-cobalt" style="text-align:center; margin-top:8px;">
+                    \[ X^{(2)} = \begin{pmatrix} 5 & -2 & -4 \\ -2 & 2 & 2 \\ -4 & 2 & 5 \end{pmatrix} \begin{pmatrix} 5 \\ -2 \\ -4 \end{pmatrix} = \begin{pmatrix} 25+4+16 \\ -10-4-8 \\ -20-4-20 \end{pmatrix} = \begin{pmatrix} 45 \\ -22 \\ -44 \end{pmatrix} \]
+                </div>
+                <div class="ratio-wrap">
+                <table class="ratio-tbl">
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>\( X^{(1)}_i \)</th>
+                            <th>\( X^{(2)}_i \)</th>
+                            <th>Ratio</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1st</td><td>5</td><td>45</td>
+                            <td class="diverging">9</td>
+                            <td rowspan="3" style="vertical-align:middle;"><span class="status-pill pill-no">Not converged</span><br><small style="color:var(--muted);font-size:.7rem;display:block;margin-top:4px;">9 ≠ 11</small></td>
+                        </tr>
+                        <tr>
+                            <td>2nd</td><td>-2</td><td>-22</td>
+                            <td class="diverging">11</td>
+                        </tr>
+                        <tr>
+                            <td>3rd</td><td>-4</td><td>-44</td>
+                            <td class="diverging">11</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+
+            <!-- Iteration 3 -->
+            <div class="iter-step">
+                <div class="iter-step-head">
+                    <span class="iter-badge">Iter 3</span>
+                    \( X^{(3)} = A\,X^{(2)} \)
+                </div>
+                <div class="block block-cobalt" style="text-align:center; margin-top:8px;">
+                    \[ X^{(3)} = \begin{pmatrix} 5 & -2 & -4 \\ -2 & 2 & 2 \\ -4 & 2 & 5 \end{pmatrix} \begin{pmatrix} 45 \\ -22 \\ -44 \end{pmatrix} = \begin{pmatrix} 225+44+176 \\ -90-44-88 \\ -180-44-220 \end{pmatrix} = \begin{pmatrix} 445 \\ -222 \\ -444 \end{pmatrix} \]
+                </div>
+                <div class="ratio-wrap">
+                <table class="ratio-tbl">
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>\( X^{(2)}_i \)</th>
+                            <th>\( X^{(3)}_i \)</th>
+                            <th>Ratio</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1st</td><td>45</td><td>445</td>
+                            <td class="close">≈ 9.89</td>
+                            <td rowspan="3" style="vertical-align:middle;"><span class="status-pill pill-close">Converging</span><br><small style="color:var(--muted);font-size:.7rem;display:block;margin-top:4px;">→ 10.09</small></td>
+                        </tr>
+                        <tr>
+                            <td>2nd</td><td>-22</td><td>-222</td>
+                            <td class="converging">≈ 10.09</td>
+                        </tr>
+                        <tr>
+                            <td>3rd</td><td>-44</td><td>-444</td>
+                            <td class="converging">≈ 10.09</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+
+            <div class="result-banner">
+                <div class="rb-icon">✓</div>
+                <div class="rb-content">
+                    <div class="rb-label">Dominant Eigenvalue (after 3 iterations)</div>
+                    <div class="rb-value">\( \lambda \approx 10.09 \)</div>
+                    <div class="rb-sub">Eigenvector: \( X^{(3)} = (445,\; -222,\; -444)^T \)</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────── § 05 ─── -->
+    <div class="sec-head" id="sec-05">
+        <span class="sec-badge">§ 05</span>
+        <h2>Exercise 1</h2>
+        <div class="sec-rule"></div>
+    </div>
+
+    <div class="prob-panel">
+        <div class="prob-header">
+            <div class="prob-num">03</div>
+            <div class="prob-meta">
+                <div class="prob-label">Power Method · Block-Diagonal Structure · 4 Iterations</div>
+                <div class="prob-title">
+                    Calculate the dominant eigenvalue and eigenvector for matrix \( A \) using \( X^{(0)} = (1,\,0,\,0)^T \).
+                </div>
+            </div>
+        </div>
+        <div class="prob-body">
+
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-title">Given Data</div>
+                <div class="block block-cobalt" style="text-align:center;">
+                    \[ A = \begin{pmatrix} 6 & 8 & 0 \\ 8 & -6 & 0 \\ 0 & 0 & 5 \end{pmatrix}, \qquad X^{(0)} = \begin{pmatrix} 1 \\ 0 \\ 0 \end{pmatrix} \]
+                </div>
+            </div>
+
+            <div class="note-banner">
+                <strong>Note on Matrix Structure:</strong> This matrix has a block-diagonal structure — the top-left 2×2 block \( \begin{pmatrix} 6 & 8 \\ 8 & -6 \end{pmatrix} \) is decoupled from the bottom-right scalar \( 5 \). Eigenvalues of the 2×2 block: \( (6-\lambda)(-6-\lambda) - 64 = \lambda^2 - 100 = 0 \;\Rightarrow\; \lambda = \pm 10 \). All eigenvalues: \( \{+10,\,-10,\,5\} \). Since \( |{+10}| = |{-10}| \), the two dominant eigenvalues have equal magnitude, which causes the standard Power Method to <strong>oscillate</strong> rather than converge to a single ratio. The two-step ratio analysis (shown below) resolves this.
+            </div>
+
+            <!-- Iteration 1 -->
+            <div class="iter-step">
+                <div class="iter-step-head">
+                    <span class="iter-badge">Iter 1</span>
+                    \( X^{(1)} = A\,X^{(0)} \)
+                </div>
+                <div class="block block-cobalt" style="text-align:center; margin-top:8px;">
+                    \[ X^{(1)} = \begin{pmatrix} 6 & 8 & 0 \\ 8 & -6 & 0 \\ 0 & 0 & 5 \end{pmatrix} \begin{pmatrix} 1 \\ 0 \\ 0 \end{pmatrix} = \begin{pmatrix} 6 \\ 8 \\ 0 \end{pmatrix} \]
+                </div>
+                <p style="margin-top:8px;font-size:.88rem;color:var(--ink-soft);">
+                    Ratio \( X^{(1)}/X^{(0)} \): \( 6/1=6,\quad 8/0=\infty \) → <span class="status-pill pill-no">Not converged</span>
+                </p>
+            </div>
+
+            <!-- Iteration 2 -->
+            <div class="iter-step">
+                <div class="iter-step-head">
+                    <span class="iter-badge">Iter 2</span>
+                    \( X^{(2)} = A\,X^{(1)} \)
+                </div>
+                <div class="block block-cobalt" style="text-align:center; margin-top:8px;">
+                    \[ X^{(2)} = \begin{pmatrix} 6 & 8 & 0 \\ 8 & -6 & 0 \\ 0 & 0 & 5 \end{pmatrix} \begin{pmatrix} 6 \\ 8 \\ 0 \end{pmatrix} = \begin{pmatrix} 36+64 \\ 48-48 \\ 0 \end{pmatrix} = \begin{pmatrix} 100 \\ 0 \\ 0 \end{pmatrix} \]
+                </div>
+                <p style="margin-top:8px;font-size:.88rem;color:var(--ink-soft);">
+                    Ratio: \( 100/6 \approx 16.67,\quad 0/8 = 0 \) → <span class="status-pill pill-no">Not converged — oscillating</span>
+                </p>
+            </div>
+
+            <!-- Iteration 3 -->
+            <div class="iter-step">
+                <div class="iter-step-head">
+                    <span class="iter-badge">Iter 3</span>
+                    \( X^{(3)} = A\,X^{(2)} \)
+                </div>
+                <div class="block block-cobalt" style="text-align:center; margin-top:8px;">
+                    \[ X^{(3)} = \begin{pmatrix} 6 & 8 & 0 \\ 8 & -6 & 0 \\ 0 & 0 & 5 \end{pmatrix} \begin{pmatrix} 100 \\ 0 \\ 0 \end{pmatrix} = \begin{pmatrix} 600 \\ 800 \\ 0 \end{pmatrix} \]
+                </div>
+                <p style="margin-top:8px;font-size:.88rem;color:var(--ink-soft);">
+                    Ratio: \( 600/100=6,\quad 800/0=\infty \) → <span class="status-pill pill-no">Still oscillating</span>
+                </p>
+            </div>
+
+            <!-- Iteration 4 -->
+            <div class="iter-step">
+                <div class="iter-step-head">
+                    <span class="iter-badge">Iter 4</span>
+                    \( X^{(4)} = A\,X^{(3)} \)
+                </div>
+                <div class="block block-cobalt" style="text-align:center; margin-top:8px;">
+                    \[ X^{(4)} = \begin{pmatrix} 6 & 8 & 0 \\ 8 & -6 & 0 \\ 0 & 0 & 5 \end{pmatrix} \begin{pmatrix} 600 \\ 800 \\ 0 \end{pmatrix} = \begin{pmatrix} 3600+6400 \\ 4800-4800 \\ 0 \end{pmatrix} = \begin{pmatrix} 10000 \\ 0 \\ 0 \end{pmatrix} \]
+                </div>
+                <p style="margin-top:8px;font-size:.88rem;color:var(--ink-soft);">
+                    Ratio: \( 10000/600 \approx 16.67,\quad 0/800=0 \) → <span class="status-pill pill-no">Still oscillating</span>
+                </p>
+            </div>
+
+            <!-- Two-step analysis -->
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-title amber">Two-Step Ratio Analysis</div>
+                <div class="ar-teach">
+                    <p>لما الـ ratios تتأرجح بين قيمتين بدل ما تتقارب، ده معناه إن فيه eigenvalues متساوية في المطلق بس مختلفة في الإشارة (زي \(+10\) و \(-10\)).</p>
+                    <p>الحل: بدل ما نقسم خطوة على الخطوة السابقة، نقسم على <strong>خطوتين قبلها</strong> — ده بيعطينا \( \lambda^2 \) وبالتالي \( |\lambda| \).</p>
+                </div>
+                <div class="block block-amber">
+                    <p><strong>Two-step ratio:</strong></p>
+                    \[ \frac{X^{(4)}_1}{X^{(2)}_1} = \frac{10000}{100} = 100 = \lambda^2 \quad\Longrightarrow\quad |\lambda| = \sqrt{100} = 10 \]
+                    \[ \frac{X^{(3)}_1}{X^{(1)}_1} = \frac{600}{6} = 100 = \lambda^2 \quad\Longrightarrow\quad |\lambda| = 10 \quad \checkmark \]
+                </div>
+                <p style="font-size:.9rem;color:var(--ink-soft);">
+                    The two dominant eigenvalues are \( \lambda = +10 \) and \( \lambda = -10 \). The corresponding eigenvectors (solved from \( (A-\lambda I)\vec{x}=0 \)) are:
+                </p>
+                <div class="block block-teal" style="text-align:center;">
+                    \[ \lambda = +10 \;\Rightarrow\; v_1 = (2,\,1,\,0)^T \qquad\quad \lambda = -10 \;\Rightarrow\; v_2 = (1,\,-2,\,0)^T \]
+                </div>
+            </div>
+
+            <div class="result-banner">
+                <div class="rb-icon">✓</div>
+                <div class="rb-content">
+                    <div class="rb-label">Dominant Eigenvalue (by two-step analysis)</div>
+                    <div class="rb-value">\( |\lambda| = 10 \quad \Rightarrow \quad \lambda = +10 \;\text{and}\; \lambda = -10 \)</div>
+                    <div class="rb-sub">
+                        Eigenvector for \( \lambda=+10 \): \(\; (2,\;1,\;0)^T \)\quad·\quad
+                        Eigenvector for \( \lambda=-10 \): \(\; (1,\;-2,\;0)^T \)
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ─────────────────────────────── § 06 ─── -->
+    <div class="sec-head" id="sec-06">
+        <span class="sec-badge">§ 06</span>
+        <h2>Exercise 2</h2>
+        <div class="sec-rule"></div>
+    </div>
+
+    <div class="prob-panel">
+        <div class="prob-header">
+            <div class="prob-num">04</div>
+            <div class="prob-meta">
+                <div class="prob-label">Power Method · Symmetric Matrix · 4 Iterations</div>
+                <div class="prob-title">
+                    Calculate the dominant eigenvalue and eigenvector for matrix \( A \) using \( X^{(0)} = (1,\,0,\,0)^T \).
+                </div>
+            </div>
+        </div>
+        <div class="prob-body">
+
+            <div class="card" style="margin-bottom:16px;">
+                <div class="card-title">Given Data</div>
+                <div class="block block-cobalt" style="text-align:center;">
+                    \[ A = \begin{pmatrix} 0 & 2 & -1 \\ 2 & 5 & -6 \\ -1 & -6 & 8 \end{pmatrix}, \qquad X^{(0)} = \begin{pmatrix} 1 \\ 0 \\ 0 \end{pmatrix} \]
+                </div>
+            </div>
+
+            <!-- Iteration 1 -->
+            <div class="iter-step">
+                <div class="iter-step-head">
+                    <span class="iter-badge">Iter 1</span>
+                    \( X^{(1)} = A\,X^{(0)} \)
+                </div>
+                <div class="block block-cobalt" style="text-align:center; margin-top:8px;">
+                    \[ X^{(1)} = \begin{pmatrix} 0 & 2 & -1 \\ 2 & 5 & -6 \\ -1 & -6 & 8 \end{pmatrix} \begin{pmatrix} 1 \\ 0 \\ 0 \end{pmatrix} = \begin{pmatrix} 0 \\ 2 \\ -1 \end{pmatrix} \]
+                </div>
+                <p style="margin-top:8px;font-size:.88rem;color:var(--ink-soft);">
+                    Ratio: \( 0/1=0,\quad 2/0=\infty \) → <span class="status-pill pill-no">Not converged</span>
+                </p>
+            </div>
+
+            <!-- Iteration 2 -->
+            <div class="iter-step">
+                <div class="iter-step-head">
+                    <span class="iter-badge">Iter 2</span>
+                    \( X^{(2)} = A\,X^{(1)} \)
+                </div>
+                <div class="block block-cobalt" style="text-align:center; margin-top:8px;">
+                    \[ X^{(2)} = \begin{pmatrix} 0 & 2 & -1 \\ 2 & 5 & -6 \\ -1 & -6 & 8 \end{pmatrix} \begin{pmatrix} 0 \\ 2 \\ -1 \end{pmatrix} = \begin{pmatrix} 0+4+1 \\ 0+10+6 \\ 0-12-8 \end{pmatrix} = \begin{pmatrix} 5 \\ 16 \\ -20 \end{pmatrix} \]
+                </div>
+                <p style="margin-top:8px;font-size:.88rem;color:var(--ink-soft);">
+                    Ratio \( X^{(2)}/X^{(1)} \): \( 5/0=\infty,\quad 16/2=8,\quad -20/-1=20 \) → <span class="status-pill pill-no">Not converged</span>
+                </p>
+            </div>
+
+            <!-- Iteration 3 -->
+            <div class="iter-step">
+                <div class="iter-step-head">
+                    <span class="iter-badge">Iter 3</span>
+                    \( X^{(3)} = A\,X^{(2)} \)
+                </div>
+                <div class="block block-cobalt" style="text-align:center; margin-top:8px;">
+                    \[ X^{(3)} = \begin{pmatrix} 0 & 2 & -1 \\ 2 & 5 & -6 \\ -1 & -6 & 8 \end{pmatrix} \begin{pmatrix} 5 \\ 16 \\ -20 \end{pmatrix} = \begin{pmatrix} 0+32+20 \\ 10+80+120 \\ -5-96-160 \end{pmatrix} = \begin{pmatrix} 52 \\ 210 \\ -261 \end{pmatrix} \]
+                </div>
+                <div class="ratio-wrap">
+                <table class="ratio-tbl">
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>\( X^{(2)}_i \)</th>
+                            <th>\( X^{(3)}_i \)</th>
+                            <th>Ratio</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1st</td><td>5</td><td>52</td>
+                            <td class="close">10.4</td>
+                            <td rowspan="3" style="vertical-align:middle;"><span class="status-pill pill-close">Converging</span><br><small style="color:var(--muted);font-size:.7rem;display:block;margin-top:4px;">→ ≈ 13</small></td>
+                        </tr>
+                        <tr>
+                            <td>2nd</td><td>16</td><td>210</td>
+                            <td class="close">13.125</td>
+                        </tr>
+                        <tr>
+                            <td>3rd</td><td>-20</td><td>-261</td>
+                            <td class="close">13.05</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+            </div>
+
+            <!-- Iteration 4 -->
+            <div class="iter-step">
+                <div class="iter-step-head">
+                    <span class="iter-badge">Iter 4</span>
+                    \( X^{(4)} = A\,X^{(3)} \)
+                </div>
+                <div class="block block-cobalt" style="text-align:center; margin-top:8px;">
+                    \[ X^{(4)} = \begin{pmatrix} 0 & 2 & -1 \\ 2 & 5 & -6 \\ -1 & -6 & 8 \end{pmatrix} \begin{pmatrix} 52 \\ 210 \\ -261 \end{pmatrix} = \begin{pmatrix} 0+420+261 \\ 104+1050+1566 \\ -52-1260-2088 \end{pmatrix} = \begin{pmatrix} 681 \\ 2720 \\ -3400 \end{pmatrix} \]
+                </div>
+                <div class="ratio-wrap">
+                <table class="ratio-tbl">
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>\( X^{(3)}_i \)</th>
+                            <th>\( X^{(4)}_i \)</th>
+                            <th>Ratio</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1st</td><td>52</td><td>681</td>
+                            <td class="converging">≈ 13.10</td>
+                            <td rowspan="3" style="vertical-align:middle;"><span class="status-pill pill-yes">Converged ✓</span><br><small style="color:var(--muted);font-size:.7rem;display:block;margin-top:4px;">All → 13</small></td>
+                        </tr>
+                        <tr>
+                            <td>2nd</td><td>210</td><td>2720</td>
+                            <td class="converging">≈ 12.95</td>
+                        </tr>
+                        <tr>
+                            <td>3rd</td><td>-261</td><td>-3400</td>
+                            <td class="converging">≈ 13.03</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+                <div class="block block-teal" style="margin-top:12px;font-size:.9rem;">
+                    All three ratios are converging to the same value \( \approx 13 \). The exact dominant eigenvalue (from the characteristic polynomial \( \lambda^3 - 13\lambda^2 - \lambda + 13 = (\lambda^2-1)(\lambda-13) = 0 \)) is \( \lambda = 13 \), confirming our iteration.
+                </div>
+            </div>
+
+            <div class="result-banner">
+                <div class="rb-icon">✓</div>
+                <div class="rb-content">
+                    <div class="rb-label">Dominant Eigenvalue (after 4 iterations)</div>
+                    <div class="rb-value">\( \lambda = 13 \)</div>
+                    <div class="rb-sub">Eigenvector: \( X^{(4)} = (681,\; 2720,\; -3400)^T \)</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</div><!-- /page-wrap -->
+
+<footer>
+    Math 302 · Numerical Methods · Eigenvalues &amp; Power Method
+</footer>
+
+</body>
+</html>

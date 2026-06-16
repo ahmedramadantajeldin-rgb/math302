@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Math 302 — Questions & Solutions</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #f5f5f0;
+    color: #2c2c2c;
+    font-family: Georgia, 'Times New Roman', serif;
+    font-size: 16px;
+    line-height: 1.7;
+    padding: 40px 20px 80px;
+  }
+
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+  }
+
+  .question-block {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+
+  .question {
+    background: #f0f4f8;
+    padding: 20px 24px;
+    border-bottom: 1px solid #ddd;
+  }
+
+  .q-label {
+    font-size: 0.78em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #4a7a9b;
+    margin-bottom: 10px;
+  }
+
+  .question p {
+    margin: 8px 0;
+  }
+
+  .btn-show {
+    display: block;
+    margin: 16px 24px 20px;
+    padding: 10px 28px;
+    background: #4a7a9b;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.95em;
+    font-family: Georgia, serif;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn-show:hover {
+    background: #365f7a;
+  }
+
+  .solution {
+    display: none;
+    background: #fffef8;
+    padding: 20px 24px;
+    border-top: 1px solid #ddd;
+  }
+
+  .solution.visible {
+    display: block;
+  }
+
+  .s-label {
+    font-size: 0.78em;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #8a7350;
+    margin-bottom: 10px;
+  }
+
+  .solution p {
+    margin: 8px 0;
+  }
+
+  table {
+    border-collapse: collapse;
+    margin: 12px 0;
+    width: 100%;
+    font-size: 0.93em;
+  }
+
+  table, th, td {
+    border: 1px solid #ccc;
+  }
+
+  th, td {
+    padding: 7px 11px;
+    text-align: center;
+  }
+
+  th {
+    background: #eef2f5;
+    font-weight: 700;
+  }
+
+  hr.sep {
+    border: none;
+    border-top: 1px dashed #ccc;
+    margin: 14px 0;
+  }
+
+  .note {
+    color: #777;
+    font-style: italic;
+    font-size: 0.9em;
+  }
+
+  strong { font-weight: 700; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ===================== QUESTION 1 ===================== -->
+<div class="question-block">
+  <div class="question">
+    <div class="q-label">Question 1</div>
+    <p>In solving by the Jacobi scheme using the recurrence $x^{(n+1)} = J x^{(n)} + h$ the equations:</p>
+    <p>
+      $100x_1 - x_2 - x_3 - x_4 = -3$<br>
+      $-x_1 - x_2 + 100x_3 - x_4 = 199$<br>
+      $-x_1 + 100x_2 - x_3 - x_4 = 98$<br>
+      $-x_1 - x_2 - x_3 + 100x_4 = -3$
+    </p>
+    <p>on a 10-digit machine, we obtained — starting from a zero initial guess for all the unknowns — the following result after performing just one iteration:</p>
+    <p>$x_1^{(1)} = -0.03$, $x_2^{(1)} = 0.98$, $x_3^{(1)} = 1.99$, $x_4^{(1)} = -0.03$</p>
+    <p>(i) Perform one further iteration and calculate its accuracy.</p>
+    <p>(ii) If the accuracy is governed by the inequality $\|x^{(n)} - x\| \le \frac{\|J\|^n}{1 - \|J\|} \|x^{(1)} - x^{(0)}\|$ where $x$ is the true solution, then what is the number of iterations needed to reach at least 9 correct decimal digits; i.e. less than $10^{-9}$.</p>
+  </div>
+  <button class="btn-show" onclick="toggleAnswer(this)">Show Answer</button>
+  <div class="solution">
+    <div class="s-label">Solution</div>
+    <p>
+      $x_1 = -0.03 + 0.01x_2 + 0.01x_3 + 0.01x_4$<br>
+      $x_2 = 0.98 + 0.01x_1 + 0.01x_3 + 0.01x_4$<br>
+      $x_3 = 1.99 + 0.01x_1 + 0.01x_2 + 0.01x_4$<br>
+      $x_4 = -0.03 + 0.01x_1 + 0.01x_2 + 0.01x_3$
+    </p>
+    <p>$$J = \begin{bmatrix} 0 & 0.01 & 0.01 & 0.01 \\ 0.01 & 0 & 0.01 & 0.01 \\ 0.01 & 0.01 & 0 & 0.01 \\ 0.01 & 0.01 & 0.01 & 0 \end{bmatrix} \xrightarrow{\text{row sums}} 0.03$$</p>
+    <p>$\|J\| = 0.03 < 1$, the method is quickly convergent.</p>
+    <table>
+      <tr><th>n</th><th>$x_1$</th><th>$x_2$</th><th>$x_3$</th><th>$x_4$</th></tr>
+      <tr><td>1</td><td>$-0.03$</td><td>$0.98$</td><td>$1.99$</td><td>$-0.03$</td></tr>
+      <tr><td>2</td><td>$-6\times10^{-4}$</td><td>$0.9993$</td><td>$1.9992$</td><td>$-6\times10^{-4}$</td></tr>
+    </table>
+    <p>$\|x^{(2)} - x^{(1)}\| = 29.4 \times 10^{-3}$ &nbsp; (components: $29.4, 19.3, 9.2, 29.4 \times 10^{-3}$)</p>
+    <p>$\|x^{(2)}\| = 1.9992$</p>
+    <p>$$\text{Accuracy} < \frac{\|J\|}{1 - \|J\|} \cdot \frac{\|x^{(2)} - x^{(1)}\|}{\|x^{(2)}\|} < \frac{0.03}{1 - 0.03} \times \frac{29.4 \times 10^{-3}}{1.9992} = 4.5 \times 10^{-4} < 5 \times 10^{-4}$$</p>
+    <p>(we have almost 4 decimal precision)</p>
+    <hr class="sep">
+    <p>$$\|x^{(n)} - x\| < \frac{\|J\|^n}{1 - \|J\|} \|x^{(1)} - x^{(0)}\| < 10^{-9}$$</p>
+    <p>$\|J\| = 0.03$, $\|x^{(1)} - x^{(0)}\| = 1.99$</p>
+    <p>$$\frac{(0.03)^n}{1 - 0.03} \times 1.99 < 10^{-9}$$</p>
+    <p>$$(0.03)^n \left( \frac{1.99}{0.97} \right) < 10^{-9}$$</p>
+    <p>$$(0.03)^n < \frac{10^{-9}}{\frac{1.99}{0.97}} < 4.87437 \times 10^{-10}$$</p>
+    <p>$$n\ln(0.03) < \ln(4.87 \times 10^{-10})$$</p>
+    <p class="note">(Dividing by a negative quantity, so we reverse the inequality)</p>
+    <p>$$n > \frac{\ln(4.87 \times 10^{-10})}{\ln(0.03)} > 6.114$$</p>
+    <p>$$n = 7 \text{ iterations}$$</p>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 2 ===================== -->
+<div class="question-block">
+  <div class="question">
+    <div class="q-label">Question 2</div>
+    <p>Use the bisection algorithm to solve the equation $x^5 - x^4 - x^3 - x^2 - x - 1 = 0$ in $[1, 2]$.</p>
+    <p>(i) Prove the existence of a root in this interval.</p>
+    <p>(ii) Execute 5 iterations and calculate your accuracy.</p>
+    <p>(iii) Calculate the number of iterations needed to reach a bound of $|x_n - x| < 10^{-8}$ where $n$ is the number of iterations.</p>
+    <p>(iv) If the interval is restricted instead to $[1.5, 2]$, estimate — without carrying the iterations — the number of iterations needed to attain the same accuracy as in (iii).</p>
+    <p>(v) If instead the equation is solved by the fixed-point iteration
+    $$x_{n+1} = \sqrt{x_n + 1 + \frac{1}{x_n} + \frac{1}{x_n^2} + \frac{1}{x_n^3}}$$
+    compare between the two methods in terms of the speed of convergence in the neighborhood of $x = 2$ without performing any iteration.</p>
+  </div>
+  <button class="btn-show" onclick="toggleAnswer(this)">Show Answer</button>
+  <div class="solution">
+    <div class="s-label">Solution</div>
+    <p>(i) $f(1) = 1-1-1-1-1-1 = -4 < 0$</p>
+    <p>$f(2) = 32-16-8-4-2-1 = 5 > 0$</p>
+    <p>$f(x)$ has a root in $[1,2]$, since $f(1)\cdot f(2) < 0$.</p>
+    <p>$x_n = \frac{a_n+b_n}{2}$, $\;f(x_n) = x_n^5 - x_n^4 - x_n^3 - x_n^2 - x_n - 1$</p>
+    <hr class="sep">
+    <p>(ii)</p>
+    <table>
+      <tr><th>n</th><th>$a_n$</th><th>$b_n$</th><th>$x_n$</th><th>$f(x_n)$</th></tr>
+      <tr><td>1</td><td>1</td><td>2</td><td>1.5</td><td>$-$ve</td></tr>
+      <tr><td>2</td><td>1.5</td><td>2</td><td>1.75</td><td>$-$ve</td></tr>
+      <tr><td>3</td><td>1.75</td><td>2</td><td>1.875</td><td>$-$ve</td></tr>
+      <tr><td>4</td><td>1.875</td><td>2</td><td>1.9375</td><td>$-$ve</td></tr>
+      <tr><td>5</td><td>1.9375</td><td>2</td><td>1.96875</td><td></td></tr>
+    </table>
+    <p>$$x_5 = 1.96875$$</p>
+    <p>$$\text{Accuracy} \leq \frac{2-1}{2^5} = \frac{1}{32} = 0.03125 \leq 1.5 \times 10^{-2} < 5 \times 10^{-2}$$</p>
+    <p>We have at least 2 significant digits.</p>
+    <hr class="sep">
+    <p>(iii) $|x_n - x| < 10^{-8}$</p>
+    <p>$$\frac{2-1}{2^n} < 10^{-8} \;\Rightarrow\; 2^{-n} < 10^{-8}$$</p>
+    <p>$$-n\ln 2 < -8\ln 10 \;\Rightarrow\; n > \frac{8\ln 10}{\ln 2} = 26.575$$</p>
+    <p>$$n = 27$$</p>
+    <hr class="sep">
+    <p>(iv) Interval $[1.5, 2]$, want $|x_n - x| < 10^{-8}$</p>
+    <p>$$\frac{b-a}{2^n} < 10^{-8} \;\Rightarrow\; \frac{2-1.5}{2^n} < 10^{-8} \;\Rightarrow\; \frac{0.5}{2^n} < 10^{-8}$$</p>
+    <p>$$2^{-n} < 2\times10^{-8}$$</p>
+    <p>$$-n\ln 2 < \ln(2\times10^{-8}) \;\Rightarrow\; n > \frac{-\ln(2\times10^{-8})}{\ln 2} = 25.27$$</p>
+    <p>$$n = 26 \text{ iterations}$$</p>
+    <hr class="sep">
+    <p>(v) $g(x) = \sqrt{x + 1 + \frac{1}{x} + \frac{1}{x^2} + \frac{1}{x^3}}$</p>
+    <p>$$g'(x) = \frac{1 - x^{-2} - 2x^{-3} - 3x^{-4}}{2\sqrt{x+1+\frac{1}{x}+\frac{1}{x^2}+\frac{1}{x^3}}}$$</p>
+    <p>$$K = |g'(x)|_{x=2} = \left| \frac{1-(2)^{-2}-2(2)^{-3}-3(2)^{-4}}{2\sqrt{\frac{1}{2}+\frac{1}{4}+\frac{1}{8}}} \right| = 0.07937507938 < 0.5$$</p>
+    <p>(fixed-point method is faster than bisection)</p>
+    <hr class="sep">
+    <p>In Newton's method:</p>
+    <p>$$K = \left| \frac{f \cdot f''}{(f')^2} \right|_{x=2} = \left| \frac{(x^5-x^4-x^3-x^2-x-1)(20x^3-12x^2-6x-2)}{(5x^4-4x^3-3x^2-2x-1)^2} \right|_{x=2}$$</p>
+    <p>$$= \frac{4}{49} = 0.081632 < 0.0793 \text{ (fixed-point)}$$</p>
+    <p>Newton's method is faster and more advisable.</p>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 3 ===================== -->
+<div class="question-block">
+  <div class="question">
+    <div class="q-label">Question 3</div>
+    <p><strong>a)</strong> The following recordings were taken in an experiment to simulate the heating of an oven — that was already heated at 10 degrees — by the relation $x = f(t)$ where $x$ represents the temperature in degrees Celsius and $t$ is the time in minutes. If such relation is modeled by a 4th degree polynomial $P_4(t)$, use an interpolation formula to obtain $x = P_4(t)$ and calculate the maximum error in $x$ after 15 minutes.</p>
+    <table>
+      <tr><th>$t$ (min)</th><td>0</td><td>10</td><td>20</td><td>30</td><td>40</td></tr>
+      <tr><th>$x\,(^\circ C)$</th><td>10</td><td>20</td><td>30</td><td>40</td><td>50</td></tr>
+    </table>
+    <p>Calculate an estimate for the rate of change of the original function $f(t)$ at $t = 24$. How do you describe this relation between $x$ and $t$?</p>
+    <p><strong>b)</strong> Use Maclaurin expansion of 7th order to calculate an approximate value for $\tan^{-1}(0.3)$.</p>
+    <p class="note">Hint: use the expansion $\tan^{-1}x = x - \frac{x^3}{3} + \frac{x^5}{5} - \frac{x^7}{7} + \dots$</p>
+    <p>Show that $f(0.3) \cong 0.2915$ rounded to 4 digits. Then, by truncating the above expansion to two terms only, calculate the area under the curve in $[0, 0.3]$ and estimate its error; i.e. by the integral $\int_0^{0.3}\tan^{-1}x\,dx$.</p>
+    <p>Explain why the area is less than the area of the rectangle enclosing this area with base $0.3$ and height $0.2915$.</p>
+  </div>
+  <button class="btn-show" onclick="toggleAnswer(this)">Show Answer</button>
+  <div class="solution">
+    <div class="s-label">Solution</div>
+    <p><strong>a)</strong></p>
+    <table>
+      <tr><th>$t$</th><th>$x$</th><th>$\Delta x/\Delta t$</th><th>2nd Diff</th><th>3rd Diff</th></tr>
+      <tr><td>0</td><td>10</td><td>$\frac{20-10}{10-0}=1$</td><td>0</td><td></td></tr>
+      <tr><td>10</td><td>20</td><td>$\frac{30-20}{20-10}=1$</td><td>0</td><td></td></tr>
+      <tr><td>20</td><td>30</td><td>$\frac{40-30}{30-20}=1$</td><td>0</td><td></td></tr>
+      <tr><td>30</td><td>40</td><td>$\frac{50-40}{40-30}=1$</td><td></td><td></td></tr>
+      <tr><td>40</td><td>50</td><td></td><td></td><td></td></tr>
+    </table>
+    <p>$a_0 = 10,\; a_1 = 1,\; a_2=a_3=a_4=0$</p>
+    <p>$$P_4(t) = a_0 + a_1(t-t_0) = 10 + 1(t-0) = t + 10$$</p>
+    <p>$$\text{Max error } E_4(t) \leq \left| \frac{(t-0)(t-10)(t-20)(t-30)(t-40)}{5!}f^{(5)}(\xi) \right|$$</p>
+    <p>at $t=15$: $$E_4(t) \leq 1171.875\, f^{(5)}(\xi)$$</p>
+    <p>$$\text{Rate of Change} = \frac{d}{dt}P_4(t) = \frac{d}{dt}(t+10) = 1$$</p>
+    <p>This relation is <strong>linear</strong>.</p>
+    <hr class="sep">
+    <p><strong>b)</strong></p>
+    <p>$$\tan^{-1}(0.3) = 0.3 - \frac{(0.3)^3}{3} + \frac{(0.3)^5}{5} - \frac{(0.3)^7}{7} = 0.2914547571$$</p>
+    <p>Then $f(0.3) = 0.2915$</p>
+    <p>$$\int_0^{0.3}\tan^{-1}x\,dx = \int_0^{0.3}\left(x - \frac{x^3}{3} + \frac{x^4}{24}\right)dx = \left[\frac{x^2}{2} - \frac{x^4}{12} + \frac{x^5}{120}\right]_0^{0.3} = 0.04434525$$</p>
+    <p>$$\text{error} < \left| \int_0^{0.3} \frac{-24\xi(\xi^2-1)}{(1+\xi^2)^4}\,dx \right| < \left| [-24x]_0^{0.3} \right| = 7.2$$</p>
+    <p>Area of rectangle: base $0.3$, height $0.2915$ $= 0.3 \times 0.2915 = 0.08745$</p>
+    <p>but $\int_0^{0.3}\tan^{-1}x\,dx = 0.04434525$, which is less than the rectangle's area.</p>
+    <p>This is because $\tan^{-1}x$ is concave on $[0, 0.3]$ — its graph curves downward. The function starts at $0$ and rises gradually (concavely) up to $0.2915$. The rectangle assumes the function equals its maximum across the entire interval, but the curve lies below this level throughout $(0,0.3)$, touching it only at $x=0.3$. Hence the area under the curve is strictly less than the rectangle's area.</p>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 4 ===================== -->
+<div class="question-block">
+  <div class="question">
+    <div class="q-label">Question 4</div>
+    <p>Solve the two equations $x + 3 - y^2 = 0$, $y = x^7$, to obtain a root for both $x$ and $y$ in the 3rd quadrant ($x$ and $y$ are negative). Start the iterations with $x_0 = y_0 = -1$. State why your method converges, and calculate your accuracy after 6 iterations.</p>
+  </div>
+  <button class="btn-show" onclick="toggleAnswer(this)">Show Answer</button>
+  <div class="solution">
+    <div class="s-label">Solution</div>
+    <p>$$x = y^{1/7} = g_1, \qquad y^2 = x+3 \Rightarrow y = -\sqrt{x+3} = g_2$$</p>
+    <p>$$C = \begin{pmatrix} \frac{\partial g_1}{\partial x} & \frac{\partial g_1}{\partial y} \\ \frac{\partial g_2}{\partial x} & \frac{\partial g_2}{\partial y} \end{pmatrix} = \begin{pmatrix} 0 & \frac{1}{7}y^{-6/7} \\ \frac{-1}{2\sqrt{x+3}} & 0 \end{pmatrix}$$</p>
+    <p>$$C_0 = \begin{pmatrix} 0 & \frac{1}{7} \\ \frac{-1}{2\sqrt{2}} & 0 \end{pmatrix}, \qquad \|C_0\| = \frac{1}{2\sqrt{2}} < 1$$</p>
+    <p>The method is convergent.</p>
+    <p>$$x = \sqrt[7]{\text{Ans}}, \qquad y = -\sqrt{\text{Ans}+3}$$</p>
+    <table>
+      <tr><th>n</th><th>x</th><th>y</th></tr>
+      <tr><td>0</td><td>$-1$</td><td>$-1$</td></tr>
+      <tr><td>1</td><td>$-1$</td><td>$-1.414213562$</td></tr>
+      <tr><td>2</td><td>$-1.050756639$</td><td>$-1.396153058$</td></tr>
+      <tr><td>3</td><td>$-1.048829077$</td><td>$-1.396843199$</td></tr>
+      <tr><td>4</td><td>$-1.048903126$</td><td>$-1.396816693$</td></tr>
+      <tr><td>5</td><td>$-1.048900282$</td><td>$-1.396817711$</td></tr>
+      <tr><td>6</td><td>$-1.048900392$</td><td>$-1.396817672$</td></tr>
+    </table>
+    <p>$\|X_6 - X_5\|$: $1.1\times10^{-7}$ (x-component), $3.916651\times10^{-8}$ (y-component)</p>
+    <p>$$\text{accuracy} < \frac{\|C_0\|}{1-\|C_0\|}\times\|X_6-X_5\| < \frac{\frac{1}{2\sqrt2}}{1-\frac{1}{2\sqrt2}}\times1.1\times10^{-7} = 5.27\times10^{-8}$$</p>
+    <p>We have almost 7 significant figures.</p>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 5 ===================== -->
+<div class="question-block">
+  <div class="question">
+    <div class="q-label">Question 5</div>
+    <p>Calculate an approximate eigenpair $(\lambda, x)$ where $\lambda$ stands for the eigenvalue and $x$ for the eigenvector for the symmetric matrix</p>
+    <p>$$A = \begin{bmatrix} 9 & 6 & 12 \\ 6 & 0 & 6 \\ 12 & 6 & 9 \end{bmatrix}$$</p>
+    <p class="note">Start from an initial vector $x^{(0)} = (1, 0, 0)^T$. Perform 4 iterations only.</p>
+    <p>Then calculate one eigenpair $(\lambda, x)$ for the matrix $B = e^{-A} + \sin A + I$.</p>
+  </div>
+  <button class="btn-show" onclick="toggleAnswer(this)">Show Answer</button>
+  <div class="solution">
+    <div class="s-label">Solution</div>
+    <p class="note">(Apply the Power method on $A$ starting from $x^{(0)}=(1,0,0)^T$, normalizing by the largest component at each of the 4 iterations, to approximate the dominant eigenpair $(\lambda, x)$.)</p>
+    <p>Once $(\lambda, x)$ is obtained for $A$, since $x$ is an eigenvector of $A$ with eigenvalue $\lambda$, it is also an eigenvector of $B = e^{-A} + \sin A + I$, with eigenvalue:</p>
+    <p>$$\mu = e^{-\lambda} + \sin\lambda + 1$$</p>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 6 ===================== -->
+<div class="question-block">
+  <div class="question">
+    <div class="q-label">Question 6</div>
+    <p>The 2nd order linear differential equation $y'' = f(x,y)$, $y(0)=y_0$, $y'(0)=z_0$ can be solved using Euler's numerical technique by transforming it into two 1st order differential equations by letting $y' = z$. Show how to apply this technique to the equation</p>
+    <p>$$y'' + 2y' + y = 0, \qquad y(0)=1,\; y'(0)=0$$</p>
+    <p>Then construct a table for the recurrence formulae</p>
+    <p>$$y_{n+1} = y_n + hz_n, \qquad z_{n+1} = z_n + h(-2z_n - y_n)$$</p>
+    <p>$y_0 = 1$, $z_0 = 0$</p>
+    <p>The table has 6 columns: $n$, $x_n$, $y_n$, $z_n$, $h(-2z_n-y_n)$, and $hz_n$. Calculate $y(0.5)$ and $z(0.5)$ using a step size $h=0.1$.</p>
+  </div>
+  <button class="btn-show" onclick="toggleAnswer(this)">Show Answer</button>
+  <div class="solution">
+    <div class="s-label">Solution</div>
+    <p>Let $z = y'$. Then $z' = y'' = -2y' - y = -2z - y$.</p>
+    <p>So the system is: $y' = z$, $z' = -2z - y$, with $y(0)=1$, $z(0)=0$.</p>
+    <p>Euler's recurrence: $y_{n+1} = y_n + hz_n$, $\;z_{n+1} = z_n + h(-2z_n - y_n)$, with $h=0.1$.</p>
+    <table>
+      <tr><th>n</th><th>$x_n$</th><th>$y_n$</th><th>$z_n$</th><th>$hz_n$</th><th>$h(-2z_n-y_n)$</th></tr>
+      <tr><td>0</td><td>0</td><td>1 (given)</td><td>0 (given)</td><td>$(0.1)(0)=0$</td><td>$(0.1)(-2(0)-1)=-0.1$</td></tr>
+      <tr><td>1</td><td>0.1</td><td>$1+(0.1)(0)=1$</td><td>$0+(0.1)(-0.1)=-0.1$</td><td>$(0.1)(-0.1)=-0.01$</td><td>$(0.1)(-2(-0.1)-1)=-0.08$</td></tr>
+      <tr><td>2</td><td>0.2</td><td>$1+(-0.01)=0.99$</td><td>$-0.1+(-0.08)=-0.18$</td><td>$(0.1)(-0.18)=-0.018$</td><td>$(0.1)(-2(-0.18)-0.99)=-0.063$</td></tr>
+      <tr><td>3</td><td>0.3</td><td>$0.99+(-0.018)=0.972$</td><td>$-0.18+(-0.063)=-0.243$</td><td>$(0.1)(-0.243)=-0.0243$</td><td>$(0.1)(-2(-0.243)-0.972)=-0.0486$</td></tr>
+      <tr><td>4</td><td>0.4</td><td>$0.972-0.0243=0.9477$</td><td>$-0.243-0.0486=-0.2916$</td><td>$(0.1)(-0.2916)=-0.02916$</td><td>$(0.1)(-2(-0.2916)-0.9477)=-0.03645$</td></tr>
+      <tr><td>5</td><td>0.5</td><td>$0.9477-0.02916=0.91854$</td><td>$-0.2916-0.03645=-0.32805$</td><td>—</td><td>—</td></tr>
+    </table>
+    <p>Therefore $y(0.5) = 0.91854$ and $z(0.5) = -0.32805$.</p>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 7 ===================== -->
+<div class="question-block">
+  <div class="question">
+    <div class="q-label">Question 7</div>
+    <p>The following recordings were taken in an experiment to simulate a relation $y = f(x)$.</p>
+    <table>
+      <tr><th>$x$</th><td>0</td><td>0.1</td><td>0.2</td><td>0.3</td></tr>
+      <tr><th>$y$</th><td>0</td><td>1</td><td>3</td><td>4</td></tr>
+    </table>
+    <p>If such relation is modeled by a 3rd order polynomial $P_3(x)$, use a suitable interpolation to obtain $P_3(x)$ and calculate the expected error at $x=0.15$. If it is required to evaluate the area under the curve $y(x)=f(x)$ in $x \in [0, 0.3]$, estimate the error expected in your calculations.</p>
+  </div>
+  <button class="btn-show" onclick="toggleAnswer(this)">Show Answer</button>
+  <div class="solution">
+    <div class="s-label">Solution</div>
+    <table>
+      <tr><th>$x$</th><th>$y$</th><th>$\Delta y/\Delta x$</th><th>2nd Diff</th><th>3rd Diff</th></tr>
+      <tr><td>0</td><td>0</td><td>$\frac{1-0}{0.1-0}=10$</td><td>$\frac{20-10}{0.2-0}=50$</td><td>$\frac{-50-50}{0.3-0}=-\frac{1000}{3}$</td></tr>
+      <tr><td>0.1</td><td>1</td><td>$\frac{3-1}{0.2-0.1}=20$</td><td>$\frac{10-20}{0.3-0.1}=-50$</td><td></td></tr>
+      <tr><td>0.2</td><td>3</td><td>$\frac{4-3}{0.3-0.2}=10$</td><td></td><td></td></tr>
+      <tr><td>0.3</td><td>4</td><td></td><td></td><td></td></tr>
+    </table>
+    <p>$a_0=0,\; a_1=10,\; a_2=50,\; a_3=-\frac{1000}{3}$</p>
+    <p>$$P_3(x) = 0 + 10(x-0) + 50(x-0)(x-0.1) - \frac{1000}{3}(x-0)(x-0.1)(x-0.2)$$</p>
+    <p>$$P_3(x) = -\frac{1000}{3}x^3 + 150x^2 - \frac{5}{3}x = -333.333333x^3 + 150x^2 - 1.66666666x$$</p>
+    <p>Expected error at $x=0.15$:</p>
+    <p>$$E_3(0.15) \le \left| \frac{(0.15)(0.05)(-0.05)(-0.15)}{4!}f^{(4)}(\xi) \right|$$</p>
+    <p>Error in area:</p>
+    <p>$$\left|\int_0^{0.3} E_3(x)\,dx\right| = 9\times10^{-6}\,f^{(4)}(\xi)$$</p>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 8 ===================== -->
+<div class="question-block">
+  <div class="question">
+    <div class="q-label">Question 8</div>
+    <p><strong>a)</strong> The equation $x^3 - 3x^2 + 2x + 7 = 0$ has a root in the interval $[-2, -1]$. Upon solving by the bisection algorithm, the following table was recorded for 7 iterations. Perform one further iteration then determine the number of correct significant digits in your solution. Calculate also the number of iterations to reach a bound of $|x_n - x| < 10^{-5}$.</p>
+    <table>
+      <tr><th>n</th><th>$a_n$</th><th>$b_n$</th><th>$p_n$</th><th>$f(p_n)$</th></tr>
+      <tr><td>1</td><td>-2</td><td>-1</td><td>-1.5</td><td>-6.125</td></tr>
+      <tr><td>⋮</td><td>⋮</td><td>⋮</td><td>⋮</td><td>⋮</td></tr>
+      <tr><td>6</td><td>-1.09375</td><td>-1.0625</td><td>-1.078125</td><td>0.103527068</td></tr>
+      <tr><td>7</td><td>-1.09375</td><td>-1.078125</td><td>-1.0859375</td><td>0.009741306</td></tr>
+    </table>
+    <p><strong>b)</strong> If the solution is calculated from the recurrence relation</p>
+    <p>$$x_{n+1} = x_n - \frac{x_n^3-3x_n^2+2x_n+7}{3x_n^2-6x_n+2}$$</p>
+    <p>Without solving with the above scheme, state which method is faster in the neighborhood of $x=-1$.</p>
+  </div>
+  <button class="btn-show" onclick="toggleAnswer(this)">Show Answer</button>
+  <div class="solution">
+    <div class="s-label">Solution</div>
+    <p>$f(x) = x^3 - 3x^2 + 2x + 7 = 0$, on $[-2,-1]$</p>
+    <p>$f(-2) = -17 < 0$, &nbsp; $f(-1) = 1 > 0$</p>
+    <table>
+      <tr><th>n</th><th>$a_n\,(<0)$</th><th>$b_n\,(>0)$</th><th>$p_n$</th></tr>
+      <tr><td>8</td><td>-1.09375</td><td>-1.0859375</td><td>-1.08984375</td></tr>
+    </table>
+    <p>$$\text{Accuracy} < \left| \frac{-1+2}{2^8} \right| = 3.90625\times10^{-3} < 5\times10^{-3}$$</p>
+    <p>We have almost 3 significant digits.</p>
+    <p>$|x-x_n| < 10^{-5}$:</p>
+    <p>$$\frac{b-a}{2^n} < 10^{-5} \;\Rightarrow\; 2^{-n} < 10^{-5}$$</p>
+    <p>$$-n\ln2 < -5\ln10 \;\Rightarrow\; n > \frac{5\ln10}{\ln2} = 16.6$$</p>
+    <p>$$n = 17$$</p>
+    <hr class="sep">
+    <p><strong>b)</strong> In Newton's method:</p>
+    <p>$$K = \max\left|\frac{f\cdot f''}{(f')^2}\right|$$</p>
+    <p>$f'(x) = 3x^2-6x+2$, &nbsp; $f''(x) = 6x-6$</p>
+    <p>at neighborhood of $x=-1$:</p>
+    <p>$$K = \left|\frac{(x^3-3x^2+2x+7)(6x-6)}{(3x^2-6x+2)^2}\right|_{x=-1} = 0.099 < 0.5$$</p>
+    <p>Newton's method is faster than bisection.</p>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 9 ===================== -->
+<div class="question-block">
+  <div class="question">
+    <div class="q-label">Question 9</div>
+    <p>The following recordings were taken in an experiment to simulate a relation $y = f(x)$:</p>
+    <table>
+      <tr><th>$x$</th><td>0</td><td>0.1</td><td>0.2</td><td>0.3</td></tr>
+      <tr><th>$y$</th><td>0</td><td>1</td><td>3</td><td>4</td></tr>
+    </table>
+    <p>If such relation is modeled by a 3rd order polynomial $P_3(x)$, use a suitable interpolation formula to obtain $P_3(x)$. Discuss a method for calculating $\int_0^{0.3} f(x)\,dx$ and calculate your accuracy.</p>
+  </div>
+  <button class="btn-show" onclick="toggleAnswer(this)">Show Answer</button>
+  <div class="solution">
+    <div class="s-label">Solution</div>
+    <table>
+      <tr><th>$x$</th><th>$y$</th><th>$\Delta y/\Delta x$</th><th>2nd Diff</th><th>3rd Diff</th></tr>
+      <tr><td>0</td><td>0</td><td>$\frac{1-0}{0.1-0}=10$</td><td>$\frac{20-10}{0.2-0}=50$</td><td>$\frac{-50-50}{0.3-0}=-\frac{1000}{3}$</td></tr>
+      <tr><td>0.1</td><td>1</td><td>$\frac{3-1}{0.2-0.1}=20$</td><td>$\frac{10-20}{0.3-0.1}=-50$</td><td></td></tr>
+      <tr><td>0.2</td><td>3</td><td>$\frac{4-3}{0.3-0.2}=10$</td><td></td><td></td></tr>
+      <tr><td>0.3</td><td>4</td><td></td><td></td><td></td></tr>
+    </table>
+    <p>$a_0=0,\; a_1=10,\; a_2=50,\; a_3=-\frac{1000}{3}$</p>
+    <p>$$P_3(x) = 0 + 10x + 50x(x-0.1) - \frac{1000}{3}x(x-0.1)(x-0.2)$$</p>
+    <p>$$P_3(x) = -\frac{1000}{3}x^3 + 150x^2 - \frac{5}{3}x = -333.333333x^3 + 150x^2 - 1.66666666x$$</p>
+    <p>$$\text{Area} = \int_0^{0.3}\left(-\frac{1000}{3}x^3 + 150x^2 - \frac{5}{3}x\right)dx = \left[-\frac{1000}{3}\frac{x^4}{4} + 150\frac{x^3}{3} - \frac{5}{3}\frac{x^2}{2}\right]_0^{0.3}$$</p>
+    <p>$$A = \frac{3}{4}$$</p>
+    <p><strong>Error estimate:</strong></p>
+    <p>$$\left|\int_0^{0.3} E_3(x)\,dx\right| = \left|\int_0^{0.3} \frac{(x-0)(x-0.1)(x-0.2)(x-0.3)}{4!}f^{(4)}(\xi)\,dx\right| = 9\times10^{-6}\,f^{(4)}(\xi)$$</p>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 10 ===================== -->
+<div class="question-block">
+  <div class="question">
+    <div class="q-label">Question 10</div>
+    <p><strong>a)</strong> The following is Maclaurin's expansion with a remainder for $(1-x)^{-1}$:</p>
+    <p>$$(1-x)^{-1} = 1 + x + x^2 + x^3 + \frac{x^4}{(1-\xi)^5}, \quad 0<\xi<x,\; |x|<1$$</p>
+    <p>Calculate an approximate value for the following integral as well as a bound for the error:</p>
+    <p>$$I = \int_{-0.5}^{0.5} \frac{1}{1-x^3}\,dx$$</p>
+    <p><strong>b)</strong> If further a trapezoidal rule is used to approximate the same result by dividing the interval into 4 equal subintervals each of 0.25, then by using the rule:</p>
+    <p>$$A = \frac{0.25}{2}\left[f(-0.5) + 2f(-0.25) + 2f(0) + 2f(0.25) + f(0.5)\right]$$</p>
+    <p>calculate another value for the same integral.</p>
+  </div>
+  <button class="btn-show" onclick="toggleAnswer(this)">Show Answer</button>
+  <div class="solution">
+    <div class="s-label">Solution</div>
+    <p><strong>a)</strong></p>
+    <p>$$\frac{1}{1-x^3} = 1 + x^3 + x^6 + x^9 + \frac{x^{12}}{(1-\xi)^5}$$</p>
+    <p>$$I = \int_{-0.5}^{0.5}(1+x^3+x^6+x^9)\,dx = \left[x + \frac{x^4}{4} + \frac{x^7}{7} + \frac{x^{10}}{10}\right]_{-0.5}^{0.5}$$</p>
+    <p>$$= \left(0.5 + \frac{(0.5)^4}{4} + \frac{(0.5)^7}{7} + \frac{(0.5)^{10}}{10}\right) - \left(-0.5 + \frac{(-0.5)^4}{4} + \frac{(-0.5)^7}{7} + \frac{(-0.5)^{10}}{10}\right)$$</p>
+    <p>$$\text{error} \leq \left|\int_{-0.5}^{0.5}\frac{x^{12}}{(1-\xi)^5}\,dx\right| \leq \left|\left[\frac{x^{13}}{13}\right]_{-0.5}^{0.5}\right| = 1.878\times10^{-5}$$</p>
+    <hr class="sep">
+    <p><strong>b)</strong></p>
+    <p>$$A = \frac{0.25}{2}\left[f(-0.5) + 2f(-0.25) + 2f(0) + 2f(0.25) + f(0.5)\right], \qquad f(x) = \frac{1}{1-x^3}$$</p>
+    <p>$$A = \frac{0.25}{2}\left[\frac{1}{1-(-0.5)^3} + 2\left(\frac{1}{1-(-0.25)^3}\right) + 2\left(\frac{1}{1-0^3}\right) + 2\left(\frac{1}{1-(0.25)^3}\right) + \frac{1}{1-(0.5)^3}\right]$$</p>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 11 ===================== -->
+<div class="question-block">
+  <div class="question">
+    <div class="q-label">Question 11</div>
+    <p>The graph $y = (x+2)^3$ intersects with the circle $(x+1)^2 + y^2 = 9$ at two points, one in the first quadrant ($x>0, y>0$) and another one in the third quadrant ($x<0, y<0$). Obtain the coordinates of the point in the third quadrant. Start the iterations from the point $x_0=-3, y_0=-2$. State if your method converges, and calculate your accuracy after 7 iterations.</p>
+  </div>
+  <button class="btn-show" onclick="toggleAnswer(this)">Show Answer</button>
+  <div class="solution">
+    <div class="s-label">Solution</div>
+    <p>$y = (x+2)^3 \;\Rightarrow\; x = \sqrt[3]{y} - 2 = g_1$</p>
+    <p>$(x+1)^2+y^2=9$ and since $y$ is negative: $y = -\sqrt{9-(x+1)^2} = g_2$</p>
+    <p>$$G = \begin{pmatrix} \frac{\partial g_1}{\partial x} & \frac{\partial g_1}{\partial y} \\ \frac{\partial g_2}{\partial x} & \frac{\partial g_2}{\partial y} \end{pmatrix} = \begin{pmatrix} 0 & \frac{1}{3}y^{-2/3} \\ \frac{(x+1)}{\sqrt{9-(x+1)^2}} & 0 \end{pmatrix}$$</p>
+    <p>$$G_0 = G\big|_{(-3,-2)} = \begin{pmatrix} 0 & -0.20998 \\ \frac{-2}{\sqrt5} & 0 \end{pmatrix}$$</p>
+    <p>$$\|G_0\|_\infty = \frac{2}{\sqrt5} = 0.894427191 < 1 \quad\text{(the method is convergent)}$$</p>
+    <p>$$x = \sqrt[3]{y} - 2, \qquad y = -\sqrt{9-(x+1)^2}$$</p>
+    <table>
+      <tr><th>n</th><th>x</th><th>y</th></tr>
+      <tr><td>0</td><td>$-3$</td><td>$-2$</td></tr>
+      <tr><td>1</td><td>$-3.25992105$</td><td>$-1.973007057$</td></tr>
+      <tr><td>2</td><td>$-3.254227194$</td><td>$-1.979509979$</td></tr>
+      <tr><td>3</td><td>$-3.255603637$</td><td>$-1.977941412$</td></tr>
+      <tr><td>4</td><td>$-3.255271902$</td><td>$-1.978319652$</td></tr>
+      <tr><td>5</td><td>$-3.255351912$</td><td>$-1.978228438$</td></tr>
+      <tr><td>6</td><td>$-3.25532618$</td><td>$-1.978250434$</td></tr>
+      <tr><td>7</td><td>$-3.255337271$</td><td>$-1.97824513$</td></tr>
+    </table>
+    <p>$|x_7-x_6| = 1.1091\times10^{-5}$, &nbsp; $|y_7-y_6| = 5.304139\times10^{-6}$</p>
+    <p>$$\text{Accuracy} \le \frac{2/\sqrt5}{1-2/\sqrt5}\times1.1091\times10^{-5} \le 2.88\times10^{-5} \le 5\times10^{-5}$$</p>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 12 ===================== -->
+<div class="question-block">
+  <div class="question">
+    <div class="q-label">Question 12</div>
+    <p>Obtain an approximate eigenpair $(\lambda, x)$, where $\lambda$ stands for the eigenvalue and $x$ for the eigenvector, of the symmetric matrix</p>
+    <p>$$A = \begin{bmatrix} 15 & -6 & 12 \\ -6 & -6 & -6 \\ 12 & -6 & -15 \end{bmatrix}$$</p>
+    <p class="note">Start from an initial vector $x^{(0)} = (1, 0, 0)^T$ and perform 4 iterations.</p>
+  </div>
+  <button class="btn-show" onclick="toggleAnswer(this)">Show Answer</button>
+  <div class="solution">
+    <div class="s-label">Solution</div>
+    <p class="note">(Apply the Power method on $A$ starting from $x^{(0)}=(1,0,0)^T$, normalizing by the largest component at each of the 4 iterations, to approximate the dominant eigenpair $(\lambda, x)$.)</p>
+  </div>
+</div>
+
+<!-- ===================== QUESTION 13 ===================== -->
+<div class="question-block">
+  <div class="question">
+    <div class="q-label">Question 13</div>
+    <p>The 1st order nonlinear differential equation $y' = f(x,y)$, $y(0)=y_0$ can be solved using a modified Euler method:</p>
+    <p>$$y_{n+1} = y_n + h y'_n + \frac{h^2}{2!}y''_n$$</p>
+    <p>Construct a table whose 1st column is the number of iterations $n$ starting from $n=0$, the 2nd column the values of $x_n$ from $x=0$ until $x=0.3$ in steps of $h=0.1$, the 3rd column is $y_n$, the 4th column is $hy'_n = 0.1(y_n^3+x_n^2)$ and the 5th column is $\frac{h^2}{2}y''_n$.</p>
+    <p>Solve the equation $y' = y^3 + x^2$, $y(0)=1$ and calculate $y(0.3)$.</p>
+  </div>
+  <button class="btn-show" onclick="toggleAnswer(this)">Show Answer</button>
+  <div class="solution">
+    <div class="s-label">Solution</div>
+    <p>$y' = y^3 + x^2$</p>
+    <p>First, compute $y''$:</p>
+    <p>$$y'' = 3y^2y' + 2x = 3y^2(y^3+x^2) + 2x = 3y^5 + 3x^2y^2 + 2x$$</p>
+    <p>$h = 0.1$</p>
+    <table>
+      <tr><th>n</th><th>$x$</th><th>$y$</th><th>$hy' = 0.1(y^3+x^2)$</th><th>$\frac{h^2}{2}y'' = \frac{1}{200}(3y^5+3x^2y^2+2x)$</th></tr>
+      <tr><td>0</td><td>0</td><td>1</td><td>$0.1((1)^3+0^2)=0.1$</td><td>$\frac{1}{200}(3(1)^5+0+0)=0.015$</td></tr>
+      <tr><td>1</td><td>0.1</td><td>$1+0.1+0.015=1.115$</td><td>$0.1((1.115)^3+0.1^2)=0.139615875$</td><td>$0.0069323018$</td></tr>
+      <tr><td>2</td><td>0.2</td><td>$1.26151889$</td><td>$0.2047776444$</td><td>$0.05088594766$</td></tr>
+      <tr><td>3</td><td>0.3</td><td>$1.51721481$</td><td>—</td><td>—</td></tr>
+    </table>
+    <p>$$y(0.3) = 1.5172$$</p>
+  </div>
+</div>
+
+</div><!-- end container -->
+
+<script>
+  function toggleAnswer(btn) {
+    var solution = btn.nextElementSibling;
+    if (solution.classList.contains('visible')) {
+      solution.classList.remove('visible');
+      btn.textContent = 'Show Answer';
+    } else {
+      solution.classList.add('visible');
+      btn.textContent = 'Hide Answer';
+      renderMathInElement(solution, {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      });
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll('.question').forEach(function(q) {
+      renderMathInElement(q, {
+        delimiters: [
+          {left: "$$", right: "$$", display: true},
+          {left: "$", right: "$", display: false}
+        ],
+        throwOnError: false
+      });
+    });
+  });
+</script>
+
+</body>
+</html>

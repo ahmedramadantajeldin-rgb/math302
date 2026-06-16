@@ -1,0 +1,1037 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Interpolation &amp; Numerical Analysis</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [['\\(','\\)'], ['$','$']], displayMath: [['\\[','\\]']] },
+    options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+  };
+</script>
+<style>
+:root {
+  --ivory:    #f7f4ef;
+  --white:    #ffffff;
+  --paper:    #fdfbf7;
+  --fog:      #eee9e0;
+  --border:   #ddd6c8;
+  --ink:      #1c1a18;
+  --ink-soft: #4a4540;
+  --muted:    #8a8078;
+  --midnight: #0e1b2e;
+  --navy:     #163256;
+  --cobalt:   #1e4d8c;
+  --sky:      #3b82c4;
+  --teal:     #1a7a6e;
+  --amber:    #b57a10;
+  --amber-lt: #f5c842;
+  --rust:     #b53a2a;
+  --green:    #1e6b45;
+  --purple:   #5b3f9a;
+
+  --ff-body: 'EB Garamond', Georgia, 'Times New Roman', serif;
+  --ff-ui:   'DM Sans', system-ui, sans-serif;
+  --ff-mono: 'DM Mono', 'Courier New', monospace;
+
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --shadow-sm: 0 1px 6px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 20px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 40px rgba(0,0,0,.10);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; font-size: 16px; }
+
+body {
+  background: var(--ivory);
+  color: var(--ink);
+  font-family: var(--ff-body);
+  font-size: 1.0625rem;
+  line-height: 1.8;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+.doc-header {
+  background: var(--midnight);
+  position: relative;
+  overflow: hidden;
+}
+.doc-header::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 50%, rgba(30,77,140,.45) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 80% at 80% 20%, rgba(26,122,110,.25) 0%, transparent 55%);
+}
+.doc-header::after {
+  content: '';
+  position: absolute; inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23ffffff' fill-opacity='0.025'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/svg%3E");
+}
+.header-inner {
+  position: relative; z-index: 1;
+  max-width: 900px; margin: 0 auto;
+  padding: 64px 32px 56px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.header-pill {
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,.1);
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 30px;
+  padding: 5px 18px;
+  font-family: var(--ff-mono);
+  font-size: .72rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.7);
+  margin-bottom: 22px;
+}
+.header-pill::before { content: '◆'; color: var(--amber-lt); margin-right: 4px; }
+.doc-header h1 {
+  font-family: var(--ff-body);
+  font-size: clamp(2rem, 5vw, 3.4rem);
+  font-weight: 600;
+  color: #fff;
+  letter-spacing: -.5px;
+  line-height: 1.18;
+  margin-bottom: 14px;
+}
+.doc-header h1 em { color: var(--amber-lt); font-style: italic; }
+.header-sub {
+  font-family: var(--ff-ui);
+  font-size: .92rem;
+  font-weight: 300;
+  color: rgba(255,255,255,.55);
+  max-width: 580px;
+  line-height: 1.65;
+}
+.header-meta {
+  font-family: var(--ff-mono);
+  font-size: .72rem;
+  color: rgba(255,255,255,.45);
+  margin-top: 16px;
+  letter-spacing: 1px;
+}
+.header-tags {
+  display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+  margin-top: 20px;
+}
+.htag {
+  font-family: var(--ff-ui);
+  font-size: .75rem; font-weight: 500;
+  padding: 4px 13px; border-radius: 20px;
+  background: rgba(255,255,255,.08);
+  border: 1px solid rgba(255,255,255,.13);
+  color: rgba(255,255,255,.65);
+}
+
+/* ── TOC ── */
+.toc-card {
+  max-width: 900px; margin: 0 auto;
+  background: var(--white);
+  border-top: 4px solid var(--cobalt);
+  border-radius: 0 0 10px 10px;
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--cobalt);
+  padding: 28px 36px;
+  box-shadow: var(--shadow-md);
+  animation: fadeUp .4s ease both;
+}
+.toc-header {
+  display: flex; align-items: center; gap: 14px; margin-bottom: 18px;
+}
+.toc-badge {
+  font-family: var(--ff-mono); font-size: .66rem; font-weight: 500;
+  letter-spacing: 2px; color: #fff; background: var(--cobalt);
+  padding: 4px 12px; border-radius: 4px; white-space: nowrap;
+}
+.toc-header h3 {
+  font-family: var(--ff-body); font-size: 1.1rem; font-weight: 600;
+  color: var(--midnight);
+}
+.toc-rule { flex: 1; height: 1px; background: var(--border); }
+.toc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 6px 24px;
+}
+.toc-link {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--ff-ui); font-size: .82rem;
+  color: var(--cobalt);
+  text-decoration: none;
+  padding: 5px 8px; border-radius: 5px;
+  transition: background .15s, color .15s;
+}
+.toc-link:hover { background: #e8f0fb; color: var(--midnight); }
+.toc-num {
+  font-family: var(--ff-mono); font-size: .62rem;
+  background: var(--fog); color: var(--muted);
+  padding: 2px 6px; border-radius: 4px;
+  flex-shrink: 0;
+}
+
+/* ── LAYOUT ── */
+.page-wrap {
+  max-width: 900px; margin: 0 auto;
+  padding: 8px 24px 80px;
+}
+
+/* ── SECTION HEADS ── */
+.sec-head {
+  display: flex; align-items: center; gap: 14px;
+  margin: 52px 0 24px;
+}
+.sec-badge {
+  font-family: var(--ff-mono); font-size: .68rem; font-weight: 500;
+  letter-spacing: 2px; color: #fff; background: var(--navy);
+  padding: 4px 11px; border-radius: 4px; white-space: nowrap;
+}
+.sec-head h2 {
+  font-family: var(--ff-body);
+  font-size: 1.6rem; font-weight: 600;
+  color: var(--midnight); letter-spacing: -.2px; white-space: nowrap;
+}
+.sec-rule { flex: 1; height: 1px; background: var(--border); }
+
+/* ── CARDS ── */
+.card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 26px 30px;
+  box-shadow: var(--shadow-sm);
+  margin-bottom: 20px;
+  animation: fadeUp .4s ease both;
+}
+.card-title {
+  font-family: var(--ff-ui); font-size: .78rem; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--cobalt);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+.card-title::before {
+  content: ''; display: inline-block;
+  width: 3px; height: 14px;
+  background: var(--cobalt); border-radius: 2px; flex-shrink: 0;
+}
+.card-title.amber::before  { background: var(--amber); }
+.card-title.amber          { color: var(--amber); }
+.card-title.teal::before   { background: var(--teal); }
+.card-title.teal           { color: var(--teal); }
+.card-title.rust::before   { background: var(--rust); }
+.card-title.rust           { color: var(--rust); }
+.card-title.purple::before { background: var(--purple); }
+.card-title.purple         { color: var(--purple); }
+.card-title.green::before  { background: var(--green); }
+.card-title.green          { color: var(--green); }
+
+/* ── LEFT-BORDER ACCENT BLOCKS ── */
+.block {
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 16px 22px;
+  margin: 14px 0;
+  font-size: .97rem; line-height: 1.75;
+}
+.block.cobalt {
+  background: #f0f4fa; border: 1px solid #c4d4ec;
+  border-left: 4px solid var(--cobalt);
+}
+.block.amber {
+  background: #fdf8ec; border: 1px solid #e8d090;
+  border-left: 4px solid var(--amber);
+}
+.block.teal {
+  background: #edf7f2; border: 1px solid #9fd4b8;
+  border-left: 4px solid var(--teal);
+}
+.block.rust {
+  background: #fdf0ee; border: 1px solid #e8b4ae;
+  border-left: 4px solid var(--rust);
+}
+.block.purple {
+  background: #f6f4ff; border: 1px solid #c8baf2;
+  border-left: 4px solid var(--purple);
+  font-family: var(--ff-body);
+}
+.block-label {
+  font-family: var(--ff-mono); font-size: .62rem; font-weight: 500;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--muted); margin-bottom: 8px; display: block;
+}
+
+/* ── ARABIC BLOCK ── */
+.ar-block {
+  font-family: var(--ff-ui);
+  direction: rtl;
+  font-size: .88rem;
+  color: var(--amber);
+  background: #fefbf0;
+  border: 1px solid #f0dfa0;
+  border-right: 3px solid var(--amber);
+  border-radius: 0 5px 5px 0;
+  padding: 10px 14px 10px 10px;
+  display: block;
+  text-align: right;
+  line-height: 1.8;
+  margin: 10px 0;
+}
+
+/* ── STEP SYSTEM ── */
+.step {
+  display: flex; gap: 16px; align-items: flex-start;
+  background: var(--paper);
+  border: 1px solid var(--fog);
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin: 10px 0;
+}
+.step-num {
+  font-family: var(--ff-mono); font-size: .7rem; font-weight: 500;
+  background: var(--navy); color: white;
+  min-width: 22px; height: 22px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.step-body { font-size: .97rem; line-height: 1.7; }
+.step-note {
+  font-family: var(--ff-ui); font-size: .8rem;
+  color: var(--muted); font-style: italic; display: block;
+  margin-top: 4px;
+}
+
+/* ── PROBLEM PANEL ── */
+.prob-panel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  margin-bottom: 32px;
+  animation: fadeUp .4s ease both;
+}
+.prob-header {
+  background: var(--navy);
+  color: #fff;
+  padding: 20px 28px;
+  display: flex; align-items: flex-start; gap: 16px;
+}
+.prob-num {
+  font-family: var(--ff-body);
+  font-size: 2.2rem; font-weight: 600;
+  color: var(--amber-lt); line-height: 1;
+  flex-shrink: 0;
+}
+.prob-meta { flex: 1; }
+.prob-label {
+  font-family: var(--ff-mono); font-size: .65rem;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: rgba(255,255,255,.5); display: block; margin-bottom: 4px;
+}
+.prob-title {
+  font-family: var(--ff-body); font-size: 1.2rem; font-weight: 500;
+  color: white; line-height: 1.35;
+}
+.prob-body { padding: 26px 28px; }
+
+/* ── TABLES ── */
+.iter-tbl {
+  width: 100%; border-collapse: collapse;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  border: 1px solid var(--border);
+  margin: 16px 0;
+}
+.iter-tbl thead th {
+  background: var(--midnight); color: rgba(255,255,255,.85);
+  font-family: var(--ff-mono); font-size: .7rem; font-weight: 500;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 10px 14px; text-align: center;
+}
+.iter-tbl tbody td, .iter-tbl tbody th {
+  padding: 9px 14px;
+  font-family: var(--ff-mono); font-size: .82rem;
+  border-bottom: 1px solid var(--fog);
+  text-align: center;
+}
+.iter-tbl tbody tr:nth-child(even) td,
+.iter-tbl tbody tr:nth-child(even) th { background: var(--paper); }
+.iter-tbl tbody td.coeff { color: var(--amber); font-weight: 600; }
+.iter-tbl tbody td.pos   { color: var(--green); font-weight: 600; }
+.iter-tbl tbody td.neg   { color: var(--rust);  font-weight: 600; }
+.iter-tbl tbody th { font-family: var(--ff-body); font-size: .9rem; }
+
+/* ── RESULT BANNER ── */
+.result-banner {
+  background: linear-gradient(130deg, var(--midnight) 0%, #1e3d6e 100%);
+  border-radius: var(--r-md);
+  padding: 20px 24px;
+  display: flex; align-items: center; gap: 18px;
+  box-shadow: 0 4px 20px rgba(14,27,46,.2);
+  margin: 16px 0;
+  flex-wrap: wrap;
+}
+.rb-icon { font-size: 2rem; flex-shrink: 0; }
+.rb-content { flex: 1; }
+.rb-label { font-family: var(--ff-ui); font-size: .78rem; color: rgba(255,255,255,.55); display: block; }
+.rb-value { font-family: var(--ff-mono); font-size: 1.3rem; font-weight: 500; color: var(--amber-lt); letter-spacing: .5px; display: block; }
+.rb-sub   { font-family: var(--ff-ui); font-size: .75rem; color: rgba(255,255,255,.4); display: block; }
+
+/* ── METRIC GRID ── */
+.metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+  gap: 14px;
+  margin: 16px 0;
+}
+.metric-card {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  padding: 16px 18px;
+}
+.metric-card.cobalt { border-top: 3px solid var(--cobalt); }
+.metric-card.amber  { border-top: 3px solid var(--amber);  }
+.metric-card.teal   { border-top: 3px solid var(--teal);   }
+.metric-card.rust   { border-top: 3px solid var(--rust);   }
+.metric-card.purple { border-top: 3px solid var(--purple); }
+.mc-label { font-family: var(--ff-mono); font-size: .63rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); display: block; margin-bottom: 6px; }
+.mc-val   { font-family: var(--ff-mono); font-size: 1.1rem; font-weight: 500; color: var(--ink); display: block; }
+
+/* ── PILL ── */
+.pill {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--ff-mono); font-size: .76rem;
+  padding: 5px 12px; border-radius: 20px; font-weight: 500;
+}
+.pill.pos { background: #e6f5ed; color: #1b6b3a; border: 1px solid #9fd4b0; }
+.pill.neg { background: #fdecea; color: #93261c; border: 1px solid #e8aca8; }
+.pill.info{ background: #e8f0fb; color: #1a4a8a; border: 1px solid #aac4e8; }
+
+p { margin-bottom: 10px; }
+p:last-child { margin-bottom: 0; }
+strong { font-weight: 600; }
+
+/* ── MATH DISPLAY OVERRIDES ── */
+.math-display {
+  background: #f0f4fa;
+  border: 1px solid #c4d4ec;
+  border-left: 4px solid var(--cobalt);
+  border-radius: 0 var(--r-sm) var(--r-sm) 0;
+  padding: 16px 22px;
+  margin: 14px 0;
+  overflow-x: auto;
+}
+
+/* ── FOOTER ── */
+footer {
+  text-align: center; padding: 32px 24px;
+  color: var(--muted); font-family: var(--ff-mono);
+  font-size: .72rem; letter-spacing: 1px;
+  border-top: 1px solid var(--border);
+}
+
+/* ── ANIMATION ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 600px) {
+  .header-inner { padding: 44px 20px 40px; }
+  .card { padding: 18px 18px; }
+  .prob-body { padding: 18px; }
+  .toc-grid { grid-template-columns: 1fr 1fr; }
+  .result-banner { flex-direction: column; }
+  .toc-card { padding: 20px 18px; }
+}
+@media (max-width: 420px) {
+  .toc-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════ HEADER ══════════════════ -->
+<header class="doc-header">
+  <div class="header-inner">
+    <div class="header-pill">Numerical Methods · Chapter 3</div>
+    <h1>Chapter 3: <em>Interpolation</em> &amp; Numerical Analysis</h1>
+    <p class="header-sub">A complete, exam-ready study guide covering Newton's Divided Difference, Lagrange Interpolation, error bounds, derivatives, and definite integration of interpolating polynomials.</p>
+    <div class="header-tags">
+      <span class="htag">Newton's Divided Difference</span>
+      <span class="htag">Lagrange Interpolation</span>
+      <span class="htag">Error Bounds</span>
+      <span class="htag">Numerical Differentiation</span>
+      <span class="htag">Numerical Integration</span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════════ TOC ══════════════════ -->
+<div class="page-wrap">
+<div class="toc-card">
+  <div class="toc-header">
+    <span class="toc-badge">Contents</span>
+    <h3>Table of Contents</h3>
+    <div class="toc-rule"></div>
+  </div>
+  <div class="toc-grid">
+    <a href="#sec01" class="toc-link"><span class="toc-num">§ 01</span> Introduction to Interpolation</a>
+    <a href="#sec02" class="toc-link"><span class="toc-num">§ 02</span> Problem 1 — P₄(x) Analysis</a>
+    <a href="#sec03" class="toc-link"><span class="toc-num">§ 03</span> Problem 2 — P₃(x) Analysis</a>
+    <a href="#sec04" class="toc-link"><span class="toc-num">§ 04</span> Lagrange Verification</a>
+
+  </div>
+</div>
+
+<!-- ══════════════════ § 01 ══════════════════ -->
+<div class="sec-head" id="sec01">
+  <span class="sec-badge">§ 01</span>
+  <h2>Introduction to Interpolation</h2>
+  <div class="sec-rule"></div>
+</div>
+
+<div class="card">
+  <div class="card-title">Definition &amp; Purpose</div>
+  <p>Interpolation is the process of constructing a continuous function — an interpolating polynomial — that passes <em>exactly</em> through a given set of discrete data points \((x_0, y_0), (x_1, y_1), \ldots, (x_n, y_n)\).</p>
+  <p>The resulting polynomial \(P_n(x)\) can then be used to estimate function values between the known data points, compute derivatives, and evaluate definite integrals — tasks that are essential throughout engineering analysis.</p>
+
+  <div class="ar-block">
+  الاستيفاء (Interpolation) هو إيجاد دالة متصلة تمر بالضبط عبر مجموعة من النقاط المعطاة، تُستخدم هذه الدالة لتقدير قيم مجهولة وحساب المشتقات والتكاملات عدديًا. أبرز أساليبه: طريقة نيوتن للفروق المنقسمة، وطريقة لاغرانج.
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title amber">Three Core Applications</div>
+  <div class="step">
+    <div class="step-num">1</div>
+    <div class="step-body"><strong>Estimation:</strong> Predict unknown values \(f(x^*)\) for \(x^*\) between data nodes — the fundamental use case.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">2</div>
+    <div class="step-body"><strong>Numerical Differentiation:</strong> Compute the rate of change \(\frac{d}{dx}P_n(x)\big|_{x=x^*}\) when the closed-form derivative of the original function is unavailable.</div>
+  </div>
+  <div class="step">
+    <div class="step-num">3</div>
+    <div class="step-body"><strong>Numerical Integration:</strong> Evaluate \(\int_a^b P_n(x)\,dx\) as an approximation to \(\int_a^b f(x)\,dx\) — the basis of Newton–Cotes formulas.</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title teal">Newton's Divided Difference — Method Overview</div>
+  <p>Newton's Divided Difference (NDD) method constructs an interpolating polynomial incrementally using a triangular table of divided differences. The polynomial takes the form:</p>
+  <div class="block amber">
+    <span class="block-label">General Form — Newton's Interpolating Polynomial</span>
+    \[P_n(x) = a_0 + a_1(x - x_0) + a_2(x-x_0)(x-x_1) + \cdots + a_n(x-x_0)(x-x_1)\cdots(x-x_{n-1})\]
+  </div>
+  <p>where the coefficients \(a_k\) are the <em>k</em>-th order divided differences evaluated at the leading nodes:</p>
+  <div class="block cobalt">
+    <span class="block-label">Coefficient Definition</span>
+    \[a_0 = f[x_0],\quad a_1 = f[x_0,x_1],\quad a_2 = f[x_0,x_1,x_2],\quad \ldots\]
+    \[f[x_i, x_{i+1}] = \frac{f[x_{i+1}] - f[x_i]}{x_{i+1} - x_i}\]
+  </div>
+
+  <div class="ar-block">
+  المعاملات \(a_k\) هي قيم الفروق المنقسمة المرتبة من الجدول المثلثي. كلٌّ منها يُحسب بقسمة الفرق بين فرقَين من المرتبة الأدنى على الفرق بين نقطتي البداية المقابلتين.
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title purple">Truncation Error Bound</div>
+  <p>The error of an \(n\)-th degree interpolating polynomial at any point \(x\) satisfies:</p>
+  <div class="block amber">
+    <span class="block-label">Error Bound Formula</span>
+    \[\left|f(x) - P_n(x)\right| \le \left|\frac{(x-x_0)(x-x_1)\cdots(x-x_n)}{(n+1)!}\right| \cdot \left|f^{(n+1)}(\xi)\right|, \quad \xi \in [\min x_i,\; \max x_i]\]
+  </div>
+  <p>When \(f^{(n+1)}\) is unknown, the expression \(\dfrac{|(x-x_0)\cdots(x-x_n)|}{(n+1)!}\) gives the <em>error multiplier</em> — the bound in terms of the unknown higher derivative.</p>
+</div>
+
+
+<!-- ══════════════════ § 02 ══════════════════ -->
+<div class="sec-head" id="sec02">
+  <span class="sec-badge">§ 02</span>
+  <h2>Problem 1 — Fourth-Degree Interpolation P₄(x)</h2>
+  <div class="sec-rule"></div>
+</div>
+
+<div class="prob-panel">
+  <div class="prob-header">
+    <div class="prob-num">01</div>
+    <div class="prob-meta">
+      <span class="prob-label">Forward Divided Difference · 5 Data Points</span>
+      <span class="prob-title">Find P₄(x); compute the max error at x = 2.5, the rate of change, and the area under the curve from x = 0 to x = 4.</span>
+    </div>
+  </div>
+  <div class="prob-body">
+
+    <!-- Given Data -->
+    <div class="card-title cobalt" style="margin-bottom:10px; font-family:var(--ff-ui); font-size:.78rem; font-weight:500; letter-spacing:2px; text-transform:uppercase; display:flex; align-items:center; gap:8px;">
+      <span style="display:inline-block;width:3px;height:14px;background:var(--cobalt);border-radius:2px;flex-shrink:0;"></span>
+      Given Data
+    </div>
+    <table class="iter-tbl">
+      <thead>
+        <tr>
+          <th>\(x\)</th><th>\(x_0=0\)</th><th>\(x_1=1\)</th><th>\(x_2=2\)</th><th>\(x_3=3\)</th><th>\(x_4=4\)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>\(y = F(x)\)</th>
+          <td>0</td><td>1</td><td>3</td><td>4</td><td>1</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Part A: Method -->
+    <div class="card-title teal" style="margin:22px 0 10px; font-family:var(--ff-ui); font-size:.78rem; font-weight:500; letter-spacing:2px; text-transform:uppercase; display:flex; align-items:center; gap:8px;">
+      <span style="display:inline-block;width:3px;height:14px;background:var(--teal);border-radius:2px;flex-shrink:0;"></span>
+      (A) Conceptual Explanation
+    </div>
+
+    <p>We have \(n+1 = 5\) equally-spaced points, so we build a 4th-order polynomial. The divided difference table is constructed column by column: each entry is the difference of its two neighbors above divided by the horizontal span of their \(x\)-values.</p>
+    <div class="block cobalt">
+      <span class="block-label">Construction Rule</span>
+      \[f[x_i, \ldots, x_{i+k}] = \frac{f[x_{i+1},\ldots,x_{i+k}] - f[x_i,\ldots,x_{i+k-1}]}{x_{i+k} - x_i}\]
+    </div>
+    <p>The diagonal entries of the table — \(f[x_0], f[x_0,x_1], f[x_0,x_1,x_2],\ldots\) — become the polynomial coefficients \(a_0, a_1, a_2, \ldots\)</p>
+
+    <!-- Part B: Solution -->
+    <div class="card-title amber" style="margin:22px 0 10px; font-family:var(--ff-ui); font-size:.78rem; font-weight:500; letter-spacing:2px; text-transform:uppercase; display:flex; align-items:center; gap:8px;">
+      <span style="display:inline-block;width:3px;height:14px;background:var(--amber);border-radius:2px;flex-shrink:0;"></span>
+      (B) Step-by-Step Solution
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body"><strong>Build the Divided Difference Table</strong><span class="step-note">Diagonal entries (shaded) become the coefficients a₀ → a₄</span></div>
+    </div>
+
+    <table class="iter-tbl">
+      <thead>
+        <tr>
+          <th>\(x_i\)</th>
+          <th>\(f[x_i]\)</th>
+          <th>1st DD</th>
+          <th>2nd DD</th>
+          <th>3rd DD</th>
+          <th>4th DD</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0</td>
+          <td class="coeff">\(0 \; (a_0)\)</td>
+          <td>—</td><td>—</td><td>—</td><td>—</td>
+        </tr>
+        <tr>
+          <td>1</td>
+          <td>1</td>
+          <td class="coeff">\(1 \; (a_1)\)</td>
+          <td>—</td><td>—</td><td>—</td>
+        </tr>
+        <tr>
+          <td>2</td>
+          <td>3</td>
+          <td>2</td>
+          <td class="coeff">\(\tfrac{1}{2} \; (a_2)\)</td>
+          <td>—</td><td>—</td>
+        </tr>
+        <tr>
+          <td>3</td>
+          <td>4</td>
+          <td>1</td>
+          <td>\(-\tfrac{1}{2}\)</td>
+          <td class="coeff">\(-\tfrac{1}{3} \; (a_3)\)</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>4</td>
+          <td>1</td>
+          <td class="neg">\(-3\)</td>
+          <td class="neg">\(-2\)</td>
+          <td>\(-\tfrac{1}{2}\)</td>
+          <td class="coeff">\(-\tfrac{1}{24} \; (a_4)\)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body"><strong>Write the Newton Form</strong><span class="step-note">Substitute coefficients into the general Newton polynomial</span></div>
+    </div>
+    <div class="block cobalt">
+      <span class="block-label">Newton Form</span>
+      \[P_4(x) = 0 + 1\cdot x + \tfrac{1}{2}\,x(x-1) - \tfrac{1}{3}\,x(x-1)(x-2) - \tfrac{1}{24}\,x(x-1)(x-2)(x-3)\]
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body"><strong>Expand to Standard Form</strong><span class="step-note">Multiply out and collect like powers of x</span></div>
+    </div>
+    <div class="block amber">
+      <span class="block-label">Simplified Polynomial</span>
+      \[P_4(x) = -\frac{1}{24}x^4 - \frac{1}{12}x^3 + \frac{25}{24}x^2 + \frac{1}{12}x\]
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body"><strong>Maximum Error at x = 2.5</strong><span class="step-note">Evaluate the error multiplier; f⁽⁵⁾(ξ) is unknown, so we express the bound in terms of it</span></div>
+    </div>
+    <div class="block rust">
+      <span class="block-label">Error Bound at x = 2.5</span>
+      \[\left|f(2.5) - P_4(2.5)\right| \le \frac{|(2.5)(1.5)(0.5)(-0.5)(-1.5)|}{5!}\cdot\left|f^{(5)}(\xi)\right|\]
+      \[= \frac{0.703125}{120}\cdot\left|f^{(5)}(\xi)\right| = 0.00585938\cdot\left|f^{(5)}(\xi)\right|\]
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body"><strong>Rate of Change (Derivative)</strong><span class="step-note">Differentiate P₄(x) with respect to x</span></div>
+    </div>
+    <div class="block teal">
+      <span class="block-label">Derivative P₄′(x)</span>
+      \[\frac{d}{dx}P_4(x) = -\frac{1}{6}x^3 - \frac{1}{4}x^2 + \frac{25}{12}x + \frac{1}{12}\]
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body"><strong>Area Under the Curve from 0 to 4</strong><span class="step-note">Integrate P₄(x) over [0, 4]</span></div>
+    </div>
+    <div class="block cobalt">
+      <span class="block-label">Definite Integral</span>
+      \[\int_0^4 P_4(x)\,dx = \left[-\frac{x^5}{120} - \frac{x^4}{48} + \frac{25x^3}{72} + \frac{x^2}{24}\right]_0^4\]
+      \[= \left(-\frac{1024}{120} - \frac{256}{48} + \frac{25\cdot 64}{72} + \frac{16}{24}\right) - 0\]
+      \[= -\frac{128}{15} - \frac{16}{3} + \frac{200}{9} + \frac{2}{3}\]
+    </div>
+
+    <div class="result-banner">
+      <div class="rb-icon">∫</div>
+      <div class="rb-content">
+        <span class="rb-label">Area under P₄(x) from x = 0 to x = 4</span>
+        <span class="rb-value">\(\displaystyle\frac{406}{45} \approx 9.0\overline{2}\)</span>
+        <span class="rb-sub">Exact fraction: 406/45</span>
+      </div>
+    </div>
+
+    <div class="metric-grid" style="margin-top:18px;">
+      <div class="metric-card cobalt">
+        <span class="mc-label">Leading Coeff a₄</span>
+        <span class="mc-val">\(-1/24\)</span>
+      </div>
+      <div class="metric-card amber">
+        <span class="mc-label">Error Multiplier</span>
+        <span class="mc-val">0.005859 × f⁽⁵⁾</span>
+      </div>
+      <div class="metric-card teal">
+        <span class="mc-label">∫₀⁴ P₄(x) dx</span>
+        <span class="mc-val">9.0222…</span>
+      </div>
+      <div class="metric-card rust">
+        <span class="mc-label">Polynomial Degree</span>
+        <span class="mc-val">n = 4</span>
+      </div>
+    </div>
+
+  </div><!-- /.prob-body -->
+</div><!-- /.prob-panel -->
+
+
+<!-- ══════════════════ § 03 ══════════════════ -->
+<div class="sec-head" id="sec03">
+  <span class="sec-badge">§ 03</span>
+  <h2>Problem 2 — Cubic Interpolation P₃(x)</h2>
+  <div class="sec-rule"></div>
+</div>
+
+<div class="prob-panel">
+  <div class="prob-header">
+    <div class="prob-num">02</div>
+    <div class="prob-meta">
+      <span class="prob-label">Newton's Divided Difference · 4 Data Points</span>
+      <span class="prob-title">Find P₃(x); compute max error at x = −2.5, rate of change at x = −2.5, and area from x = 0 to x = 3.</span>
+    </div>
+  </div>
+  <div class="prob-body">
+
+    <!-- Given Data -->
+    <div class="card-title cobalt" style="margin-bottom:10px; font-family:var(--ff-ui); font-size:.78rem; font-weight:500; letter-spacing:2px; text-transform:uppercase; display:flex; align-items:center; gap:8px;">
+      <span style="display:inline-block;width:3px;height:14px;background:var(--cobalt);border-radius:2px;flex-shrink:0;"></span>
+      Given Data
+    </div>
+    <table class="iter-tbl">
+      <thead>
+        <tr>
+          <th>\(x\)</th><th>\(x_0=0\)</th><th>\(x_1=-1\)</th><th>\(x_2=-2\)</th><th>\(x_3=-3\)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th>\(y = F(x)\)</th>
+          <td>0</td><td>10</td><td>7</td><td>14</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- Part A -->
+    <div class="card-title teal" style="margin:22px 0 10px; font-family:var(--ff-ui); font-size:.78rem; font-weight:500; letter-spacing:2px; text-transform:uppercase; display:flex; align-items:center; gap:8px;">
+      <span style="display:inline-block;width:3px;height:14px;background:var(--teal);border-radius:2px;flex-shrink:0;"></span>
+      (A) Conceptual Explanation
+    </div>
+
+    <p>Four data points determine a unique polynomial of degree at most 3. Note the <em>non-uniform</em> spacing: the \(x\)-nodes decrease by 1 from 0 to −3, so the denominators in the divided differences are consistently \((-1)\), \((-2)\), and \((-3)\) respectively.</p>
+
+    <div class="block cobalt">
+      <span class="block-label">Key Observation — Negative Spacing</span>
+      When nodes are listed in decreasing order, divided differences involve negative denominators. The divided difference formula remains identical; only the sign of the denominator changes.
+      \[f[x_0, x_1] = \frac{f[x_1] - f[x_0]}{x_1 - x_0} = \frac{10 - 0}{-1 - 0} = -10\]
+    </div>
+
+    <div class="ar-block">
+    لاحظ أن نقاط البيانات مرتبة تنازليًا من 0 إلى −3، لذا فإن مقامات الفروق المنقسمة ستكون سالبة. هذا لا يغيّر الطريقة، بل يؤثر فقط على إشارة المعاملات. المعامل \(a_1 = -10\) ناتج عن هذا الترتيب.
+    </div>
+
+    <!-- Part B -->
+    <div class="card-title amber" style="margin:22px 0 10px; font-family:var(--ff-ui); font-size:.78rem; font-weight:500; letter-spacing:2px; text-transform:uppercase; display:flex; align-items:center; gap:8px;">
+      <span style="display:inline-block;width:3px;height:14px;background:var(--amber);border-radius:2px;flex-shrink:0;"></span>
+      (B) Step-by-Step Solution
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body"><strong>Build the Divided Difference Table</strong><span class="step-note">Track the diagonal (highlighted) entries as coefficients a₀ → a₃</span></div>
+    </div>
+
+    <table class="iter-tbl">
+      <thead>
+        <tr>
+          <th>\(x_i\)</th>
+          <th>\(f[x_i]\)</th>
+          <th>1st DD</th>
+          <th>2nd DD</th>
+          <th>3rd DD</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>0</td>
+          <td class="coeff">\(0 \; (a_0)\)</td>
+          <td>—</td><td>—</td><td>—</td>
+        </tr>
+        <tr>
+          <td>−1</td>
+          <td>10</td>
+          <td class="coeff">\(-10 \; (a_1)\)</td>
+          <td>—</td><td>—</td>
+        </tr>
+        <tr>
+          <td>−2</td>
+          <td>7</td>
+          <td class="pos">3</td>
+          <td class="coeff">\(-\tfrac{13}{2} \; (a_2)\)</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>−3</td>
+          <td>14</td>
+          <td class="neg">\(-7\)</td>
+          <td class="pos">5</td>
+          <td class="coeff">\(-\tfrac{23}{6} \; (a_3)\)</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="block cobalt">
+      <span class="block-label">Divided Difference Calculations — Verification</span>
+      \[f[x_0,x_1] = \frac{10-0}{-1-0} = -10 \qquad f[x_1,x_2] = \frac{7-10}{-2-(-1)} = \frac{-3}{-1} = 3\]
+      \[f[x_2,x_3] = \frac{14-7}{-3-(-2)} = \frac{7}{-1} = -7\]
+      \[f[x_0,x_1,x_2] = \frac{3-(-10)}{-2-0} = \frac{13}{-2} = -\frac{13}{2}\]
+      \[f[x_1,x_2,x_3] = \frac{-7-3}{-3-(-1)} = \frac{-10}{-2} = 5\]
+      \[f[x_0,x_1,x_2,x_3] = \frac{5-(-13/2)}{-3-0} = \frac{23/2}{-3} = -\frac{23}{6}\]
+    </div>
+
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body"><strong>Write the Newton Form</strong></div>
+    </div>
+    <div class="block cobalt">
+      <span class="block-label">Newton Form</span>
+      \[P_3(x) = 0 + (-10)(x-0) + \left(-\frac{13}{2}\right)(x-0)(x+1) + \left(-\frac{23}{6}\right)(x-0)(x+1)(x+2)\]
+    </div>
+
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body"><strong>Expand to Standard Form</strong><span class="step-note">Multiply factor by factor and collect powers of x</span></div>
+    </div>
+    <div class="block cobalt">
+      <span class="block-label">Expansion Detail</span>
+      \[-10x - \frac{13}{2}(x^2+x) - \frac{23}{6}(x^3+3x^2+2x)\]
+      \[= -10x - \frac{13}{2}x^2 - \frac{13}{2}x - \frac{23}{6}x^3 - \frac{23}{2}x^2 - \frac{23}{3}x\]
+      \[= -\frac{23}{6}x^3 - \left(\frac{13}{2}+\frac{23}{2}\right)x^2 - \left(10+\frac{13}{2}+\frac{23}{3}\right)x\]
+    </div>
+    <div class="block amber">
+      <span class="block-label">Simplified Polynomial P₃(x)</span>
+      \[P_3(x) = -\frac{23}{6}x^3 - 18x^2 - \frac{145}{6}x\]
+    </div>
+
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body"><strong>Maximum Error Bound at x = −2.5</strong></div>
+    </div>
+    <div class="block rust">
+      <span class="block-label">Error Bound at x = −2.5</span>
+      \[\left|f(-2.5) - P_3(-2.5)\right| \le \frac{|(-2.5)(-2.5+1)(-2.5+2)(-2.5+3)|}{4!}\cdot\left|f^{(4)}(\xi)\right|\]
+      \[= \frac{|(-2.5)(-1.5)(-0.5)(0.5)|}{24}\cdot\left|f^{(4)}(\xi)\right| = \frac{0.9375}{24}\cdot\left|f^{(4)}(\xi)\right|\]
+      \[= 0.0390625\cdot\left|f^{(4)}(\xi)\right|\]
+    </div>
+
+    <div class="step">
+      <div class="step-num">5</div>
+      <div class="step-body"><strong>Rate of Change at x = −2.5</strong><span class="step-note">Differentiate P₃(x), then substitute x = −2.5</span></div>
+    </div>
+    <div class="block teal">
+      <span class="block-label">Derivative and Evaluation</span>
+      \[\frac{d}{dx}P_3(x) = -\frac{23}{2}x^2 - 36x - \frac{145}{6}\]
+      \[\left.\frac{d}{dx}P_3(x)\right|_{x=-2.5} = -\frac{23}{2}(6.25) - 36(-2.5) - \frac{145}{6}\]
+      \[= -\frac{143.75}{2} + 90 - \frac{145}{6} = -71.875 + 90 - 24.1\overline{6} = -\frac{145}{24}\]
+    </div>
+
+    <div class="result-banner">
+      <div class="rb-icon">∂</div>
+      <div class="rb-content">
+        <span class="rb-label">Rate of Change at x = −2.5</span>
+        <span class="rb-value">\(\displaystyle\left.\frac{dP_3}{dx}\right|_{x=-2.5} = -\frac{145}{24} \approx -6.041\overline{6}\)</span>
+        <span class="rb-sub">Exact value: −145/24</span>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">6</div>
+      <div class="step-body"><strong>Area Under the Curve from 0 to 3</strong><span class="step-note">Integrate P₃(x) over [0, 3]</span></div>
+    </div>
+    <div class="block cobalt">
+      <span class="block-label">Definite Integral</span>
+      \[\int_0^3 P_3(x)\,dx = \int_0^3 \left(-\frac{23}{6}x^3 - 18x^2 - \frac{145}{6}x\right)dx\]
+      \[= \left[-\frac{23}{24}x^4 - 6x^3 - \frac{145}{12}x^2\right]_0^3\]
+      \[= -\frac{23}{24}(81) - 6(27) - \frac{145}{12}(9)\]
+      \[= -\frac{1863}{24} - 162 - \frac{1305}{12} = -77.625 - 162 - 108.75\]
+    </div>
+
+    <div class="result-banner">
+      <div class="rb-icon">∫</div>
+      <div class="rb-content">
+        <span class="rb-label">Area under P₃(x) from x = 0 to x = 3</span>
+        <span class="rb-value">\(\displaystyle\int_0^3 P_3(x)\,dx = -348.375\)</span>
+        <span class="rb-sub">Negative result indicates net area below the x-axis over this interval</span>
+      </div>
+    </div>
+
+    <div class="metric-grid" style="margin-top:18px;">
+      <div class="metric-card cobalt">
+        <span class="mc-label">Leading Coeff a₃</span>
+        <span class="mc-val">\(-23/6\)</span>
+      </div>
+      <div class="metric-card amber">
+        <span class="mc-label">Error Multiplier</span>
+        <span class="mc-val">0.03906 × f⁽⁴⁾</span>
+      </div>
+      <div class="metric-card teal">
+        <span class="mc-label">P₃′(−2.5)</span>
+        <span class="mc-val">−6.0417</span>
+      </div>
+      <div class="metric-card rust">
+        <span class="mc-label">∫₀³ P₃(x) dx</span>
+        <span class="mc-val">−348.375</span>
+      </div>
+    </div>
+
+  </div><!-- /.prob-body -->
+</div><!-- /.prob-panel -->
+
+
+<!-- ══════════════════ § 04 ══════════════════ -->
+<div class="sec-head" id="sec04">
+  <span class="sec-badge">§ 04</span>
+  <h2>Lagrange Interpolation — Verification</h2>
+  <div class="sec-rule"></div>
+</div>
+
+<div class="card">
+  <div class="card-title teal">Method Overview</div>
+  <p>The Lagrange form expresses the interpolating polynomial as a weighted sum of <em>basis polynomials</em> \(L_i(x)\), each constructed to be 1 at node \(x_i\) and 0 at all other nodes:</p>
+  <div class="block amber">
+    <span class="block-label">Lagrange Interpolating Polynomial</span>
+    \[P_n(x) = \sum_{i=0}^{n} y_i\, L_i(x), \qquad L_i(x) = \prod_{\substack{j=0\\j\ne i}}^{n}\frac{x - x_j}{x_i - x_j}\]
+  </div>
+  <p>The Lagrange and Newton forms are algebraically identical — they represent the <em>same unique polynomial</em> of degree \(\le n\) through \(n+1\) points. Verifying one via the other confirms the result.</p>
+  <div class="ar-block">
+  طريقة لاغرانج والطريقة النيوتنية يُنتجان نفس كثير الحدود تمامًا — هذا مضمون بنظرية تفرّد كثير الحدود الاستيفائي. التحقق بطريقة لاغرانج يُعزّز الثقة بالنتيجة ويُثبت عدم وجود خطأ حسابي.
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title purple">Lagrange Basis Polynomials for Problem 2</div>
+  <p>Using nodes \(x_0=0,\; x_1=-1,\; x_2=-2,\; x_3=-3\) and values \(y = 0, 10, 7, 14\):</p>
+
+  <div class="block cobalt">
+    <span class="block-label">L₀(x) — basis at x₀ = 0</span>
+    \[L_0(x) = \frac{(x+1)(x+2)(x+3)}{(1)(2)(3)} = \frac{1}{6}(x^3+6x^2+11x+6)\]
+  </div>
+  <div class="block cobalt">
+    <span class="block-label">L₁(x) — basis at x₁ = −1</span>
+    \[L_1(x) = \frac{(x)(x+2)(x+3)}{(-1)(1)(2)} = -\frac{1}{2}(x^3+5x^2+6x)\]
+  </div>
+  <div class="block cobalt">
+    <span class="block-label">L₂(x) — basis at x₂ = −2</span>
+    \[L_2(x) = \frac{(x)(x+1)(x+3)}{(-2)(-1)(1)} = \frac{1}{2}(x^3+4x^2+3x)\]
+  </div>
+  <div class="block cobalt">
+    <span class="block-label">L₃(x) — basis at x₃ = −3</span>
+    \[L_3(x) = \frac{(x)(x+1)(x+2)}{(-3)(-2)(-1)} = -\frac{1}{6}(x^3+3x^2+2x)\]
+  </div>
+</div>
+
+<div class="card">
+  <div class="card-title amber">Assembling the Lagrange Polynomial</div>
+  <div class="block amber">
+    <span class="block-label">Full Lagrange Sum</span>
+    \[P_3(x) = (0)\,L_0(x) + (10)\,L_1(x) + (7)\,L_2(x) + (14)\,L_3(x)\]
+    \[= -5(x^3+5x^2+6x) + \frac{7}{2}(x^3+4x^2+3x) - \frac{7}{3}(x^3+3x^2+2x)\]
+  </div>
+  <p>Collecting coefficients of each power:</p>
+  <div class="block teal">
+    <span class="block-label">Result — identical to Newton form ✓</span>
+    \[P_3(x) = -\frac{23}{6}x^3 - 18x^2 - \frac{145}{6}x\]
+  </div>
+  <div class="block amber">
+    <span class="block-label">Verification Conclusion</span>
+    Both Newton's Divided Difference and Lagrange methods produce the <em>same polynomial</em> \(P_3(x)\). This confirms the uniqueness of the interpolating polynomial and validates both computations.
+  </div>
+
+  <div class="step">
+    <div class="step-num">✓</div>
+    <div class="step-body"><strong>Newton and Lagrange results match exactly.</strong> The interpolating polynomial through these four data points is unique, and both representations of it are confirmed correct.<span class="step-note">QED — Quod Erat Demonstrandum</span></div>
+  </div>
+</div>
+
+</div><!-- /.page-wrap -->
+
+<footer>
+  © 2025 · Interpolation &amp; Numerical Analysis · Chapter 3
+</footer>
+
+</body>
+</html>
