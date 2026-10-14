@@ -295,12 +295,53 @@
     outline: 2px solid var(--mark);
     outline-offset: 2px;
   }
+
+  /* ───────── MechHub Return Link ───────── */
+  .hub-nav {
+    margin-bottom: 22px;
+  }
+  .hub-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--chalk-dim);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 6px 14px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+  }
+  .hub-link:hover {
+    color: var(--true-val);
+    border-color: var(--true-val);
+    background: rgba(232, 161, 60, 0.08);
+    transform: translateY(-1px);
+  }
+  .hub-link svg {
+    width: 13px;
+    height: 13px;
+    transition: transform 0.2s ease;
+  }
+  .hub-link:hover svg {
+    transform: translateX(-3px);
+  }
 </style>
 </head>
 <body>
 
   <section class="board">
     <div class="board-inner">
+      <div class="hub-nav">
+        <a href="https://ahmedramadantajeldin-rgb.github.io/MechLibrary/" class="hub-link" title="Return to MechHub">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          <span>← Back to MechHub</span>
+        </a>
+      </div>
       <div class="eyebrow">Converging on f(x) = 0</div>
       <h1>MATH<span class="num">302</span></h1>
       <p class="subtitle">Ten methods for getting closer to an answer you can't solve outright — one step, one iteration, one approximation at a time.</p>
